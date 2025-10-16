@@ -2,6 +2,8 @@
 #include "PackagePool.h"
 #include "Message.h"
 #include "base/Utils.h"
+#include "GameServer.h"
+#include "Gateway.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
@@ -42,6 +44,8 @@ namespace uranus::network {
     }
 
     void Connection::ConnectToClient() {
+        received_ = std::chrono::steady_clock::now();
+
         co_spawn(stream_.get_executor(), [self = shared_from_this()]() mutable -> awaitable<void> {
             const auto [ec] = co_await self->stream_.async_handshake(asio::ssl::stream_base::server);
             if (ec) {
@@ -66,7 +70,13 @@ namespace uranus::network {
         output_.close();
         watchdog_.cancel();
 
-        // TODO
+        auto op = GetAttr<int64_t>("PLAYER_ID");
+        if (op.has_value()) {
+            const auto pid = op.value();
+            if (auto *pGateway = server_->GetModule<Gateway>(); pGateway != nullptr) {
+                pGateway->RemoveConnection(pid);
+            }
+        }
     }
 
     bool Connection::IsConnected() const {

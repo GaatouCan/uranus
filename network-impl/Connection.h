@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/Types.h"
+#include "base/AttributeMap.h"
 
 #include <memory>
 #include <asio/ssl/stream.hpp>
@@ -22,7 +23,7 @@ namespace uranus {
         using std::error_code;
         using SslStream = asio::ssl::stream<TcpSocket>;
 
-        class Connection final : public std::enable_shared_from_this<Connection> {
+        class Connection final : public AttributeMap, public std::enable_shared_from_this<Connection> {
 
             using OutputChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, unique_ptr<Message>)>>;
 
@@ -30,7 +31,7 @@ namespace uranus {
             Connection() = delete;
 
             explicit Connection(SslStream &&stream);
-            ~Connection();
+            ~Connection() override;
 
             void SetGameServer(GameServer *server);
             [[nodiscard]] GameServer *GetGameServer() const;
