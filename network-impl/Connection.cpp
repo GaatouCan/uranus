@@ -33,6 +33,7 @@ namespace uranus::network {
     }
 
     Connection::~Connection() {
+        this->Disconnect();
     }
 
     void Connection::SetGameServer(GameServer *server) {
