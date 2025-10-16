@@ -2,20 +2,9 @@
 
 #include "MessageNode.h"
 
-
-namespace uranus {
-
-    class Message;
-
-    namespace network {
-
-        class PackageNode final : public MessageNode {
-
-        public:
-            PackageNode();
-            ~PackageNode() override;
-
-            // void Execute(ActorContext *ctx) override;
-        };
-    }
+namespace uranus::network {
+    class PackageNode final : public MessageNode {
+    public:
+        ~PackageNode() override;
+    };
 }
