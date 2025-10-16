@@ -130,7 +130,7 @@ namespace uranus::network {
 
                 auto *msg = new Message();
 
-                msg->type != Message::kFromClient;
+                msg->type |= Message::kFromClient;
                 msg->session = 0;
                 msg->data = reinterpret_cast<void *>(pkg);
                 msg->length = sizeof(Package);
