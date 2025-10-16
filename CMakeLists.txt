@@ -57,7 +57,7 @@ target_link_libraries(core PUBLIC mimalloc)
 set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 
-add_subdirectory(network-impl)
+add_subdirectory(package)
 
 # Uranus executable
 file(GLOB_RECURSE URANUS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.cpp)
@@ -74,9 +74,9 @@ endif ()
 
 add_executable(uranus ${URANUS_FILES})
 target_link_libraries(uranus PUBLIC core)
-target_link_libraries(uranus PUBLIC network-impl)
+target_link_libraries(uranus PUBLIC package-impl)
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core-src)
-target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/network-impl)
+target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/package)
 
 set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

@@ -33,6 +33,8 @@ namespace uranus {
             explicit Connection(SslStream &&stream);
             ~Connection() override;
 
+            [[nodiscard]] std::string GetKey() const;
+
             // void SetGameServer(GameServer *server);
             // [[nodiscard]] GameServer *GetGameServer() const;
 

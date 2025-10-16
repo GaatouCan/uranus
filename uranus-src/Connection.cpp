@@ -1,5 +1,5 @@
 #include "Connection.h"
-#include "PackagePool.h"
+#include "../network-impl/PackagePool.h"
 #include "Message.h"
 #include "base/Utils.h"
 #include "ConnectionHandler.h"
@@ -34,13 +34,9 @@ namespace uranus::network {
         this->Disconnect();
     }
 
-    // void Connection::SetGameServer(GameServer *server) {
-    //     server_ = server;
-    // }
-    //
-    // GameServer *Connection::GetGameServer() const {
-    //     return server_;
-    // }
+    std::string Connection::GetKey() const {
+        return key_;
+    }
 
     void Connection::SetConnectionHandler(ConnectionHandler *handler) {
         handler_ = unique_ptr<ConnectionHandler>(handler);
