@@ -3,6 +3,7 @@
 #include "Message.h"
 #include "base/Utils.h"
 #include "GameServer.h"
+#include "ConnectionHandler.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
@@ -43,7 +44,14 @@ namespace uranus::network {
         return server_;
     }
 
+    void Connection::SetConnectionHandler(ConnectionHandler *handler) {
+        handler_ = unique_ptr<ConnectionHandler>(handler);
+    }
+
     void Connection::ConnectToClient() {
+        if (handler_ == nullptr)
+            throw std::runtime_error("Connection::ConnectToClient: no handler");
+
         received_ = std::chrono::steady_clock::now();
 
         co_spawn(stream_.get_executor(), [self = shared_from_this()]() mutable -> awaitable<void> {
@@ -52,6 +60,8 @@ namespace uranus::network {
                 // TODO
                 self->Disconnect();
             }
+
+            self->handler_->OnConnected();
 
             co_await (
                 self->ReadPackage() &&
@@ -69,6 +79,8 @@ namespace uranus::network {
         stream_.next_layer().close();
         output_.close();
         watchdog_.cancel();
+
+        handler_->OnDisconnect();
     }
 
     bool Connection::IsConnected() const {
@@ -137,7 +149,7 @@ namespace uranus::network {
                 msg->data = reinterpret_cast<void *>(pkg);
                 msg->length = sizeof(Package);
 
-                // TODO: Handle Pacakge
+                handler_->OnReadMessage(msg);
             }
         } catch (const std::exception &e) {
             // TODO
@@ -161,6 +173,8 @@ namespace uranus::network {
                     // TODO
                     continue;
                 }
+
+                handler_->OnWriteMessage(msg.get());
 
                 Package::PackageHeader header{};
                 memset(&header, 0, Package::kPackageHeaderSize);
@@ -233,21 +247,15 @@ namespace uranus::network {
 
                 if (auto [ec] = co_await watchdog_.async_wait(); ec) {
                     if (ec == asio::error::operation_aborted) {
-
+                        co_return;
                     }
-                        // SPDLOG_INFO("{} - Connection[{}] canceled watchdog timer",
-                        //         __FUNCTION__, key_);
-                    else {
-
-                    }
-                        // SPDLOG_INFO("{} - Connection[{}] - {}", __FUNCTION__, key_,
-                        //         ec.message());
-
-                    co_return;
+                    break;
                 }
 
                 now = std::chrono::steady_clock::now();
             } while (received_ + expiration_ > now);
+
+            handler_->OnTimeout();
 
             if (IsConnected()) {
                 this->Disconnect();

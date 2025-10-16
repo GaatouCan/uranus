@@ -16,6 +16,7 @@ namespace uranus {
 
         class Package;
         class PackagePool;
+        class ConnectionHandler;
 
         using std::shared_ptr;
         using std::unique_ptr;
@@ -35,6 +36,8 @@ namespace uranus {
 
             void SetGameServer(GameServer *server);
             [[nodiscard]] GameServer *GetGameServer() const;
+
+            void SetConnectionHandler(ConnectionHandler *handler);
 
             void ConnectToClient();
             void Disconnect();
@@ -62,6 +65,8 @@ namespace uranus {
             SteadyTimer watchdog_;
             SteadyDuration expiration_;
             SteadyTimePoint received_;
+
+            unique_ptr<ConnectionHandler> handler_;
         };
     }
 }

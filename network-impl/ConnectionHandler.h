@@ -1,28 +1,39 @@
 #pragma once
 
-#include <memory>
-
 #include "Common.h"
 
-namespace uranus::network {
+namespace uranus {
 
-    class Connection;
+    class Message;
 
-    class ConnectionHandler {
+    namespace network {
 
-    public:
-        ConnectionHandler() = delete;
+        class Connection;
 
-        explicit ConnectionHandler(Connection *conn) : conn_(conn) {}
-        virtual ~ConnectionHandler() = default;
+        class ConnectionHandler {
 
-        DISABLE_COPY_MOVE(ConnectionHandler)
+        public:
+            ConnectionHandler() = delete;
 
-        [[nodiscard]] Connection *GetConnection() const {
-            return conn_;
-        }
+            explicit ConnectionHandler(Connection *conn) : conn_(conn) {}
+            virtual ~ConnectionHandler() = default;
 
-    protected:
-        Connection *conn_;
-    };
+            DISABLE_COPY_MOVE(ConnectionHandler)
+
+            [[nodiscard]] Connection *GetConnection() const {
+                return conn_;
+            }
+
+            virtual void OnConnected() {}
+
+            virtual void OnReadMessage(Message *msg) {}
+            virtual void OnWriteMessage(Message *msg) {}
+
+            virtual void OnTimeout() {}
+            virtual void OnDisconnect() {}
+
+        protected:
+            Connection *conn_;
+        };
+    }
 }
