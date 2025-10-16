@@ -46,6 +46,11 @@ namespace uranus::network {
 
         friend class PackagePool;
 
+        struct PackageHeader final {
+            int32_t id;
+            int32_t length;
+        };
+
         explicit Package(Recycler<Package>::Handle handle);
 
     public:
@@ -64,15 +69,15 @@ namespace uranus::network {
         void SetData(const std::string& str);
         void SetData(std::string_view sv);
 
-        std::string ToString() const;
+        [[nodiscard]] std::string ToString() const;
+
+        static constexpr size_t kPackageHeaderSize = sizeof(PackageHeader);
 
     private:
         Recycler<Package>::Handle handle_;
 
     public:
-        int32_t id_;
-        size_t length_;
-
+        PackageHeader header_;
         Buffer payload_;
     };
 }

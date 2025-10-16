@@ -14,7 +14,8 @@ namespace uranus::network {
     }
 
     Package::Package(Recycler<Package>::Handle handle)
-        : handle_(handle) {
+        : handle_(std::move(handle)),
+          header_() {
     }
 
     Package::~Package() {
@@ -25,15 +26,15 @@ namespace uranus::network {
     }
 
     void Package::SetPackageID(const int32_t id) {
-        id_ = id;
+        header_.id = id;
     }
 
     int32_t Package::GetPackageID() const {
-        return id_;
+        return header_.id;
     }
 
     void Package::SetData(const std::span<const uint8_t> data) {
-        length_ = data.size();
+        header_.length = data.size();
         payload_.resize(data.size());
         if (!data.empty()) {
             std::memcpy(payload_.data(), data.data(), data.size());
@@ -49,12 +50,12 @@ namespace uranus::network {
     }
 
     void Package::SetData(const std::string &str) {
-        length_ = str.size();
+        header_.length = str.size();
         payload_.assign(str.begin(), str.end());
     }
 
     void Package::SetData(std::string_view sv) {
-        length_ = sv.size();
+        header_.length = sv.size();
         payload_.assign(sv.begin(), sv.end());
     }
 

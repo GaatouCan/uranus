@@ -6,14 +6,16 @@
 
 namespace uranus {
 
-    enum MessageType {
-        kToService  = 1,
-        kToPlayer   = 1 << 1,
-        kToClient   = 1 << 2,
-        kToServer   = 1 << 3,
-    };
-
     struct CORE_API Message final {
+
+        enum MessageType {
+            kToService  = 1,
+            kToPlayer   = 1 << 1,
+            kToClient   = 1 << 2,
+            kToServer   = 1 << 3,
+            kFromClient = 1 << 4,
+        };
+
         int32_t type;
 
         int32_t session;

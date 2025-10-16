@@ -11,6 +11,11 @@ namespace uranus {
 
     namespace network {
 
+        class Package;
+        class PackagePool;
+
+        using std::shared_ptr;
+        using std::make_shared;
         using SslStream = asio::ssl::stream<TcpSocket>;
 
         class Connection final : public std::enable_shared_from_this<Connection> {
@@ -33,6 +38,8 @@ namespace uranus {
         private:
             SslStream stream_;
             GameServer *server_;
+
+            shared_ptr<PackagePool> pool_;
         };
     }
 }
