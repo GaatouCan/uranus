@@ -2,7 +2,6 @@
 #include "PackagePool.h"
 #include "Message.h"
 #include "base/Utils.h"
-#include "GameServer.h"
 #include "ConnectionHandler.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
@@ -21,7 +20,6 @@ using namespace asio::experimental::awaitable_operators;
 namespace uranus::network {
     Connection::Connection(SslStream &&stream)
         : stream_(std::move(stream)),
-          server_(nullptr),
           output_(stream_.get_executor(), 1024),
           watchdog_(stream_.get_executor()),
           expiration_(std::chrono::seconds(30)) {
@@ -36,13 +34,13 @@ namespace uranus::network {
         this->Disconnect();
     }
 
-    void Connection::SetGameServer(GameServer *server) {
-        server_ = server;
-    }
-
-    GameServer *Connection::GetGameServer() const {
-        return server_;
-    }
+    // void Connection::SetGameServer(GameServer *server) {
+    //     server_ = server;
+    // }
+    //
+    // GameServer *Connection::GetGameServer() const {
+    //     return server_;
+    // }
 
     void Connection::SetConnectionHandler(ConnectionHandler *handler) {
         handler_ = unique_ptr<ConnectionHandler>(handler);

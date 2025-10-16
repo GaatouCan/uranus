@@ -9,7 +9,6 @@
 
 namespace uranus {
 
-    class GameServer;
     class Message;
 
     namespace network {
@@ -34,8 +33,8 @@ namespace uranus {
             explicit Connection(SslStream &&stream);
             ~Connection() override;
 
-            void SetGameServer(GameServer *server);
-            [[nodiscard]] GameServer *GetGameServer() const;
+            // void SetGameServer(GameServer *server);
+            // [[nodiscard]] GameServer *GetGameServer() const;
 
             void SetConnectionHandler(ConnectionHandler *handler);
 
@@ -54,7 +53,6 @@ namespace uranus {
 
         private:
             SslStream stream_;
-            GameServer *server_;
 
             std::string key_;
 
