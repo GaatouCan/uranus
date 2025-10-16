@@ -3,7 +3,6 @@
 #include "Message.h"
 #include "base/Utils.h"
 #include "GameServer.h"
-#include "Gateway.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
@@ -70,14 +69,6 @@ namespace uranus::network {
         stream_.next_layer().close();
         output_.close();
         watchdog_.cancel();
-
-        auto op = GetAttr<int64_t>("PLAYER_ID");
-        if (op.has_value()) {
-            const auto pid = op.value();
-            if (auto *pGateway = server_->GetModule<Gateway>(); pGateway != nullptr) {
-                pGateway->RemoveConnection(pid);
-            }
-        }
     }
 
     bool Connection::IsConnected() const {
