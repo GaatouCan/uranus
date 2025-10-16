@@ -74,7 +74,9 @@ endif ()
 
 add_executable(uranus ${URANUS_FILES})
 target_link_libraries(uranus PUBLIC core)
+target_link_libraries(uranus PUBLIC network-impl)
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core-src)
+target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/network-impl)
 
 set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
