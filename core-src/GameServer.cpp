@@ -4,54 +4,55 @@
 
 #include <asio/signal_set.hpp>
 
-
-GameServer::GameServer() {
-    io_pool_ = make_unique<MultiIOContextPool>();
-    worker_pool_ = make_unique<SingleIOContextPool>();
-}
-
-GameServer::~GameServer() {
-}
-
-void GameServer::Start() {
-    for (const auto &module: ordered_) {
-        module->Start();
+namespace uranus {
+    GameServer::GameServer() {
+        io_pool_ = make_unique<MultiIOContextPool>();
+        worker_pool_ = make_unique<SingleIOContextPool>();
     }
 
-    worker_pool_->Start(8);
-    io_pool_->Start(4);
-
-    asio::signal_set signals(ctx_, SIGINT, SIGTERM);
-    signals.async_wait([this](auto, auto) {
-        Stop();
-    });
-
-    ctx_.run();
-}
-
-void GameServer::Stop() {
-    if (ctx_.stopped())
-        return;
-
-    ctx_.stop();
-
-    io_pool_->Stop();
-    worker_pool_->Stop();
-
-    for (auto iter = ordered_.rbegin(); iter != ordered_.rend(); ++iter) {
-        (*iter)->Stop();
+    GameServer::~GameServer() {
     }
-    ordered_.clear();
-}
 
-asio::io_context &GameServer::GetMainIOContext() {
-    return ctx_;
-}
+    void GameServer::Start() {
+        for (const auto &module: ordered_) {
+            module->Start();
+        }
 
-asio::io_context &GameServer::GetSocketIOContext() const {
-    return io_pool_->GetIOContext();
-}
+        worker_pool_->Start(8);
+        io_pool_->Start(4);
 
-asio::io_context &GameServer::GetWorkerIOContext() const {
-    return worker_pool_->GetIOContext();
+        asio::signal_set signals(ctx_, SIGINT, SIGTERM);
+        signals.async_wait([this](auto, auto) {
+            Stop();
+        });
+
+        ctx_.run();
+    }
+
+    void GameServer::Stop() {
+        if (ctx_.stopped())
+            return;
+
+        ctx_.stop();
+
+        io_pool_->Stop();
+        worker_pool_->Stop();
+
+        for (auto iter = ordered_.rbegin(); iter != ordered_.rend(); ++iter) {
+            (*iter)->Stop();
+        }
+        ordered_.clear();
+    }
+
+    asio::io_context &GameServer::GetMainIOContext() {
+        return ctx_;
+    }
+
+    asio::io_context &GameServer::GetSocketIOContext() const {
+        return io_pool_->GetIOContext();
+    }
+
+    asio::io_context &GameServer::GetWorkerIOContext() const {
+        return worker_pool_->GetIOContext();
+    }
 }

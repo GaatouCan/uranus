@@ -48,8 +48,33 @@ if (MSVC)
     endforeach()
 endif ()
 
-add_executable(core main.cpp ${CORE_FILES})
+add_library(core SHARED ${CORE_FILES})
 target_compile_definitions(core PRIVATE URANUS_EXPORT)
 target_link_libraries(core PUBLIC spdlog::spdlog)
 target_link_libraries(core PUBLIC asio::asio)
 target_link_libraries(core PUBLIC mimalloc)
+
+set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
+set_target_properties(core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
+
+add_subdirectory(network-impl)
+
+# Uranus executable
+file(GLOB_RECURSE URANUS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.cpp)
+
+if (MSVC)
+    foreach(file ${URANUS_FILES})
+        get_filename_component(PARENT_DIR "${file}" DIRECTORY)
+        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
+        string(REPLACE "/" "\\" GROUP "${GROUP}")
+        set(GROUP "${GROUP}")
+        source_group("${GROUP}" FILES "${file}")
+    endforeach()
+endif ()
+
+add_executable(uranus ${URANUS_FILES})
+target_link_libraries(uranus PUBLIC core)
+target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core-src)
+
+set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
+set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

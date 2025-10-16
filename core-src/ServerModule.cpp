@@ -1,18 +1,20 @@
 #include "ServerModule.h"
 
-ServerModule::ServerModule(GameServer *ser)
-    : server_(ser) {
-}
+namespace uranus {
+    ServerModule::ServerModule(GameServer *ser)
+        : server_(ser) {
+    }
 
-ServerModule::~ServerModule() {
-}
+    ServerModule::~ServerModule() {
+    }
 
-GameServer *ServerModule::GetGameServer() const {
-    return server_;
-}
+    GameServer *ServerModule::GetGameServer() const {
+        return server_;
+    }
 
-void ServerModule::Start() {
-}
+    void ServerModule::Start() {
+    }
 
-void ServerModule::Stop() {
+    void ServerModule::Stop() {
+    }
 }

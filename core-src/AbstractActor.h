@@ -2,29 +2,31 @@
 
 #include "Common.h"
 
+namespace uranus {
 
-class Package;
-class GameServer;
+    class Message;
+    class GameServer;
 
-class CORE_API AbstractActor {
+    class CORE_API AbstractActor {
 
-    friend class ActorContext;
+        friend class ActorContext;
 
-public:
-    AbstractActor();
-    virtual ~AbstractActor();
+    public:
+        AbstractActor();
+        virtual ~AbstractActor();
 
-    DISABLE_COPY_MOVE(AbstractActor)
+        DISABLE_COPY_MOVE(AbstractActor)
 
-    virtual void OnPackage(Package *pkg);
+        virtual void OnReceive(Message *msg);
 
-protected:
-    [[nodiscard]] ActorContext *GetActorContext() const;
-    [[nodiscard]] GameServer *GetGameServer() const;
+    protected:
+        [[nodiscard]] ActorContext *GetActorContext() const;
+        [[nodiscard]] GameServer *GetGameServer() const;
 
-private:
-    void SetUpContext(ActorContext *ctx);
+    private:
+        void SetUpContext(ActorContext *ctx);
 
-private:
-    ActorContext *ctx_;
-};
+    private:
+        ActorContext *ctx_;
+    };
+}

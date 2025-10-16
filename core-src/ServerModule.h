@@ -2,26 +2,28 @@
 
 #include "Common.h"
 
+namespace uranus {
 
-class GameServer;
+    class GameServer;
 
-class CORE_API ServerModule {
+    class CORE_API ServerModule {
 
-public:
-    ServerModule() = delete;
+    public:
+        ServerModule() = delete;
 
-    explicit ServerModule(GameServer* ser);
-    virtual ~ServerModule();
+        explicit ServerModule(GameServer* ser);
+        virtual ~ServerModule();
 
-    DISABLE_COPY_MOVE(ServerModule)
+        DISABLE_COPY_MOVE(ServerModule)
 
-    [[nodiscard]] GameServer *GetGameServer() const;
+        [[nodiscard]] GameServer *GetGameServer() const;
 
-    [[nodiscard]] virtual const char *GetModuleName() const = 0;
+        [[nodiscard]] virtual const char *GetModuleName() const = 0;
 
-    virtual void Start();
-    virtual void Stop();
+        virtual void Start();
+        virtual void Stop();
 
-private:
-    GameServer *const server_;
-};
+    private:
+        GameServer *const server_;
+    };
+}
