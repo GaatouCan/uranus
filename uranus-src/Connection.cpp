@@ -43,6 +43,10 @@ Gateway *Connection::GetGateway() const {
     return gateway_;
 }
 
+GameServer *Connection::GetGameServer() const {
+    return gateway_->GetGameServer();
+}
+
 void Connection::ConnectToClient() {
     received_ = std::chrono::steady_clock::now();
 

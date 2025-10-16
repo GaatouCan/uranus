@@ -10,6 +10,7 @@
 
 namespace uranus {
     class Message;
+    class GameServer;
     namespace network {
         class Package;
         class PackagePool;
@@ -21,6 +22,7 @@ class Gateway;
 using uranus::Message;
 using uranus::network::Package;
 using uranus::network::PackagePool;
+using uranus::GameServer;
 using std::shared_ptr;
 using std::unique_ptr;
 using std::make_shared;
@@ -41,6 +43,7 @@ public:
     [[nodiscard]] std::string GetKey() const;
 
     [[nodiscard]] Gateway *GetGateway() const;
+    [[nodiscard]] GameServer *GetGameServer() const;
 
     void ConnectToClient();
     void Disconnect();
