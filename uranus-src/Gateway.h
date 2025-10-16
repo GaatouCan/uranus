@@ -8,45 +8,39 @@
 #include <shared_mutex>
 #include <asio/ssl/context.hpp>
 
-namespace uranus::network {
 
-    class Connection;
-    class ConnectionInitializer;
+class Connection;
 
-    using std::unordered_map;
-    using std::shared_ptr;
-    using std::unique_ptr;
-    using std::make_shared;
-    using std::shared_mutex;
+using uranus::GameServer;
+using uranus::ServerModule;
+using std::unordered_map;
+using std::shared_ptr;
+using std::unique_ptr;
+using std::make_shared;
+using std::shared_mutex;
 
-    class Gateway final : public ServerModule {
+class Gateway final : public ServerModule {
+public:
+    explicit Gateway(GameServer *server);
+    ~Gateway() override;
 
-    public:
-        explicit Gateway(GameServer *server);
-        ~Gateway() override;
+    [[nodiscard]] constexpr const char *GetModuleName() const override { return "Gateway"; }
 
-        [[nodiscard]] constexpr const char *GetModuleName() const override { return "Gateway"; }
+    void Start() override;
+    void Stop() override;
 
-        void SetConnectionInitializer(ConnectionInitializer *initializer);
+    // void EmplaceConnection(int64_t pid, const shared_ptr<Connection> &conn);
+    [[nodiscard]] shared_ptr<Connection> FindConnection(const std::string &key) const;
 
-        void Start() override;
-        void Stop() override;
+    void RemoveConnection(const std::string &key);
 
-        // void EmplaceConnection(int64_t pid, const shared_ptr<Connection> &conn);
-        [[nodiscard]] shared_ptr<Connection> FindConnection(const std::string &key) const;
+private:
+    awaitable<void> WaitForClient(uint16_t port);
 
-        void RemoveConnection(const std::string &key);
+private:
+    TcpAcceptor acceptor_;
+    asio::ssl::context ssl_context_;
 
-    private:
-        awaitable<void> WaitForClient(uint16_t port);
-
-    private:
-        TcpAcceptor acceptor_;
-        asio::ssl::context ssl_context_;
-
-        mutable shared_mutex mutex_;
-        unordered_map<std::string, shared_ptr<Connection>> conn_map_;
-
-        unique_ptr<ConnectionInitializer> initializer_;
-    };
-}
+    mutable shared_mutex mutex_;
+    unordered_map<std::string, shared_ptr<Connection> > conn_map_;
+};
