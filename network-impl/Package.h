@@ -46,14 +46,14 @@ namespace uranus::network {
 
         friend class PackagePool;
 
+        explicit Package(Recycler<Package>::Handle handle);
+
+    public:
         struct PackageHeader final {
             int32_t id;
             int32_t length;
         };
 
-        explicit Package(Recycler<Package>::Handle handle);
-
-    public:
         Package() = delete;
         ~Package();
 
