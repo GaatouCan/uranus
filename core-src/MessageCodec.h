@@ -6,7 +6,7 @@
 
 namespace uranus {
 
-    class Message;
+    struct Message;
     using asio::awaitable;
 
     class CORE_API MessageCodec {
