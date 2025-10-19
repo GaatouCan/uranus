@@ -1,5 +1,4 @@
 #include "PackageCodec.h"
-
 #include "Message.h"
 #include "Package.h"
 
@@ -18,14 +17,90 @@ namespace uranus::network {
     PackageCodec::~PackageCodec() {
     }
 
-    awaitable<void> PackageCodec::Encode(Message *msg) {
+    awaitable<error_code> PackageCodec::Encode(Message *msg) {
         if (msg == nullptr)
-            co_return;
+            co_return std::make_error_code(std::errc::invalid_argument);
 
         auto *pkg = static_cast<Package *>(msg->data);
-        // TODO
+
+        Package::PackageHeader header{};
+        memset(&header, 0, Package::kPackageHeaderSize);
+
+        header.id = static_cast<int32_t>(htonl(pkg->header_.id));
+        header.length = static_cast<int32_t>(htonl(pkg->header_.length));
+
+        if (pkg->header_.length <= 0) {
+            const auto [ec, len] = co_await async_write(stream_, asio::buffer(&header, Package::kPackageHeaderSize));
+
+            if (ec) {
+                co_return ec;
+            }
+
+            if (len != Package::kPackageHeaderSize) {
+                co_return std::make_error_code(std::errc::invalid_argument);
+            }
+
+            co_return std::error_code{};
+        }
+
+        if (pkg->header_.length > 1024 * 4096) {
+            co_return std::make_error_code(std::errc::invalid_argument);
+        }
+
+        const auto buffers = {
+            asio::buffer(&header, Package::kPackageHeaderSize),
+            asio::buffer(pkg->payload_),
+        };
+
+        const auto [data_ec, data_len] = co_await async_write(stream_, buffers);
+
+        if (data_ec) {
+            co_return data_ec;
+        }
+
+        if (data_len != Package::kPackageHeaderSize + pkg->header_.length) {
+            co_return std::make_error_code(std::errc::invalid_argument);
+        }
+
+        co_return std::error_code{};
     }
 
-    awaitable<void> PackageCodec::Decode(Message *msg) {
+    awaitable<error_code> PackageCodec::Decode(Message *msg) {
+        if (msg == nullptr)
+            co_return std::make_error_code(std::errc::invalid_argument);
+
+        auto *pkg = static_cast<Package *>(msg->data);
+
+        const auto [header_ec, header_len] = co_await async_read(stream_, asio::buffer(&pkg->header_, Package::kPackageHeaderSize));
+
+        if (header_ec) {
+            co_return header_ec;
+        }
+
+        if (header_len != Package::kPackageHeaderSize) {
+            co_return std::make_error_code(std::errc::invalid_argument);
+        }
+
+        pkg->header_.id = static_cast<int32_t>(ntohl(pkg->header_.id));
+        pkg->header_.length = static_cast<int32_t>(ntohl(pkg->header_.length));
+
+        if (pkg->header_.length > 0) {
+            if (pkg->header_.length > 4096 * 1024) {
+                co_return std::make_error_code(std::errc::invalid_argument);
+            }
+
+            pkg->payload_.resize(pkg->header_.length);
+            const auto [payload_ec, payload_len] = co_await async_read(stream_, asio::buffer(pkg->payload_));
+
+            if (payload_ec) {
+                co_return payload_ec;
+            }
+
+            if (payload_len != pkg->header_.length) {
+                co_return std::make_error_code(std::errc::invalid_argument);
+            }
+        }
+
+        co_return std::error_code{};
     }
 }

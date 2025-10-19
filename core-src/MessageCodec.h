@@ -8,6 +8,7 @@ namespace uranus {
 
     struct Message;
     using asio::awaitable;
+    using std::error_code;
 
     class CORE_API MessageCodec {
 
@@ -15,7 +16,7 @@ namespace uranus {
         MessageCodec() =  default;
         virtual ~MessageCodec() = default;
 
-        virtual awaitable<void> Encode(Message *msg) = 0;
-        virtual awaitable<void> Decode(Message *msg) = 0;
+        virtual awaitable<error_code> Encode(Message *msg) = 0;
+        virtual awaitable<error_code> Decode(Message *msg) = 0;
     };
 }

@@ -17,7 +17,7 @@ namespace uranus::network {
         explicit PackageCodec(SslStream &stream);
         ~PackageCodec() override;
 
-        awaitable<void> Encode(Message *msg) override;
-        awaitable<void> Decode(Message *msg) override;
+        awaitable<error_code> Encode(Message *msg) override;
+        awaitable<error_code> Decode(Message *msg) override;
     };
 }
