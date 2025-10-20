@@ -80,10 +80,10 @@ void PlayerContext::PushMessage(Message *msg) {
         return;
     }
 
-    auto node = std::make_unique<PackageNode>();
+    auto *node = new PackageNode();
     node->SetMessage(msg);
 
-    this->PushNode(std::move(node));
+    this->PushNode(node);
 }
 
 void PlayerContext::CleanUp() {

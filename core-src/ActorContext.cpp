@@ -47,20 +47,18 @@ namespace uranus {
         return !channel_.is_open();
     }
 
-    bool ActorContext::PushNode(unique_ptr<ChannelNode> &&node) {
-        if (!channel_.is_open())
-            return true;
-
-        return channel_.try_send_via_dispatch(error_code{}, std::move(node));
-    }
-
-    void ActorContext::AsyncPushNode(unique_ptr<ChannelNode> &&node) {
+    void ActorContext::PushNode(ChannelNode *node) {
         if (!channel_.is_open())
             return;
 
-        co_spawn(ctx_, [node = std::move(node), self = shared_from_this()]() mutable -> awaitable<void> {
-            co_await self->channel_.async_send(error_code{}, std::move(node));
-        }, detached);
+        if (!channel_.try_send_via_dispatch(error_code{}, node)) {
+            co_spawn(ctx_, [self = shared_from_this(), node]() mutable -> awaitable<void> {
+                const auto [ec] = co_await self->channel_.async_send(error_code{}, node);
+                if (ec == asio::experimental::error::channel_closed) {
+                    delete node;
+                }
+            }, detached);
+        }
     }
 
     awaitable<void> ActorContext::Process() {
@@ -70,6 +68,8 @@ namespace uranus {
                 if (ec == asio::experimental::error::channel_closed) {
                     SPDLOG_DEBUG("{} - Actor[{:p}] close channel",
                         __FUNCTION__, static_cast<void *>(this));
+
+                    delete node;
                     break;
                 }
 
@@ -77,6 +77,16 @@ namespace uranus {
                     continue;
 
                 node->Execute(this);
+
+                delete node;
+            }
+
+            for (;;) {
+                const bool ok = channel_.try_receive([](std::error_code ec, const ChannelNode *node) {
+                    delete node;
+                });
+                if (!ok)
+                    break;
             }
         } catch (const std::exception &e) {
             SPDLOG_ERROR("{} - Actor[{:p}] - Exception: {}",

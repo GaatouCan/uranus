@@ -24,7 +24,7 @@ namespace uranus {
 
     class CORE_API ActorContext : public std::enable_shared_from_this<ActorContext> {
 
-        using ActorChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, unique_ptr<ChannelNode>)>>;
+        using ActorChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, ChannelNode *)>>;
 
     public:
         ActorContext() = delete;
@@ -57,12 +57,7 @@ namespace uranus {
 
         [[nodiscard]] bool IsChannelClosed() const;
 
-        bool PushNode(unique_ptr<ChannelNode> &&node);
-        void AsyncPushNode(unique_ptr<ChannelNode> &&node);
-
-        template<class T, class... Args>
-        requires std::is_base_of_v<ChannelNode, T>
-        void EmplaceNode(Args &&... args);
+        void PushNode(ChannelNode *node);
 
         awaitable<void> Process();
 
@@ -74,16 +69,4 @@ namespace uranus {
 
         ActorChannel channel_;
     };
-
-    template<class T, class ... Args>
-    requires std::is_base_of_v<ChannelNode, T>
-    void ActorContext::EmplaceNode(Args &&...args) {
-        auto node = make_unique<ChannelNode>(std::forward<Args>(args)...);
-        const bool res = this->PushNode(std::move(node));
-
-        if (!res) {
-            auto back = make_unique<ChannelNode>(std::forward<Args>(args)...);
-            this->AsyncPushNode(std::move(back));
-        }
-    }
 }
