@@ -99,7 +99,22 @@ void Connection::SendToClient(Message *msg) {
         return;
     }
 
-    output_.try_send_via_dispatch(error_code{}, msg);
+    if (!output_.try_send_via_dispatch(error_code{}, msg)) {
+        co_spawn(stream_.get_executor(), [self = shared_from_this(), msg]() mutable -> awaitable<void> {
+            const auto [ec] = co_await self->output_.async_send(error_code{}, msg);
+            if (ec == asio::experimental::error::channel_closed) {
+                if (msg == nullptr)
+                    co_return;
+
+                if (msg->data != nullptr) {
+                    auto *pkg = static_cast<Package *>(msg->data);
+                    pkg->Recycle();
+                }
+
+                delete msg;
+            }
+        }, detached);
+    }
 }
 
 awaitable<void> Connection::ReadPackage() {
