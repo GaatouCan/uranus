@@ -1,9 +1,16 @@
 #include "ServiceContext.h"
 #include "AbstractService.h"
+#include "Message.h"
+#include "PackageNode.h"
+#include "PackagePool.h"
 #include "../GameWorld.h"
+
+using uranus::network::Package;
+using uranus::network::PackageNode;
 
 ServiceContext::ServiceContext(GameWorld *world)
     : ActorContext(world) {
+    pool_ = make_shared<PackagePool>();
 }
 
 ServiceContext::~ServiceContext() {
@@ -20,6 +27,29 @@ AbstractActor *ServiceContext::GetActor() const {
 }
 
 Message *ServiceContext::BuildMessage() {
+    auto *msg = new Message();
+
+    msg->type = Message::kFromService;
+    msg->session = 0;
+
+    auto *pkg = pool_->Acquire();
+
+    msg->data = pkg;
+    msg->length = sizeof(Package);
+
+    return msg;
+}
+
+int ServiceContext::Initial(DataAsset *data) {
+    pool_->Initial(64);
+}
+
+int ServiceContext::Start() {
+
+}
+
+void ServiceContext::CleanUp() {
+
 }
 
 void ServiceContext::SendToService(int64_t target, Message *msg) {
