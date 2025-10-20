@@ -26,6 +26,10 @@ AbstractActor *ServiceContext::GetActor() const {
     return handle_.Get();
 }
 
+GameWorld *ServiceContext::GetWorld() const {
+    return dynamic_cast<GameWorld *>(GetGameServer());
+}
+
 Message *ServiceContext::BuildMessage() {
     auto *msg = new Message();
 

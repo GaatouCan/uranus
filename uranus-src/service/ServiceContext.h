@@ -27,6 +27,8 @@ public:
 
     [[nodiscard]] AbstractActor *GetActor() const override;
 
+    [[nodiscard]] GameWorld *GetWorld() const;
+
     [[nodiscard]] Message *BuildMessage() override;
 
     int Initial(DataAsset *data) override;
