@@ -18,10 +18,10 @@ class ServiceFactory final {
     };
 
 public:
-    void LoadService() override;
+    void LoadService();
 
-    [[nodiscard]] ServiceHandle CreateInstance(const std::string &path) override;
-    void DestroyInstance(AbstractService *pService, const std::string &path) override;
+    [[nodiscard]] ServiceHandle CreateInstance(const std::string &path);
+    void DestroyInstance(AbstractService *pService, const std::string &path);
 
 private:
     std::unordered_map<std::string, LibraryNode> core_map_;

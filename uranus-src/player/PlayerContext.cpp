@@ -8,12 +8,15 @@ PlayerContext::~PlayerContext() {
 }
 
 AbstractActor *PlayerContext::GetActor() const {
+    return nullptr;
 }
 
 int PlayerContext::Initial(DataAsset *data) {
+    return 0;
 }
 
 int PlayerContext::Start() {
+    return 0;
 }
 
 void PlayerContext::Stop() {
