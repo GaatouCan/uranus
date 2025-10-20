@@ -81,7 +81,9 @@ bool Connection::IsConnected() const {
 void Connection::SendToClient(Message *msg) {
     if (msg == nullptr) return;
 
-    if (!stream_.next_layer().is_open()) {
+    if (!IsConnected()) {
+        auto *pkg = static_cast<Package *>(msg->data);
+        pkg->Recycle();
         delete msg;
         return;
     }
@@ -143,19 +145,19 @@ awaitable<void> Connection::WritePackage() {
         }
 
         while (true) {
-            const auto [ec, msg] = co_await output_.async_receive();
-            if (ec) {
-                if (ec == asio::error::operation_aborted)
-                    break;
-            }
-
-            if (nullptr != msg) {
-                auto *pkg = static_cast<Package *>(msg->data);
-                msg->data = nullptr;
-                msg->length = 0;
-
-                pkg->Recycle();
-            }
+            // const auto [ec, msg] = co_await output_.async_receive();
+            // if (ec) {
+            //     if (ec == asio::error::operation_aborted)
+            //         break;
+            // }
+            //
+            // if (nullptr != msg) {
+            //     auto *pkg = static_cast<Package *>(msg->data);
+            //     msg->data = nullptr;
+            //     msg->length = 0;
+            //
+            //     pkg->Recycle();
+            // }
         }
     } catch (const std::exception &e) {
         // TODO
