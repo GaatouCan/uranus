@@ -15,6 +15,7 @@ namespace uranus {
     using std::shared_ptr;
     using std::make_shared;
 
+    class DataAsset;
     class GameServer;
     class AbstractActor;
     class ChannelNode;
@@ -38,6 +39,10 @@ namespace uranus {
         asio::io_context &GetIOContext();
 
         [[nodiscard]] virtual AbstractActor *GetActor() const = 0;
+
+        virtual int Initial(DataAsset *data) = 0;
+        virtual int Start() = 0;
+        virtual void Stop() = 0;
 
         virtual void SendToService(int64_t target, Message *msg) = 0;
         virtual void SendToService(const std::string &name, Message *msg) = 0;
@@ -72,6 +77,11 @@ namespace uranus {
     requires std::is_base_of_v<ChannelNode, T>
     void ActorContext::EmplaceNode(Args &&...args) {
         auto node = make_unique<ChannelNode>(std::forward<Args>(args)...);
-        this->PushNode(std::move(node));
+        const bool res = this->PushNode(std::move(node));
+
+        if (!res) {
+            auto back = make_unique<ChannelNode>(std::forward<Args>(args)...);
+            this->AsyncPushNode(std::move(back));
+        }
     }
 }

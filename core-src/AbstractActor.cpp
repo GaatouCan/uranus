@@ -11,6 +11,17 @@ namespace uranus {
     AbstractActor::~AbstractActor() {
     }
 
+    int AbstractActor::Initial(DataAsset *data) {
+        return 0;
+    }
+
+    int AbstractActor::Start() {
+        return 0;
+    }
+
+    void AbstractActor::Stop() {
+    }
+
     void AbstractActor::OnReceive(Message *msg) {
     }
 

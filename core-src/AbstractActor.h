@@ -5,6 +5,7 @@
 
 namespace uranus {
 
+    class DataAsset;
     class Message;
     class GameServer;
 
@@ -18,7 +19,9 @@ namespace uranus {
 
         DISABLE_COPY_MOVE(AbstractActor)
 
-        virtual void Initial();
+        virtual int Initial(DataAsset *data);
+        virtual int Start();
+        virtual void Stop();
 
         virtual void OnReceive(Message *msg);
 
