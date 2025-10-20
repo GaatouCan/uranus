@@ -24,14 +24,23 @@ namespace uranus {
         return ctx_;
     }
 
+    int ActorContext::Initial(DataAsset *data) {
+        return 1;
+    }
+
+    int ActorContext::Start() {
+        return 1;
+    }
+
+    void ActorContext::Stop() {
+        if (channel_.is_open())
+            channel_.close();
+    }
+
     void ActorContext::SetUpActor() {
         if (auto *actor = this->GetActor(); actor != nullptr) {
             actor->SetUpContext(this);
-            return;
         }
-
-        SPDLOG_WARN("{} - Actor[{:p}] try to set up context again",
-            __FUNCTION__, static_cast<void *>(this));
     }
 
     bool ActorContext::PushNode(unique_ptr<ChannelNode> &&node) {

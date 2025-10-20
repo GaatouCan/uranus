@@ -2,6 +2,8 @@
 #include "ActorContext.h"
 
 #include <format>
+#include <spdlog/spdlog.h>
+
 
 namespace uranus {
     AbstractActor::AbstractActor()
@@ -12,11 +14,11 @@ namespace uranus {
     }
 
     int AbstractActor::Initial(DataAsset *data) {
-        return 0;
+        return 1;
     }
 
     int AbstractActor::Start() {
-        return 0;
+        return 1;
     }
 
     void AbstractActor::Stop() {
@@ -40,6 +42,10 @@ namespace uranus {
     }
 
     void AbstractActor::SetUpContext(ActorContext *ctx) {
+        if (ctx_ != nullptr) {
+            SPDLOG_WARN("{} - Actor[{:p}] try to set up context again",
+                __FUNCTION__, static_cast<void *>(this));
+        }
         ctx_ = ctx;
     }
 }

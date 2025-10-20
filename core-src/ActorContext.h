@@ -40,9 +40,9 @@ namespace uranus {
 
         [[nodiscard]] virtual AbstractActor *GetActor() const = 0;
 
-        virtual int Initial(DataAsset *data) = 0;
-        virtual int Start() = 0;
-        virtual void Stop() = 0;
+        virtual int Initial(DataAsset *data);
+        virtual int Start();
+        virtual void Stop();
 
         virtual void SendToService(int64_t target, Message *msg) = 0;
         virtual void SendToService(const std::string &name, Message *msg) = 0;
