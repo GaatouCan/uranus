@@ -18,7 +18,7 @@ namespace uranus {
     class GameServer;
     class AbstractActor;
     class ChannelNode;
-    class Message;
+    struct Message;
 
 
     class CORE_API ActorContext : public std::enable_shared_from_this<ActorContext> {
@@ -45,12 +45,13 @@ namespace uranus {
         virtual void SendToPlayer(int64_t pid, Message *msg) = 0;
         virtual void SendToClient(int64_t pid, Message *msg) = 0;
 
-        virtual void PushPackage(Message *pkg) = 0;
+        virtual void PushMessage(Message *msg) = 0;
 
     protected:
         void SetUpActor();
 
-        void PushNode(unique_ptr<ChannelNode> &&node);
+        bool PushNode(unique_ptr<ChannelNode> &&node);
+        void AsyncPushNode(unique_ptr<ChannelNode> &&node);
 
         template<class T, class... Args>
         requires std::is_base_of_v<ChannelNode, T>

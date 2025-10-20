@@ -28,35 +28,35 @@ namespace uranus {
         }
     }
 
-    void ActorContext::PushNode(unique_ptr<ChannelNode> &&node) {
+    bool ActorContext::PushNode(unique_ptr<ChannelNode> &&node) {
+        if (!channel_.is_open())
+            return true;
+
+        return channel_.try_send_via_dispatch(error_code{}, std::move(node));
+    }
+
+    void ActorContext::AsyncPushNode(unique_ptr<ChannelNode> &&node) {
         if (!channel_.is_open())
             return;
 
-        if (!channel_.try_send_via_dispatch(error_code{}, std::move(node))) {
-            // TODO
-        }
+        co_spawn(ctx_, [node = std::move(node), self = shared_from_this()]() mutable -> awaitable<void> {
+            co_await self->channel_.async_send(error_code{}, std::move(node));
+        }, detached);
     }
 
     awaitable<void> ActorContext::Process() {
         try {
             while (channel_.is_open()) {
                 const auto [ec, node] = co_await channel_.async_receive();
-                if (ec) {
-                    if (ec == asio::error::operation_aborted) {
-                        // TODO
-                        break;
-                    }
+                if (ec == asio::experimental::error::channel_closed) {
+                    // TODO
+                    break;
                 }
 
-                if (node == nullptr) continue;
+                if (node == nullptr)
+                    continue;
 
                 node->Execute(this);
-            }
-
-            while (true) {
-                const auto [ec, node] = co_await channel_.async_receive();
-                if (ec == asio::error::operation_aborted)
-                    break;
             }
         } catch (const std::exception &e) {
             // TODO:
