@@ -18,4 +18,6 @@ target_compile_definitions(package-impl PRIVATE URANUS_MESSAGE)
 target_link_libraries(package-impl PUBLIC core)
 target_link_libraries(package-impl PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
+set_target_properties(package-impl PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
+set_target_properties(package-impl PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(package-impl PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output/lib)
