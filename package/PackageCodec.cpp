@@ -1,6 +1,7 @@
 #include "PackageCodec.h"
 #include "Message.h"
 #include "Package.h"
+#include "PackageErrc.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <winsock2.h>
@@ -19,7 +20,7 @@ namespace uranus::network {
 
     awaitable<error_code> PackageCodec::Encode(Message *msg) {
         if (msg == nullptr)
-            co_return std::make_error_code(std::errc::invalid_argument);
+            co_return MakeErrorCode(PackageErrc::kNullMessage);
 
         auto *pkg = static_cast<Package *>(msg->data);
 
@@ -37,14 +38,18 @@ namespace uranus::network {
             }
 
             if (len != Package::kPackageHeaderSize) {
-                co_return std::make_error_code(std::errc::invalid_argument);
+                co_return MakeErrorCode(PackageErrc::kEncodeLengthError);
             }
 
             co_return std::error_code{};
         }
 
         if (pkg->header_.length > 1024 * 4096) {
-            co_return std::make_error_code(std::errc::invalid_argument);
+            co_return MakeErrorCode(PackageErrc::kPayloadTooLarge);
+        }
+
+        if (pkg->payload_.size() != pkg->header_.length) {
+            co_return MakeErrorCode(PackageErrc::kPayloadLengthError);
         }
 
         const auto buffers = {
@@ -59,15 +64,15 @@ namespace uranus::network {
         }
 
         if (data_len != Package::kPackageHeaderSize + pkg->header_.length) {
-            co_return std::make_error_code(std::errc::invalid_argument);
+            co_return MakeErrorCode(PackageErrc::kEncodeLengthError);
         }
 
-        co_return std::error_code{};
+        co_return MakeErrorCode(PackageErrc::kOk);
     }
 
     awaitable<error_code> PackageCodec::Decode(Message *msg) {
         if (msg == nullptr)
-            co_return std::make_error_code(std::errc::invalid_argument);
+            co_return MakeErrorCode(PackageErrc::kNullMessage);
 
         auto *pkg = static_cast<Package *>(msg->data);
 
@@ -78,7 +83,7 @@ namespace uranus::network {
         }
 
         if (header_len != Package::kPackageHeaderSize) {
-            co_return std::make_error_code(std::errc::invalid_argument);
+            co_return MakeErrorCode(PackageErrc::kDecodeLengthError);
         }
 
         pkg->header_.id = static_cast<int32_t>(ntohl(pkg->header_.id));
@@ -86,7 +91,7 @@ namespace uranus::network {
 
         if (pkg->header_.length > 0) {
             if (pkg->header_.length > 4096 * 1024) {
-                co_return std::make_error_code(std::errc::invalid_argument);
+                co_return MakeErrorCode(PackageErrc::kPayloadTooLarge);
             }
 
             pkg->payload_.resize(pkg->header_.length);
@@ -97,10 +102,10 @@ namespace uranus::network {
             }
 
             if (payload_len != pkg->header_.length) {
-                co_return std::make_error_code(std::errc::invalid_argument);
+                co_return MakeErrorCode(PackageErrc::kDecodeLengthError);
             }
         }
 
-        co_return std::error_code{};
+        co_return MakeErrorCode(PackageErrc::kOk);
     }
 }
