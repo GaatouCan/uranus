@@ -44,6 +44,8 @@ namespace uranus {
         virtual int Start();
         virtual void Stop();
 
+        [[nodiscard]] virtual Message *BuildMessage() = 0;
+
         virtual void SendToService(int64_t target, Message *msg) = 0;
         virtual void SendToService(const std::string &name, Message *msg) = 0;
 

@@ -22,7 +22,6 @@ namespace uranus {
         virtual int Start();
         virtual void Stop();
 
-        [[nodiscard]] virtual Message *BuildMessage() = 0;
         virtual void OnReceive(Message *msg);
 
     protected:
