@@ -53,6 +53,10 @@ target_compile_definitions(core PRIVATE URANUS_EXPORT)
 target_link_libraries(core PUBLIC spdlog::spdlog)
 target_link_libraries(core PUBLIC asio::asio)
 target_link_libraries(core PUBLIC mimalloc)
+target_include_directories(core PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core-src>
+        $<INSTALL_INTERFACE:include>
+)
 
 set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

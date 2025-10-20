@@ -2,6 +2,7 @@
 
 #include "Common.h"
 
+
 namespace uranus {
 
     class Message;
