@@ -1,13 +1,14 @@
 #pragma once
 
-#include "Common.h"
+
+#include "ServerModule.h"
+#include "GameServer.h"
 
 
 namespace uranus {
 
     class DataAsset;
-    class Message;
-    class GameServer;
+    struct Message;
 
     class CORE_API AbstractActor {
 
@@ -29,10 +30,20 @@ namespace uranus {
         [[nodiscard]] ActorContext *GetActorContext() const;
         [[nodiscard]] GameServer *GetGameServer() const;
 
+
+        template<class T>
+        requires std::is_base_of_v<ServerModule, T>
+        T *GetServerModule() const;
+
     private:
         void SetUpContext(ActorContext *ctx);
 
     private:
         ActorContext *ctx_;
     };
+
+    template<class T> requires std::is_base_of_v<ServerModule, T>
+    T *AbstractActor::GetServerModule() const {
+        return this->GetGameServer()->GetModule<T>();
+    }
 }

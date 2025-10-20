@@ -5,7 +5,7 @@
 
 namespace uranus {
 
-    class Message;
+    struct Message;
 
     class CORE_API MessageNode : public ChannelNode {
 
