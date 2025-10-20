@@ -3,7 +3,7 @@
 #include "MessageNode.h"
 
 namespace uranus::network {
-    class PackageNode final : public MessageNode {
+    class NETWORK_API PackageNode final : public MessageNode {
     public:
         ~PackageNode() override;
     };

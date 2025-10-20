@@ -10,6 +10,18 @@
     #define CORE_API __attribute__((visibility("default")))
 #endif
 
+
+#if defined(_WIN32) || defined(_WIN64)
+    #ifdef URANUS_MESSAGE
+        #define NETWORK_API __declspec(dllexport)
+    #else
+        #define NETWORK_API __declspec(dllimport)
+    #endif
+#else
+    #define NETWORK_API __attribute__((visibility("default")))
+#endif
+
+
 #if defined(_WIN32) || defined(_WIN64)
     #ifdef URANUS_SERVICE
         #define SERVICE_API __declspec(dllexport)

@@ -9,7 +9,7 @@ namespace uranus::network {
 
     using SslStream = asio::ssl::stream<TcpSocket>;
 
-    class PackageCodec final : public MessageCodec {
+    class NETWORK_API PackageCodec final : public MessageCodec {
 
         SslStream &stream_;
 

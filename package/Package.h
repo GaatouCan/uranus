@@ -7,7 +7,7 @@
 
 namespace uranus::network {
 
-    class Package final {
+    class NETWORK_API Package final {
 
 #pragma region Buffer Heap
         class BufferHeap final {
