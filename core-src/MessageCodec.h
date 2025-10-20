@@ -17,6 +17,8 @@ namespace uranus {
         MessageCodec() = default;
         virtual ~MessageCodec() = default;
 
+        virtual awaitable<error_code> Initial() = 0;
+
         virtual awaitable<error_code> Encode(Message *msg) = 0;
         virtual awaitable<error_code> Decode(Message *msg) = 0;
     };

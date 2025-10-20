@@ -18,6 +18,8 @@ namespace uranus {
 
         DISABLE_COPY_MOVE(AbstractActor)
 
+        virtual void Initial();
+
         virtual void OnReceive(Message *msg);
 
     protected:

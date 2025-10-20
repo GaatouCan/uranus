@@ -18,6 +18,11 @@ namespace uranus::network {
     PackageCodec::~PackageCodec() {
     }
 
+    awaitable<error_code> PackageCodec::Initial() {
+        const auto [ec] = co_await stream_.async_handshake(asio::ssl::stream_base::server);
+        co_return ec;
+    }
+
     awaitable<error_code> PackageCodec::Encode(Message *msg) {
         if (msg == nullptr)
             co_return MakeErrorCode(PackageErrc::kNullMessage);

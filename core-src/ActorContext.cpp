@@ -3,6 +3,8 @@
 #include "GameServer.h"
 #include "ChannelNode.h"
 
+#include <spdlog/spdlog.h>
+
 
 namespace uranus {
     ActorContext::ActorContext(GameServer *ser)
@@ -25,7 +27,11 @@ namespace uranus {
     void ActorContext::SetUpActor() {
         if (auto *actor = this->GetActor(); actor != nullptr) {
             actor->SetUpContext(this);
+            return;
         }
+
+        SPDLOG_WARN("{} - Actor[{:p}] try to set up context again",
+            __FUNCTION__, static_cast<void *>(this));
     }
 
     bool ActorContext::PushNode(unique_ptr<ChannelNode> &&node) {
@@ -49,7 +55,8 @@ namespace uranus {
             while (channel_.is_open()) {
                 const auto [ec, node] = co_await channel_.async_receive();
                 if (ec == asio::experimental::error::channel_closed) {
-                    // TODO
+                    SPDLOG_DEBUG("{} - Actor[{:p}] close channel",
+                        __FUNCTION__, static_cast<void *>(this));
                     break;
                 }
 
@@ -59,7 +66,8 @@ namespace uranus {
                 node->Execute(this);
             }
         } catch (const std::exception &e) {
-            // TODO:
+            SPDLOG_ERROR("{} - Actor[{:p}] - Exception: {}",
+                __FUNCTION__, static_cast<void *>(this), e.what());
         }
     }
 
