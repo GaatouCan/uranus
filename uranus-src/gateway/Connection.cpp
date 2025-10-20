@@ -67,7 +67,7 @@ void Connection::Disconnect() {
         return;
     }
 
-    gateway_->RemoveConnection(key_);
+    gateway_->RemoveConnection(key_, pid_);
 
     stream_.next_layer().close();
     output_.close();
@@ -76,6 +76,17 @@ void Connection::Disconnect() {
 
 bool Connection::IsConnected() const {
     return stream_.next_layer().is_open();
+}
+
+void Connection::SetPlayerID(const int64_t pid) {
+    pid_ = pid;
+    gateway_->OnPlayerLogin(shared_from_this());
+}
+
+int64_t Connection::GetPlayerID() const {
+    if (pid_ < 0)
+        return kInvalidPlayerID;
+    return pid_;
 }
 
 void Connection::SendToClient(Message *msg) {

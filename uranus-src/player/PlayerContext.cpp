@@ -96,9 +96,7 @@ void PlayerContext::SendToClient(int64_t pid, Message *msg) {
 
     auto *gateway = GetGameServer()->GetModule<Gateway>();
     if (gateway != nullptr) {
-
-        // FIXME: Use Player ID To Find Connection
-        if (const auto conn = gateway->FindConnection("")) {
+        if (const auto conn = gateway->FindConnection(pid)) {
             conn->SendToClient(msg);
             return;
         }

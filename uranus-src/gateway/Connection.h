@@ -56,6 +56,9 @@ public:
 
     [[nodiscard]] bool IsConnected() const;
 
+    void SetPlayerID(int64_t pid);
+    [[nodiscard]] int64_t GetPlayerID() const;
+
     void SendToClient(Message *msg);
 
 private:

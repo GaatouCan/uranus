@@ -35,9 +35,39 @@ shared_ptr<Connection> Gateway::FindConnection(const std::string &key) const {
     return it == conn_map_.end() ? nullptr : it->second;
 }
 
-void Gateway::RemoveConnection(const std::string &key) {
-    std::unique_lock lock(mutex_);
-    conn_map_.erase(key);
+shared_ptr<Connection> Gateway::FindConnection(const int64_t pid) const {
+    std::string key;
+
+    {
+        std::shared_lock lock(player_mutex_);
+        const auto iter = pid_to_key_.find(pid);
+        if (iter == pid_to_key_.end())
+            return nullptr;
+
+        key = iter->second;
+    }
+
+    if (key.empty())
+        return nullptr;
+
+    return this->FindConnection(key);
+}
+
+void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
+    std::unique_lock lock(player_mutex_);
+    pid_to_key_[conn->GetPlayerID()] = conn->GetKey();
+}
+
+void Gateway::RemoveConnection(const std::string &key, const int64_t pid) {
+    {
+        std::unique_lock lock(mutex_);
+        conn_map_.erase(key);
+    }
+
+    if (pid > 0) {
+        std::unique_lock lock(player_mutex_);
+        pid_to_key_.erase(pid);
+    }
 }
 
 awaitable<void> Gateway::WaitForClient(uint16_t port) {

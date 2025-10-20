@@ -29,10 +29,12 @@ public:
     void Start() override;
     void Stop() override;
 
-    // void EmplaceConnection(int64_t pid, const shared_ptr<Connection> &conn);
     [[nodiscard]] shared_ptr<Connection> FindConnection(const std::string &key) const;
+    [[nodiscard]] shared_ptr<Connection> FindConnection(int64_t pid) const;
 
-    void RemoveConnection(const std::string &key);
+    void OnPlayerLogin(const shared_ptr<Connection> &conn);
+
+    void RemoveConnection(const std::string &key, int64_t pid);
 
 private:
     awaitable<void> WaitForClient(uint16_t port);
@@ -43,4 +45,7 @@ private:
 
     mutable shared_mutex mutex_;
     unordered_map<std::string, shared_ptr<Connection> > conn_map_;
+
+    mutable shared_mutex player_mutex_;
+    unordered_map<int64_t, std::string> pid_to_key_;
 };
