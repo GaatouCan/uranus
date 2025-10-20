@@ -88,7 +88,7 @@ void Connection::SendToClient(Message *msg) {
         return;
     }
 
-    output_.try_send_via_dispatch(error_code{}, unique_ptr<Message>(msg));
+    output_.try_send_via_dispatch(error_code{}, msg);
 }
 
 awaitable<void> Connection::ReadPackage() {
@@ -130,34 +130,34 @@ awaitable<void> Connection::WritePackage() {
             if (msg == nullptr)
                 continue;
 
-            const auto codec_ec = co_await codec_->Encode(msg.get());
+            const auto codec_ec = co_await codec_->Encode(msg);
 
             auto *pkg = static_cast<Package *>(msg->data);
             pkg->Recycle();
 
-            msg->data = nullptr;
-            msg->length = 0;
+            delete msg;
 
             if (codec_ec) {
                 this->Disconnect();
-                co_return;
+                break;
             }
         }
 
         while (true) {
-            // const auto [ec, msg] = co_await output_.async_receive();
-            // if (ec) {
-            //     if (ec == asio::error::operation_aborted)
-            //         break;
-            // }
-            //
-            // if (nullptr != msg) {
-            //     auto *pkg = static_cast<Package *>(msg->data);
-            //     msg->data = nullptr;
-            //     msg->length = 0;
-            //
-            //     pkg->Recycle();
-            // }
+            const bool ok = output_.try_receive([](error_code ec, Message *msg) {
+                if (msg == nullptr)
+                    return;
+
+                if (msg->data != nullptr) {
+                    auto *pkg = static_cast<Package *>(msg->data);
+                    pkg->Recycle();
+                }
+
+                delete msg;
+            });
+
+            if (!ok)
+                break;
         }
     } catch (const std::exception &e) {
         // TODO

@@ -38,7 +38,7 @@ using SslStream = asio::ssl::stream<TcpSocket>;
 
 class Connection final : public std::enable_shared_from_this<Connection> {
 
-    using OutputChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, unique_ptr<Message>)>>;
+    using OutputChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, Message *)>>;
 
 public:
     Connection() = delete;
