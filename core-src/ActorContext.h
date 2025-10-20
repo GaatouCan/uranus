@@ -55,6 +55,8 @@ namespace uranus {
     protected:
         void SetUpActor();
 
+        [[nodiscard]] bool IsChannelClosed() const;
+
         bool PushNode(unique_ptr<ChannelNode> &&node);
         void AsyncPushNode(unique_ptr<ChannelNode> &&node);
 

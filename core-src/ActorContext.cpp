@@ -43,6 +43,10 @@ namespace uranus {
         }
     }
 
+    bool ActorContext::IsChannelClosed() const {
+        return !channel_.is_open();
+    }
+
     bool ActorContext::PushNode(unique_ptr<ChannelNode> &&node) {
         if (!channel_.is_open())
             return true;

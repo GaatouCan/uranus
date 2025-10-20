@@ -1,5 +1,12 @@
 #include "PlayerContext.h"
 #include "AbstractPlayer.h"
+#include "Message.h"
+#include "Package.h"
+#include "PackageNode.h"
+
+using uranus::network::Package;
+using uranus::network::PackageNode;
+
 
 PlayerContext::PlayerContext(GameServer *ser)
     : ActorContext(ser) {
@@ -63,6 +70,20 @@ void PlayerContext::SendToClient(int64_t pid, Message *msg) {
 }
 
 void PlayerContext::PushMessage(Message *msg) {
+    if (msg == nullptr || msg->data == nullptr)
+        return;
+
+    if (IsChannelClosed()) {
+        auto *pkg = static_cast<Package *>(msg->data);
+        pkg->Recycle();
+        delete msg;
+        return;
+    }
+
+    auto node = std::make_unique<PackageNode>();
+    node->SetMessage(msg);
+
+    this->PushNode(std::move(node));
 }
 
 void PlayerContext::CleanUp() {
