@@ -9,8 +9,12 @@
 #include "Gateway.h"
 
 namespace uranus {
-    class Message;
+
+    struct Message;
+    class MessageCodec;
+
     class GameServer;
+
     namespace network {
         class Package;
         class PackagePool;
@@ -20,12 +24,14 @@ namespace uranus {
 class Gateway;
 
 using uranus::Message;
+using uranus::MessageCodec;
 using uranus::network::Package;
 using uranus::network::PackagePool;
 using uranus::GameServer;
 using std::shared_ptr;
 using std::unique_ptr;
 using std::make_shared;
+using std::make_unique;
 using std::error_code;
 using SslStream = asio::ssl::stream<TcpSocket>;
 
@@ -63,11 +69,13 @@ private:
     Gateway *const gateway_;
 
     std::string key_;
-    int64_t pid_;
 
+    unique_ptr<MessageCodec> codec_;
     shared_ptr<PackagePool> pool_;
 
     OutputChannel output_;
+
+    int64_t pid_;
 
     SteadyTimer watchdog_;
     SteadyDuration expiration_;

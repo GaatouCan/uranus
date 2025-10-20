@@ -2,29 +2,26 @@
 #include "PackagePool.h"
 #include "Message.h"
 #include "base/Utils.h"
+#include "PackageCodec.h"
+#include "../GameWorld.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
 
-#include "GameServer.h"
-
-#if defined(_WIN32) || defined(_WIN64)
-#include <winsock2.h>
-#else
-#include <arpa/inet.h>
-#include <endian.h>
-#endif
-
 
 using namespace asio::experimental::awaitable_operators;
+using uranus::network::PackageCodec;
 
 Connection::Connection(SslStream &&stream, Gateway *gateway)
     : stream_(std::move(stream)),
       gateway_(gateway),
-      pid_(kInvalidPlayerID),
       output_(stream_.get_executor(), 1024),
+      pid_(kInvalidPlayerID),
       watchdog_(stream_.get_executor()),
       expiration_(std::chrono::seconds(30)) {
+
+    codec_ = make_unique<PackageCodec>(stream_);
+
     pool_ = make_shared<PackagePool>();
     pool_->Initial(64);
 
@@ -95,54 +92,24 @@ void Connection::SendToClient(Message *msg) {
 awaitable<void> Connection::ReadPackage() {
     try {
         while (IsConnected()) {
-            auto *pkg = pool_->Acquire();
-
-            const auto [header_ec, header_len] = co_await async_read(
-                stream_, asio::buffer(&pkg->header_, Package::kPackageHeaderSize));
-
-            if (header_ec) {
-                // TODO
-                this->Disconnect();
-                co_return;
-            }
-
-            if (header_len != Package::kPackageHeaderSize) {
-                this->Disconnect();
-                co_return;
-            }
-
-            pkg->header_.id = static_cast<int32_t>(ntohl(pkg->header_.id));
-            pkg->header_.length = static_cast<int32_t>(ntohl(pkg->header_.length));
-
-            if (pkg->header_.length > 0) {
-                if (pkg->header_.length > 4096 * 1024) {
-                    // TODO: Too long
-                    this->Disconnect();
-                    co_return;
-                }
-
-                pkg->payload_.resize(pkg->header_.length);
-                const auto [payload_ec, payload_len] = co_await async_read(stream_, asio::buffer(pkg->payload_));
-
-                if (payload_ec) {
-                    // TODO:
-                    this->Disconnect();
-                    co_return;
-                }
-
-                if (payload_len != pkg->header_.length) {
-                    // TODO:
-                    this->Disconnect();
-                    co_return;
-                }
-            }
-
             auto *msg = new Message();
+            auto *pkg = pool_->Acquire();
 
             msg->type |= Message::kFromClient;
             msg->session = 0;
             msg->data = reinterpret_cast<void *>(pkg);
             msg->length = sizeof(Package);
+
+            const auto ec = co_await codec_->Decode(msg);
+            if (ec) {
+                // TODO:
+
+                pkg->Recycle();
+                delete msg;
+                this->Disconnect();
+            }
+
+            // TODO: Handle Message
         }
     } catch (const std::exception &e) {
         // TODO
@@ -161,66 +128,34 @@ awaitable<void> Connection::WritePackage() {
             if (msg == nullptr)
                 continue;
 
-            const auto *pkg = static_cast<Package *>(msg->data);
-            if (pkg == nullptr) {
-                // TODO
-                continue;
-            }
+            const auto codec_ec = co_await codec_->Encode(msg.get());
 
-            Package::PackageHeader header{};
-            memset(&header, 0, Package::kPackageHeaderSize);
+            auto *pkg = static_cast<Package *>(msg->data);
+            pkg->Recycle();
 
-            header.id = static_cast<int32_t>(htonl(pkg->header_.id));
-            header.length = static_cast<int32_t>(htonl(pkg->header_.length));
+            msg->data = nullptr;
+            msg->length = 0;
 
-            if (pkg->header_.length <= 0) {
-                const auto [ec, len] = co_await
-                        async_write(stream_, asio::buffer(&header, Package::kPackageHeaderSize));
-
-                if (ec) {
-                    // TODO
-                    this->Disconnect();
-                    co_return;
-                }
-
-                if (len != Package::kPackageHeaderSize) {
-                    // TODO
-                    this->Disconnect();
-                    co_return;
-                }
-
-                continue;
-            }
-
-            if (pkg->header_.length > 1024 * 4096) {
-                // TODO:
-                continue;
-            }
-
-            const auto buffers = {
-                asio::const_buffer(&header, Package::kPackageHeaderSize),
-                asio::buffer(pkg->payload_),
-            };
-
-            const auto [data_ec, data_len] = co_await async_write(stream_, buffers);
-
-            if (data_ec) {
-                // TODO
-                this->Disconnect();
-                co_return;
-            }
-
-            if (data_len != Package::kPackageHeaderSize + pkg->header_.length) {
-                // TODO
+            if (codec_ec) {
                 this->Disconnect();
                 co_return;
             }
         }
 
         while (true) {
-            if (const auto [ec, msg] = co_await output_.async_receive();
-                ec && ec == asio::error::operation_aborted)
-                break;
+            const auto [ec, msg] = co_await output_.async_receive();
+            if (ec) {
+                if (ec == asio::error::operation_aborted)
+                    break;
+            }
+
+            if (nullptr != msg) {
+                auto *pkg = static_cast<Package *>(msg->data);
+                msg->data = nullptr;
+                msg->length = 0;
+
+                pkg->Recycle();
+            }
         }
     } catch (const std::exception &e) {
         // TODO

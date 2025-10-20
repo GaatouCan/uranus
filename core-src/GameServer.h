@@ -60,7 +60,7 @@ namespace uranus {
             return dynamic_cast<T *>(iter->second.get());
         }
 
-        auto *ptr = new T(std::forward<Args>(args)...);
+        auto *ptr = new T(this, std::forward<Args>(args)...);
 
         modules_.insert_or_assign(typeid(T), unique_ptr<ServerModule>(ptr));
         ordered_.emplace_back(ptr);

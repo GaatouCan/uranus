@@ -13,7 +13,7 @@ namespace uranus {
     class CORE_API MessageCodec {
 
     public:
-        MessageCodec() =  default;
+        MessageCodec() = default;
         virtual ~MessageCodec() = default;
 
         virtual awaitable<error_code> Encode(Message *msg) = 0;
