@@ -3,6 +3,8 @@
 #include "Message.h"
 #include "Package.h"
 #include "PackageNode.h"
+#include "PackagePool.h"
+#include "../GameWorld.h"
 #include "../gateway/Connection.h"
 #include "../gateway/Gateway.h"
 
@@ -10,8 +12,9 @@ using uranus::network::Package;
 using uranus::network::PackageNode;
 
 
-PlayerContext::PlayerContext(GameServer *ser)
-    : ActorContext(ser) {
+PlayerContext::PlayerContext(GameWorld *world)
+    : ActorContext(world) {
+    pool_ = make_shared<PackagePool>();
 }
 
 PlayerContext::~PlayerContext() {
@@ -27,12 +30,18 @@ AbstractActor *PlayerContext::GetActor() const {
     return handle_.Get();
 }
 
+GameWorld *PlayerContext::GetWorld() const {
+    return dynamic_cast<GameWorld *>(GetGameServer());
+}
+
 int PlayerContext::Initial(DataAsset *data) {
     if (!handle_.IsValid()) {
         throw std::runtime_error(std::format(
             "{} - PlayerContext[{:p}] - Player Handle is invalid",
             __FUNCTION__, static_cast<const void *>(this)));
     }
+
+    pool_->Initial(64);
 
     const auto ret = handle_->Initial(data);
     return ret;
@@ -57,6 +66,20 @@ int PlayerContext::Start() {
 
 
     return 1;
+}
+
+Message *PlayerContext::BuildMessage() {
+    auto *msg = new Message();
+
+    msg->type = Message::kFromPlayer;
+    msg->session = 0;
+
+    auto *pkg = pool_->Acquire();
+
+    msg->data = pkg;
+    msg->length = sizeof(Package);
+
+    return msg;
 }
 
 void PlayerContext::SendToService(int64_t target, Message *msg) {
@@ -94,8 +117,7 @@ void PlayerContext::SendToClient(int64_t pid, Message *msg) {
         return;
     }
 
-    auto *gateway = GetGameServer()->GetModule<Gateway>();
-    if (gateway != nullptr) {
+    if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
         if (const auto conn = gateway->FindConnection(pid)) {
             conn->SendToClient(msg);
             return;
