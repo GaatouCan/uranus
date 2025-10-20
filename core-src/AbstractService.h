@@ -13,7 +13,9 @@ namespace uranus {
         AbstractService();
         ~AbstractService() override;
 
-        [[nodiscard]] virtual int64_t GetServiceID() const = 0;
+        void SetServiceID(int64_t id);
+        [[nodiscard]] int64_t GetServiceID() const;
+
         [[nodiscard]] virtual std::string GetServiceName() const = 0;
 
         void SendToService(int64_t target, Message *msg) const;
@@ -21,5 +23,8 @@ namespace uranus {
 
         void SendToPlayer(int64_t pid, Message *msg) const;
         void SendToClient(int64_t pid, Message *msg) const;
+
+    private:
+        int64_t id_;
     };
 }

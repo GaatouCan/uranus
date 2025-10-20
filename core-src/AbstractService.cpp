@@ -2,10 +2,21 @@
 #include "ActorContext.h"
 
 namespace uranus {
-    AbstractService::AbstractService() {
+    AbstractService::AbstractService()
+        : id_(kInvalidServiceID) {
     }
 
     AbstractService::~AbstractService() {
+    }
+
+    void AbstractService::SetServiceID(const int64_t id) {
+        id_ = id;
+    }
+
+    int64_t AbstractService::GetServiceID() const {
+        if (id_ < 0)
+            return kInvalidServiceID;
+        return id_;
     }
 
     void AbstractService::SendToService(const int64_t target, Message *msg) const {
