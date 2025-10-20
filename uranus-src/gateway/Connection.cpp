@@ -109,6 +109,7 @@ awaitable<void> Connection::ReadPackage() {
                 pkg->Recycle();
                 delete msg;
                 this->Disconnect();
+                break;
             }
 
             // TODO: Handle Message
@@ -122,19 +123,29 @@ awaitable<void> Connection::WritePackage() {
     try {
         while (IsConnected() && output_.is_open()) {
             const auto [ec, msg] = co_await output_.async_receive();
-            if (ec) {
-                // TODO
-                break;
-            }
 
             if (msg == nullptr)
                 continue;
 
-            const auto codec_ec = co_await codec_->Encode(msg);
+            if (msg->data == nullptr) {
+                delete msg;
+                continue;
+            }
 
             auto *pkg = static_cast<Package *>(msg->data);
-            pkg->Recycle();
 
+            if (ec) {
+                // TODO
+                pkg->Recycle();
+                delete msg;
+
+                this->Disconnect();
+                break;
+            }
+
+            const auto codec_ec = co_await codec_->Encode(msg);
+
+            pkg->Recycle();
             delete msg;
 
             if (codec_ec) {
