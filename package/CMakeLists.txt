@@ -13,6 +13,7 @@ if (MSVC)
 endif ()
 
 add_library(package-impl STATIC ${PACKAGE_FILES})
+target_compile_definitions(package-impl PRIVATE URANUS_EXPORT)
 target_link_libraries(package-impl PUBLIC core)
 target_link_libraries(package-impl PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 target_include_directories(package-impl PUBLIC ${CMAKE_SOURCE_DIR}/core-src)
