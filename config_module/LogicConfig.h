@@ -17,7 +17,7 @@ namespace uranus::config {
         LogicConfig() = default;
         virtual ~LogicConfig() = default;
 
-        virtual vector<std::string> InitialList() const = 0;
+        [[nodiscard]] virtual vector<std::string> InitialList() const = 0;
         virtual int LoadConfig(const map<std::string, nlohmann::json *> &data) = 0;
     };
 }
