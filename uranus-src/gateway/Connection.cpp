@@ -4,6 +4,7 @@
 #include "base/Utils.h"
 #include "PackageCodec.h"
 #include "../GameWorld.h"
+#include "../login/LoginAuth.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
@@ -128,7 +129,10 @@ awaitable<void> Connection::ReadPackage() {
             }
 
             if (pid_ < 0) {
-                // TODO: Handle Login
+                if (auto *auth = GetGameServer()->GetModule<LoginAuth>()) {
+                    auth->OnPlayerLogin(shared_from_this(), static_cast<Package *>(msg->data));
+                }
+                Package::ReleaseMessage(msg);
                 continue;
             }
 
