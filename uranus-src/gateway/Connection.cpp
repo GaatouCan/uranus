@@ -31,12 +31,12 @@ Connection::Connection(SslStream &&stream, Gateway *gateway)
     const auto expiration = cfg["server"]["network"]["expiration"].as<int>();
     const auto outputSize = cfg["server"]["network"]["outputBuffer"].as<int>();
 
-    const auto initialCapacity = cfg["server"]["network"]["recycler"]["initialCapacity"].as<int>();
-    const auto minimumCapacity = cfg["server"]["network"]["recycler"]["minimumCapacity"].as<int>();
-    const auto halfCollect = cfg["server"]["network"]["recycler"]["halfCollect"].as<int>();
-    const auto fullCollect = cfg["server"]["network"]["recycler"]["fullCollect"].as<int>();
+    const auto initialCapacity      = cfg["server"]["network"]["recycler"]["initialCapacity"].as<int>();
+    const auto minimumCapacity      = cfg["server"]["network"]["recycler"]["minimumCapacity"].as<int>();
+    const auto halfCollect          = cfg["server"]["network"]["recycler"]["halfCollect"].as<int>();
+    const auto fullCollect          = cfg["server"]["network"]["recycler"]["fullCollect"].as<int>();
     const auto collectThreshold = cfg["server"]["network"]["recycler"]["collectThreshold"].as<double>();
-    const auto collectRate = cfg["server"]["network"]["recycler"]["collectRate"].as<double>();
+    const auto collectRate      = cfg["server"]["network"]["recycler"]["collectRate"].as<double>();
 
     expiration_ = std::chrono::seconds(expiration);
 
