@@ -1,0 +1,30 @@
+#pragma once
+
+#include "ServerModule.h"
+
+#include <yaml-cpp/node/node.h>
+#include <nlohmann/json.hpp>
+#include <unordered_map>
+
+
+namespace uranus::config {
+
+    class CONFIG_API ConfigModule final : public ServerModule {
+
+    public:
+        explicit ConfigModule(GameServer *ser);
+        ~ConfigModule() override;
+
+        [[nodiscard]] constexpr const char *GetModuleName() const override {
+            return "Config Module";
+        }
+
+        [[nodiscard]] const YAML::Node &GetServerConfig() const {
+            return config_;
+        }
+
+    private:
+        YAML::Node config_;
+        std::unordered_map<std::string, nlohmann::json> config_map_;
+    };
+}

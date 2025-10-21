@@ -21,6 +21,16 @@
     #define NETWORK_API __attribute__((visibility("default")))
 #endif
 
+#if defined(_WIN32) || defined(_WIN64)
+    #ifdef URANUS_CONFIG
+        #define CONFIG_API __declspec(dllexport)
+    #else
+        #define CONFIG_API __declspec(dllimport)
+    #endif
+#else
+    #define CONFIG_API __attribute__((visibility("default")))
+#endif
+
 
 #if defined(_WIN32) || defined(_WIN64)
     #ifdef URANUS_SERVICE

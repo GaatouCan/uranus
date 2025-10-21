@@ -27,6 +27,7 @@ list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/spdlog)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/libmimalloc)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/nlohmann_json)
+list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/YAML_CPP)
 
 find_package(spdlog CONFIG REQUIRED)
 find_package(asio CONFIG REQUIRED)
@@ -62,6 +63,7 @@ set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DI
 set_target_properties(core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(core PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output/lib)
 
+add_subdirectory(config_module)
 add_subdirectory(package)
 
 # Uranus executable
