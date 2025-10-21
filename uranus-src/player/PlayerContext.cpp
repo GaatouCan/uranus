@@ -97,6 +97,8 @@ void PlayerContext::SendToService(const int64_t target, Message *msg) {
         return;
     }
 
+    msg->type |= Message::kToService;
+
     if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
         if (const auto ser = mgr->FindService(target)) {
             ser->PushMessage(msg);
@@ -118,6 +120,8 @@ void PlayerContext::SendToService(const std::string &name, Message *msg) {
         Package::ReleaseMessage(msg);
         return;
     }
+
+    msg->type |= Message::kToService;
 
     if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
         if (const auto ser = mgr->FindService(name)) {

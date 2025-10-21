@@ -3,9 +3,12 @@
 #include "Message.h"
 #include "PackageNode.h"
 #include "PackagePool.h"
+#include "ServiceManager.h"
 #include "../GameWorld.h"
 #include "../gateway/Gateway.h"
 #include "../gateway/Connection.h"
+#include "../player/PlayerContext.h"
+#include "../player/PlayerManager.h"
 
 using uranus::network::Package;
 using uranus::network::PackageNode;
@@ -86,16 +89,81 @@ void ServiceContext::CleanUp() {
     handle_.Release();
 }
 
-void ServiceContext::SendToService(int64_t target, Message *msg) {
+void ServiceContext::SendToService(const int64_t target, Message *msg) {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - ServiceContext[{:p}] - Service Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    if (msg == nullptr || msg->data == nullptr || target < 0 || target == handle_->GetServiceID()) {
+        Package::ReleaseMessage(msg);
+        return;
+    }
+
+    msg->type |= Message::kToService;
+
+    if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+        if (const auto ser = mgr->FindService(target)) {
+            ser->PushMessage(msg);
+            return;
+        }
+    }
+
+    Package::ReleaseMessage(msg);
 }
 
 void ServiceContext::SendToService(const std::string &name, Message *msg) {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - ServiceContext[{:p}] - Service Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    if (msg == nullptr || msg->data == nullptr || name.empty()) {
+        Package::ReleaseMessage(msg);
+        return;
+    }
+
+    int64_t target = kInvalidServiceID;
+
+    if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+        target = mgr->FindServiceID(name);
+    }
+
+    if (target >= 0 || target != handle_->GetServiceID()) {
+        this->SendToService(target, msg);
+        return;
+    }
+
+    Package::ReleaseMessage(msg);
 }
 
-void ServiceContext::SendToPlayer(int64_t pid, Message *msg) {
+void ServiceContext::SendToPlayer(const int64_t pid, Message *msg) {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - ServiceContext[{:p}] - Service Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    if (msg == nullptr || msg->data == nullptr || pid <= 0) {
+        Package::ReleaseMessage(msg);
+        return;
+    }
+
+    msg->type |= Message::kToPlayer;
+
+    if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
+        if (const auto plr = mgr->FindPlayer(pid)) {
+            plr->PushMessage(msg);
+            return;
+        }
+    }
+
+    Package::ReleaseMessage(msg);
 }
 
-void ServiceContext::SendToClient(int64_t pid, Message *msg) {
+void ServiceContext::SendToClient(const int64_t pid, Message *msg) {
     if (!handle_.IsValid()) {
         throw std::runtime_error(std::format(
             "{} - ServiceContext[{:p}] - Service Handle is invalid",
