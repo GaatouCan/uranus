@@ -66,8 +66,7 @@ namespace uranus {
             while (channel_.is_open()) {
                 const auto [ec, node] = co_await channel_.async_receive();
                 if (ec == asio::experimental::error::channel_closed) {
-                    SPDLOG_DEBUG("{} - Actor[{:p}] close channel",
-                        __FUNCTION__, static_cast<void *>(this));
+                    SPDLOG_DEBUG("Actor[{:p}] close channel", static_cast<void *>(this));
 
                     delete node;
                     break;
@@ -89,8 +88,7 @@ namespace uranus {
                     break;
             }
         } catch (const std::exception &e) {
-            SPDLOG_ERROR("{} - Actor[{:p}] - Exception: {}",
-                __FUNCTION__, static_cast<void *>(this), e.what());
+            SPDLOG_ERROR("Actor[{:p}] - Exception: {}", static_cast<void *>(this), e.what());
         }
     }
 

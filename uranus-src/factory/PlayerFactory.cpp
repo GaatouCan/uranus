@@ -25,33 +25,33 @@ void PlayerFactory::Initial() {
     library_ = SharedLibrary(agent);
 
     if (!library_.IsValid()) {
-        SPDLOG_CRITICAL("{} - Failed to load player library", __FUNCTION__);
+        SPDLOG_CRITICAL("Failed to load player library");
         exit(-1);
     }
 
     creator_ = library_.GetSymbol<PlayerCreator>("CreatePlayer");
     if (!creator_) {
-        SPDLOG_CRITICAL("{} - Failed to load player creator", __FUNCTION__);
+        SPDLOG_CRITICAL("Failed to load player creator");
         exit(-2);
     }
 
     destroyer_ = library_.GetSymbol<PlayerDestroyer>("DestroyPlayer");
     if (!destroyer_) {
-        SPDLOG_CRITICAL("{} - Failed to load player destroyer", __FUNCTION__);
+        SPDLOG_CRITICAL("Failed to load player destroyer");
         exit(-3);
     }
 
-    SPDLOG_INFO("{} - Loaded player library", __FUNCTION__);
+    SPDLOG_INFO("Loaded player library");
 }
 
 PlayerHandle PlayerFactory::CreatePlayer() {
-    SPDLOG_DEBUG("{} - Create player instance", __FUNCTION__);
+    SPDLOG_DEBUG("Create player instance");
 
     auto *pPlayer = std::invoke(creator_);
     return PlayerHandle{pPlayer, this};
 }
 
 void PlayerFactory::DestroyPlayer(AbstractPlayer *pPlayer) {
-    SPDLOG_DEBUG("{} - Destroy player instance", __FUNCTION__);
+    SPDLOG_DEBUG("Destroy player instance");
     std::invoke(destroyer_, pPlayer);
 }

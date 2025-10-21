@@ -51,6 +51,8 @@ public:
     [[nodiscard]] Gateway *GetGateway() const;
     [[nodiscard]] GameServer *GetGameServer() const;
 
+    [[nodiscard]] asio::ip::address RemoteAddress() const;
+
     void ConnectToClient();
     void Disconnect();
 

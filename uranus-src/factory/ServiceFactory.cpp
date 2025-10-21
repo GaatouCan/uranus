@@ -31,8 +31,7 @@ void ServiceFactory::LoadService() {
             SharedLibrary library(entry.path());
 
             if (!library.IsValid()) {
-                SPDLOG_ERROR("{} - Load core library[{}] failed",
-                    __FUNCTION__, entry.path().string());
+                SPDLOG_ERROR("Load core library[{}] failed", entry.path().string());
                 continue;
             }
 
@@ -40,8 +39,7 @@ void ServiceFactory::LoadService() {
             const auto destroyer = library.GetSymbol<ServiceDestroyer>("DestroyInstance");
 
             if (creator == nullptr || destroyer == nullptr) {
-                SPDLOG_ERROR("{} - Load core library[{}] symbol failed",
-                    __FUNCTION__, entry.path().string());
+                SPDLOG_ERROR("Load core library[{}] symbol failed", entry.path().string());
                 continue;
             }
 
@@ -53,8 +51,7 @@ void ServiceFactory::LoadService() {
 
             core_map_.insert_or_assign(filename, node);
 
-            SPDLOG_INFO("{} - Loaded core service[{}]",
-                __FUNCTION__, filename);
+            SPDLOG_INFO("Loaded core service[{}]", filename);
         }
     }
 
@@ -72,8 +69,7 @@ void ServiceFactory::LoadService() {
             SharedLibrary library(entry.path());
 
             if (!library.IsValid()) {
-                SPDLOG_ERROR("{} - Load extend library[{}] failed",
-                    __FUNCTION__, entry.path().string());
+                SPDLOG_ERROR("Load extend library[{}] failed", entry.path().string());
                 continue;
             }
 
@@ -81,8 +77,7 @@ void ServiceFactory::LoadService() {
             const auto destroyer = library.GetSymbol<ServiceDestroyer>("DestroyInstance");
 
             if (creator == nullptr || destroyer == nullptr) {
-                SPDLOG_ERROR("{} - Load extend library[{}] symbol failed",
-                    __FUNCTION__, entry.path().string());
+                SPDLOG_ERROR("Load extend library[{}] symbol failed", entry.path().string());
                 continue;
             }
 
@@ -93,8 +88,7 @@ void ServiceFactory::LoadService() {
 
             extend_map_.insert_or_assign(filename, node);
 
-            SPDLOG_INFO("{} - Loaded extend service[{}]",
-                __FUNCTION__, filename);
+            SPDLOG_INFO("Loaded extend service[{}]", filename);
         }
     }
 }
@@ -108,8 +102,7 @@ ServiceHandle ServiceFactory::CreateInstance(const std::string &path) {
     if (res[0] == "core") {
         if (const auto iter = core_map_.find(res[1]); iter != core_map_.end()) {
             if (const auto creator = iter->second.creator; creator != nullptr) {
-                SPDLOG_DEBUG("{} - Create core service[{}]",
-                    __FUNCTION__, path);
+                SPDLOG_DEBUG("Create core service[{}]", path);
 
                 auto *pService = std::invoke(creator);
                 return { pService, this, path };
@@ -120,8 +113,7 @@ ServiceHandle ServiceFactory::CreateInstance(const std::string &path) {
     if (res[0] == "extend") {
         if (const auto iter = extend_map_.find(res[1]); iter != extend_map_.end()) {
             if (const auto creator = iter->second.creator; creator != nullptr) {
-                SPDLOG_DEBUG("{} - Create extend service[{}]",
-                    __FUNCTION__, path);
+                SPDLOG_DEBUG("Create extend service[{}]", path);
 
                 auto *pService = std::invoke(creator);
                 return { pService, this, path };
@@ -136,8 +128,7 @@ void ServiceFactory::DestroyInstance(AbstractService *pService, const std::strin
     const std::vector<std::string> res = utils::SplitString(path, '.');
 
     if (res.size() != 2) {
-        SPDLOG_WARN("{} - Parse path[{}] failed, use default deleter",
-            __FUNCTION__, path);
+        SPDLOG_WARN("Parse path[{}] failed, use default deleter", path);
         delete pService;
         return;
     }
@@ -155,8 +146,7 @@ void ServiceFactory::DestroyInstance(AbstractService *pService, const std::strin
 
         if (const auto iter = core_map_.find(res[1]); iter != core_map_.end()) {
             if (const auto destroyer = iter->second.destroyer; destroyer != nullptr) {
-                SPDLOG_DEBUG("{} - Destroy core service[{}]",
-                    __FUNCTION__, path);
+                SPDLOG_DEBUG("Destroy core service[{}]", path);
 
                 std::invoke(destroyer, pService);
                 return;
@@ -167,8 +157,7 @@ void ServiceFactory::DestroyInstance(AbstractService *pService, const std::strin
     if (res[0] == "extend") {
         if (const auto iter = extend_map_.find(res[1]); iter != extend_map_.end()) {
             if (const auto destroyer = iter->second.destroyer; destroyer != nullptr) {
-                SPDLOG_DEBUG("{} - Destroy extend service[{}]",
-                    __FUNCTION__, path);
+                SPDLOG_DEBUG("Destroy extend service[{}]", path);
 
                 std::invoke(destroyer, pService);
                 return;
@@ -176,8 +165,7 @@ void ServiceFactory::DestroyInstance(AbstractService *pService, const std::strin
         }
     }
 
-    SPDLOG_WARN("{} - Failed to find path[{}], use default deleter",
-        __FUNCTION__, path);
+    SPDLOG_WARN("Failed to find path[{}], use default deleter", path);
 
     delete pService;
 }

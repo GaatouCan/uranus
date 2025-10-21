@@ -43,8 +43,8 @@ namespace uranus {
 
     void AbstractActor::SetUpContext(ActorContext *ctx) {
         if (ctx_ != nullptr) {
-            SPDLOG_WARN("{} - Actor[{:p}] try to set up context again",
-                __FUNCTION__, static_cast<void *>(this));
+            SPDLOG_WARN("Actor[{:p}] - Try to set up context again",
+                static_cast<void *>(this));
         }
         ctx_ = ctx;
     }

@@ -5,6 +5,10 @@
 #include "PackageCodec.h"
 #include "../GameWorld.h"
 #include "../login/LoginAuth.h"
+#include "../player/PlayerManager.h"
+#include "../player/PlayerContext.h"
+// #include "../service/ServiceManager.h"
+// #include "../service/ServiceContext.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
@@ -26,7 +30,7 @@ Connection::Connection(SslStream &&stream, Gateway *gateway)
     pool_ = make_shared<PackagePool>();
     pool_->Initial(64);
 
-    key_ = fmt::format("{}-{}", stream_.next_layer().remote_endpoint().address().to_string(), utils::UnixTime());
+    key_ = fmt::format("{}-{}", RemoteAddress().to_string(), utils::UnixTime());
 }
 
 Connection::~Connection() {
@@ -45,13 +49,17 @@ GameServer *Connection::GetGameServer() const {
     return gateway_->GetGameServer();
 }
 
+asio::ip::address Connection::RemoteAddress() const {
+    return stream_.next_layer().remote_endpoint().address();
+}
+
 void Connection::ConnectToClient() {
     received_ = std::chrono::steady_clock::now();
 
     co_spawn(stream_.get_executor(), [self = shared_from_this()]() mutable -> awaitable<void> {
         const auto ec = co_await self->codec_->Initial();
         if (ec) {
-            // TODO
+            SPDLOG_ERROR("Connection[{}] - Failed to initial codec, error code: {}", self->key_, ec.message());
             self->Disconnect();
         }
 
@@ -114,15 +122,14 @@ awaitable<void> Connection::ReadPackage() {
             auto *msg = new Message();
             auto *pkg = pool_->Acquire();
 
-            msg->type |= Message::kFromClient;
+            msg->type |= (Message::kFromClient | Message::kToPlayer);
             msg->session = 0;
             msg->data = reinterpret_cast<void *>(pkg);
             msg->length = sizeof(Package);
 
             const auto ec = co_await codec_->Decode(msg);
             if (ec) {
-                // TODO:
-
+                SPDLOG_ERROR("Connection[{}] - Failed to read package, error: {}", key_, ec.message());
                 Package::ReleaseMessage(msg);
                 this->Disconnect();
                 break;
@@ -138,10 +145,17 @@ awaitable<void> Connection::ReadPackage() {
 
             received_ = std::chrono::steady_clock::now();
 
-            // TODO: Handle Message
+            if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
+                if (const auto plr = mgr->FindPlayer(pid_)) {
+                    plr->PushMessage(msg);
+                    continue;
+                }
+            }
+
+            Package::ReleaseMessage(msg);
         }
     } catch (const std::exception &e) {
-        // TODO
+        SPDLOG_ERROR("Connection[{}] - Exception: {}", key_, e.what());
     }
 }
 
@@ -181,7 +195,7 @@ awaitable<void> Connection::WritePackage() {
                 break;
         }
     } catch (const std::exception &e) {
-        // TODO
+        SPDLOG_ERROR("Connection[{}] - Exception: {}", key_, e.what());
     }
 }
 
@@ -209,6 +223,6 @@ awaitable<void> Connection::Watchdog() {
             this->Disconnect();
         }
     } catch (const std::exception &e) {
-        // SPDLOG_ERROR("{} - Connection[{}], Exception: {}", __FUNCTION__, key_, e.what());
+        SPDLOG_ERROR("Connection[{}] - Exception: {}", key_, e.what());
     }
 }
