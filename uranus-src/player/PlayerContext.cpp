@@ -7,6 +7,9 @@
 #include "../GameWorld.h"
 #include "../gateway/Connection.h"
 #include "../gateway/Gateway.h"
+#include "../service/ServiceContext.h"
+#include "../service/ServiceManager.h"
+
 
 using uranus::network::Package;
 using uranus::network::PackageNode;
@@ -82,10 +85,48 @@ Message *PlayerContext::BuildMessage() {
     return msg;
 }
 
-void PlayerContext::SendToService(int64_t target, Message *msg) {
+void PlayerContext::SendToService(const int64_t target, Message *msg) {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - PlayerContext[{:p}] - Player Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    if (msg == nullptr || msg->data == nullptr || target < 0) {
+        Package::ReleaseMessage(msg);
+        return;
+    }
+
+    if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+        if (const auto ser = mgr->FindService(target)) {
+            ser->PushMessage(msg);
+            return;
+        }
+    }
+
+    Package::ReleaseMessage(msg);
 }
 
 void PlayerContext::SendToService(const std::string &name, Message *msg) {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - PlayerContext[{:p}] - Player Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    if (msg == nullptr || msg->data == nullptr || name.empty()) {
+        Package::ReleaseMessage(msg);
+        return;
+    }
+
+    if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+        if (const auto ser = mgr->FindService(name)) {
+            ser->PushMessage(msg);
+            return;
+        }
+    }
+
+    Package::ReleaseMessage(msg);
 }
 
 void PlayerContext::SendToPlayer(int64_t pid, Message *msg) {
