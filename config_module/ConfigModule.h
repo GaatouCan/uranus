@@ -23,6 +23,8 @@ namespace uranus::config {
             return config_;
         }
 
+        [[nodiscard]] const nlohmann::json *FindConfig(const std::string &path) const;
+
     private:
         YAML::Node config_;
         std::unordered_map<std::string, nlohmann::json> config_map_;
