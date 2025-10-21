@@ -80,7 +80,7 @@ private:
     unique_ptr<MessageCodec> codec_;
     shared_ptr<PackagePool> pool_;
 
-    OutputChannel output_;
+    unique_ptr<OutputChannel> output_;
 
     int64_t pid_;
 

@@ -24,11 +24,39 @@ namespace uranus::config {
         assert(!config_["server"]["network"].IsNull());
         assert(!config_["server"]["network"]["worker"].IsNull());
         assert(!config_["server"]["network"]["expiration"].IsNull());
+        assert(!config_["server"]["network"]["outputBuffer"].IsNull());
+        assert(!config_["server"]["network"]["recycler"].IsNull());
+        assert(!config_["server"]["network"]["recycler"]["initialCapacity"].IsNull());
+        assert(!config_["server"]["network"]["recycler"]["minimumCapacity"].IsNull());
+        assert(!config_["server"]["network"]["recycler"]["halfCollect"].IsNull());
+        assert(!config_["server"]["network"]["recycler"]["fullCollect"].IsNull());
+        assert(!config_["server"]["network"]["recycler"]["collectThreshold"].IsNull());
+        assert(!config_["server"]["network"]["recycler"]["collectRate"].IsNull());
 
         assert(!config_["server"]["actor"].IsNull());
         assert(!config_["server"]["actor"]["worker"].IsNull());
 
         assert(!config_["service"].IsNull());
+        assert(!config_["service"]["core"].IsNull());
+        assert(!config_["service"]["extend"].IsNull());
+        assert(!config_["service"]["queueBuffer"].IsNull());
+        assert(!config_["service"]["recycler"].IsNull());
+        assert(!config_["service"]["recycler"]["InitialCapacity"].IsNull());
+        assert(!config_["service"]["recycler"]["minimumCapacity"].IsNull());
+        assert(!config_["service"]["recycler"]["halfCollect"].IsNull());
+        assert(!config_["service"]["recycler"]["fullCollect"].IsNull());
+        assert(!config_["service"]["recycler"]["collectThreshold"].IsNull());
+        assert(!config_["service"]["recycler"]["collectRate"].IsNull());
+
+        assert(!config_["player"].IsNull());
+        assert(!config_["player"]["queueBuffer"].IsNull());
+        assert(!config_["player"]["recycler"].IsNull());
+        assert(!config_["player"]["recycler"]["InitialCapacity"].IsNull());
+        assert(!config_["player"]["recycler"]["minimumCapacity"].IsNull());
+        assert(!config_["player"]["recycler"]["halfCollect"].IsNull());
+        assert(!config_["player"]["recycler"]["fullCollect"].IsNull());
+        assert(!config_["player"]["recycler"]["collectThreshold"].IsNull());
+        assert(!config_["player"]["recycler"]["collectRate"].IsNull());
 
         SPDLOG_INFO("Load server configuration successfully");
 
@@ -43,9 +71,9 @@ namespace uranus::config {
         #ifdef WIN32
                     filepath = utils::StringReplace(filepath, '\\', '.');
         #elifdef __linux__
-                        filepath = utils::StringReplace(filepath, '/', '.');
+                    filepath = utils::StringReplace(filepath, '/', '.');
         #else
-                        filepath = utils::StringReplace(filepath, '/', '.');
+                    filepath = utils::StringReplace(filepath, '/', '.');
         #endif
 
                     config_map_[filepath] = nlohmann::json::parse(fs);

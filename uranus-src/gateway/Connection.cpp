@@ -3,6 +3,7 @@
 #include "Message.h"
 #include "base/Utils.h"
 #include "PackageCodec.h"
+#include "ConfigModule.h"
 #include "../GameWorld.h"
 #include "../login/LoginAuth.h"
 #include "../player/PlayerManager.h"
@@ -16,19 +17,42 @@
 
 using namespace asio::experimental::awaitable_operators;
 using uranus::network::PackageCodec;
+using uranus::config::ConfigModule;
 
 Connection::Connection(SslStream &&stream, Gateway *gateway)
     : stream_(std::move(stream)),
       gateway_(gateway),
-      output_(stream_.get_executor(), 1024),
       pid_(kInvalidPlayerID),
       watchdog_(stream_.get_executor()),
       expiration_(std::chrono::seconds(30)) {
 
+    const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
+
+    const auto expiration = cfg["server"]["network"]["expiration"].as<int>();
+    const auto outputSize = cfg["server"]["network"]["outputBuffer"].as<int>();
+
+    const auto initialCapacity = cfg["server"]["network"]["recycler"]["initialCapacity"].as<int>();
+    const auto minimumCapacity = cfg["server"]["network"]["recycler"]["minimumCapacity"].as<int>();
+    const auto halfCollect = cfg["server"]["network"]["recycler"]["halfCollect"].as<int>();
+    const auto fullCollect = cfg["server"]["network"]["recycler"]["fullCollect"].as<int>();
+    const auto collectThreshold = cfg["server"]["network"]["recycler"]["collectThreshold"].as<double>();
+    const auto collectRate = cfg["server"]["network"]["recycler"]["collectRate"].as<double>();
+
+    expiration_ = std::chrono::seconds(expiration);
+
     codec_ = make_unique<PackageCodec>(stream_);
 
     pool_ = make_shared<PackagePool>();
-    pool_->Initial(64);
+
+    pool_->SetHalfCollect(halfCollect);
+    pool_->SetFullCollect(fullCollect);
+    pool_->SetMinimumCapacity(minimumCapacity);
+    pool_->SetCollectThreshold(collectThreshold);
+    pool_->SetCollectRate(collectRate);
+
+    pool_->Initial(initialCapacity);
+
+    output_ = make_unique<OutputChannel>(stream_.get_executor(), outputSize);
 
     key_ = fmt::format("{}-{}", RemoteAddress().to_string(), utils::UnixTime());
 }
@@ -83,7 +107,7 @@ void Connection::Disconnect() {
     gateway_->RemoveConnection(key_, pid_);
 
     stream_.next_layer().close();
-    output_.close();
+    output_->close();
     watchdog_.cancel();
 }
 
@@ -110,9 +134,9 @@ void Connection::SendToClient(Message *msg) {
         return;
     }
 
-    if (!output_.try_send_via_dispatch(error_code{}, msg)) {
+    if (!output_->try_send_via_dispatch(error_code{}, msg)) {
         co_spawn(stream_.get_executor(), [self = shared_from_this(), msg]() mutable -> awaitable<void> {
-            const auto [ec] = co_await self->output_.async_send(error_code{}, msg);
+            const auto [ec] = co_await self->output_->async_send(error_code{}, msg);
             if (ec == asio::experimental::error::channel_closed) {
                 Package::ReleaseMessage(msg);
             }
@@ -165,8 +189,8 @@ awaitable<void> Connection::ReadPackage() {
 
 awaitable<void> Connection::WritePackage() {
     try {
-        while (IsConnected() && output_.is_open()) {
-            const auto [ec, msg] = co_await output_.async_receive();
+        while (IsConnected() && output_->is_open()) {
+            const auto [ec, msg] = co_await output_->async_receive();
 
             if (msg == nullptr || msg->data == nullptr) {
                 Package::ReleaseMessage(msg);
@@ -191,7 +215,7 @@ awaitable<void> Connection::WritePackage() {
         }
 
         while (true) {
-            const bool ok = output_.try_receive([](error_code ec, Message *msg) {
+            const bool ok = output_->try_receive([](error_code ec, Message *msg) {
                 Package::ReleaseMessage(msg);
             });
 

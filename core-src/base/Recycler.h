@@ -50,6 +50,7 @@ public:
         : usage_(-1),
           half_collect_(kRecyclerHalfCollect),
           full_collect_(kRecyclerFullCollect),
+          minimum_capacity_(kRecyclerMinimumCapacity),
           collect_threshold_(kRecyclerCollectThreshold),
           collect_rate_(kRecyclerCollectRate) {
 
@@ -78,6 +79,10 @@ public:
 
     void SetFullCollect(const int num) {
         full_collect_ = num;
+    }
+
+    void SetMinimumCapacity(const int num) {
+        minimum_capacity_ = num;
     }
 
     void SetCollectThreshold(const float threshold) {
@@ -143,8 +148,8 @@ public:
         auto num = static_cast<size_t>(std::floor(static_cast<float>(total) * collect_rate_));
 
         // Check Rest Count Greater Than Zero
-        if (total - num < kRecyclerMinimumCapacity)
-            num = total - kRecyclerMinimumCapacity;
+        if (total - num < minimum_capacity_)
+            num = total - minimum_capacity_;
 
         if (num <= 0)
             return;
@@ -177,6 +182,7 @@ private:
 
     size_t half_collect_;
     size_t full_collect_;
+    size_t minimum_capacity_;
     double collect_threshold_;
     double collect_rate_;
 };

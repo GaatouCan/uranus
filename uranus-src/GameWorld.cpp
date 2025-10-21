@@ -25,6 +25,7 @@ void GameWorld::Start() {
 int main(int argc, char **argv) {
     auto *world = new GameWorld();
 
+    world->CreateModule<ConfigModule>();
     world->CreateModule<PlayerManager>();
     world->CreateModule<Gateway>();
 
