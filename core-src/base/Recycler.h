@@ -85,11 +85,11 @@ public:
         minimum_capacity_ = num;
     }
 
-    void SetCollectThreshold(const float threshold) {
+    void SetCollectThreshold(const double threshold) {
         collect_threshold_ = threshold;
     }
 
-    void SetCollectRate(const float rate) {
+    void SetCollectRate(const double rate) {
         collect_rate_ = rate;
     }
 
