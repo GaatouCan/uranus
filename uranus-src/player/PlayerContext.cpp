@@ -109,7 +109,7 @@ void PlayerContext::SendToClient(int64_t pid, Message *msg) {
     if (msg == nullptr || msg->data == nullptr)
         return;
 
-    if (pid < 0 || pid != handle_->GetPlayerID()) {
+    if (pid <= 0 || pid != handle_->GetPlayerID()) {
         auto *pkg = static_cast<Package *>(msg->data);
         pkg->Recycle();
         delete msg;

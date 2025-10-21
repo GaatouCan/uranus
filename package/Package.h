@@ -5,6 +5,10 @@
 #include <mimalloc.h>
 #include <span>
 
+namespace uranus {
+    class Message;
+}
+
 namespace uranus::network {
 
     class NETWORK_API Package final {
@@ -72,6 +76,8 @@ namespace uranus::network {
         [[nodiscard]] std::string ToString() const;
 
         static constexpr size_t kPackageHeaderSize = sizeof(PackageHeader);
+
+        static void ReleaseMessage(const Message *msg);
 
     private:
         Recycler<Package>::Handle handle_;
