@@ -48,7 +48,7 @@ void Connection::ConnectToClient() {
     received_ = std::chrono::steady_clock::now();
 
     co_spawn(stream_.get_executor(), [self = shared_from_this()]() mutable -> awaitable<void> {
-        const auto [ec] = co_await self->stream_.async_handshake(asio::ssl::stream_base::server);
+        const auto ec = co_await self->codec_->Initial();
         if (ec) {
             // TODO
             self->Disconnect();
@@ -93,9 +93,7 @@ void Connection::SendToClient(Message *msg) {
     if (msg == nullptr) return;
 
     if (!IsConnected()) {
-        auto *pkg = static_cast<Package *>(msg->data);
-        pkg->Recycle();
-        delete msg;
+        Package::ReleaseMessage(msg);
         return;
     }
 
@@ -103,15 +101,7 @@ void Connection::SendToClient(Message *msg) {
         co_spawn(stream_.get_executor(), [self = shared_from_this(), msg]() mutable -> awaitable<void> {
             const auto [ec] = co_await self->output_.async_send(error_code{}, msg);
             if (ec == asio::experimental::error::channel_closed) {
-                if (msg == nullptr)
-                    co_return;
-
-                if (msg->data != nullptr) {
-                    auto *pkg = static_cast<Package *>(msg->data);
-                    pkg->Recycle();
-                }
-
-                delete msg;
+                Package::ReleaseMessage(msg);
             }
         }, detached);
     }
@@ -132,11 +122,17 @@ awaitable<void> Connection::ReadPackage() {
             if (ec) {
                 // TODO:
 
-                pkg->Recycle();
-                delete msg;
+                Package::ReleaseMessage(msg);
                 this->Disconnect();
                 break;
             }
+
+            if (pid_ < 0) {
+                // TODO: Handle Login
+                continue;
+            }
+
+            received_ = std::chrono::steady_clock::now();
 
             // TODO: Handle Message
         }
@@ -150,29 +146,21 @@ awaitable<void> Connection::WritePackage() {
         while (IsConnected() && output_.is_open()) {
             const auto [ec, msg] = co_await output_.async_receive();
 
-            if (msg == nullptr)
-                continue;
-
-            if (msg->data == nullptr) {
-                delete msg;
+            if (msg == nullptr || msg->data == nullptr) {
+                Package::ReleaseMessage(msg);
                 continue;
             }
 
-            auto *pkg = static_cast<Package *>(msg->data);
-
             if (ec) {
                 // TODO
-                pkg->Recycle();
-                delete msg;
-
+                Package::ReleaseMessage(msg);
                 this->Disconnect();
                 break;
             }
 
             const auto codec_ec = co_await codec_->Encode(msg);
 
-            pkg->Recycle();
-            delete msg;
+            Package::ReleaseMessage(msg);
 
             if (codec_ec) {
                 this->Disconnect();
@@ -182,15 +170,7 @@ awaitable<void> Connection::WritePackage() {
 
         while (true) {
             const bool ok = output_.try_receive([](error_code ec, Message *msg) {
-                if (msg == nullptr)
-                    return;
-
-                if (msg->data != nullptr) {
-                    auto *pkg = static_cast<Package *>(msg->data);
-                    pkg->Recycle();
-                }
-
-                delete msg;
+                Package::ReleaseMessage(msg);
             });
 
             if (!ok)

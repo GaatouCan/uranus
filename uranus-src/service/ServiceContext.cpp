@@ -107,6 +107,8 @@ void ServiceContext::SendToClient(int64_t pid, Message *msg) {
         return;
     }
 
+    msg->type |= Message::kToClient;
+
     if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
         if (const auto conn = gateway->FindConnection(pid)) {
             conn->SendToClient(msg);
