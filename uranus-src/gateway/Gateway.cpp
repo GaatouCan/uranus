@@ -3,6 +3,8 @@
 #include "Connection.h"
 #include "ConfigModule.h"
 
+#include <spdlog/spdlog.h>
+
 
 using uranus::config::ConfigModule;
 
@@ -85,7 +87,7 @@ awaitable<void> Gateway::WaitForClient(uint16_t port) {
             auto [ec, socket] = co_await acceptor_.async_accept(GetGameServer()->GetSocketIOContext());
 
             if (ec) {
-                // SPDLOG_ERROR("{:<20} - {}", __FUNCTION__, ec.message());
+                SPDLOG_ERROR("{}", ec.message());
                 continue;
             }
 
@@ -116,9 +118,7 @@ awaitable<void> Gateway::WaitForClient(uint16_t port) {
                 conn_map_.insert_or_assign(key, conn);
             }
 
-            // SPDLOG_INFO("{} - New connection[{}] from {}",
-            //     __FUNCTION__, key, conn->RemoteAddress().to_string());
-
+            SPDLOG_INFO("New connection[{}] from {}", key, conn->RemoteAddress().to_string());
             conn->ConnectToClient();
         }
     } catch (std::exception &e) {
