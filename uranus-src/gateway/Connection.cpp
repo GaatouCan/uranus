@@ -170,7 +170,7 @@ awaitable<void> Connection::WritePackage() {
             }
 
             if (ec) {
-                // TODO
+                SPDLOG_ERROR("Connection[{}] - Failed to write package, error: {}", key_, ec.message());
                 Package::ReleaseMessage(msg);
                 this->Disconnect();
                 break;
