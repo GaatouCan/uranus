@@ -6,7 +6,7 @@
 #include <span>
 
 namespace uranus {
-    class Message;
+    struct Message;
 }
 
 namespace uranus::network {

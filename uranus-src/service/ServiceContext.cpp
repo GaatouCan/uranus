@@ -102,14 +102,8 @@ void ServiceContext::SendToClient(int64_t pid, Message *msg) {
             __FUNCTION__, static_cast<const void *>(this)));
     }
 
-    if (msg == nullptr || msg->data == nullptr)
-        return;
-
-    if (pid <= 0) {
-        auto *pkg = static_cast<Package *>(msg->data);
-        pkg->Recycle();
-        delete msg;
-
+    if (msg == nullptr || msg->data == nullptr || pid <= 0) {
+        Package::ReleaseMessage(msg);
         return;
     }
 
@@ -120,19 +114,12 @@ void ServiceContext::SendToClient(int64_t pid, Message *msg) {
         }
     }
 
-    auto *pkg = static_cast<Package *>(msg->data);
-    pkg->Recycle();
-    delete msg;
+    Package::ReleaseMessage(msg);
 }
 
 void ServiceContext::PushMessage(Message *msg) {
-    if (msg == nullptr || msg->data == nullptr)
-        return;
-
-    if (IsChannelClosed()) {
-        auto *pkg = static_cast<Package *>(msg->data);
-        pkg->Recycle();
-        delete msg;
+    if (msg == nullptr || msg->data == nullptr || IsChannelClosed()) {
+        Package::ReleaseMessage(msg);
         return;
     }
 

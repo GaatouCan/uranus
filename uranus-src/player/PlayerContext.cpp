@@ -91,29 +91,23 @@ void PlayerContext::SendToService(const std::string &name, Message *msg) {
 void PlayerContext::SendToPlayer(int64_t pid, Message *msg) {
     // Player can not send to other player directly,
     // so this method will do nothing but only release the message
-
-    if (msg != nullptr && msg->data != nullptr) {
-        auto *pkg = static_cast<Package *>(msg->data);
-        pkg->Recycle();
-        delete msg;
-    }
+    Package::ReleaseMessage(msg);
 }
 
-void PlayerContext::SendToClient(int64_t pid, Message *msg) {
+void PlayerContext::SendToClient(const int64_t pid, Message *msg) {
     if (!handle_.IsValid()) {
         throw std::runtime_error(std::format(
             "{} - PlayerContext[{:p}] - Player Handle is invalid",
             __FUNCTION__, static_cast<const void *>(this)));
     }
 
-    if (msg == nullptr || msg->data == nullptr)
+    if (msg == nullptr || msg->data == nullptr) {
+        Package::ReleaseMessage(msg);
         return;
+    }
 
     if (pid <= 0 || pid != handle_->GetPlayerID()) {
-        auto *pkg = static_cast<Package *>(msg->data);
-        pkg->Recycle();
-        delete msg;
-
+        Package::ReleaseMessage(msg);
         return;
     }
 
@@ -124,19 +118,12 @@ void PlayerContext::SendToClient(int64_t pid, Message *msg) {
         }
     }
 
-    auto *pkg = static_cast<Package *>(msg->data);
-    pkg->Recycle();
-    delete msg;
+    Package::ReleaseMessage(msg);
 }
 
 void PlayerContext::PushMessage(Message *msg) {
-    if (msg == nullptr || msg->data == nullptr)
-        return;
-
-    if (IsChannelClosed()) {
-        auto *pkg = static_cast<Package *>(msg->data);
-        pkg->Recycle();
-        delete msg;
+    if (msg == nullptr || msg->data == nullptr || IsChannelClosed()) {
+        Package::ReleaseMessage(msg);
         return;
     }
 
