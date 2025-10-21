@@ -24,14 +24,22 @@ PlayerContext::PlayerContext(GameWorld *world)
 
     const auto outputSize = cfg["player"]["queueBuffer"].as<int>();
 
-    const auto initialCapacity      = cfg["server"]["network"]["recycler"]["initialCapacity"].as<int>();
-    const auto minimumCapacity      = cfg["server"]["network"]["recycler"]["minimumCapacity"].as<int>();
-    const auto halfCollect          = cfg["server"]["network"]["recycler"]["halfCollect"].as<int>();
-    const auto fullCollect          = cfg["server"]["network"]["recycler"]["fullCollect"].as<int>();
-    const auto collectThreshold = cfg["server"]["network"]["recycler"]["collectThreshold"].as<double>();
-    const auto collectRate      = cfg["server"]["network"]["recycler"]["collectRate"].as<double>();
+    const auto initialCapacity      = cfg["player"]["recycler"]["initialCapacity"].as<int>();
+    const auto minimumCapacity      = cfg["player"]["recycler"]["minimumCapacity"].as<int>();
+    const auto halfCollect          = cfg["player"]["recycler"]["halfCollect"].as<int>();
+    const auto fullCollect          = cfg["player"]["recycler"]["fullCollect"].as<int>();
+    const auto collectThreshold = cfg["player"]["recycler"]["collectThreshold"].as<double>();
+    const auto collectRate      = cfg["player"]["recycler"]["collectRate"].as<double>();
+
+    channel_ = make_unique<ActorChannel>(GetIOContext(), outputSize);
 
     pool_ = make_shared<PackagePool>();
+
+    pool_->SetHalfCollect(halfCollect);
+    pool_->SetFullCollect(fullCollect);
+    pool_->SetMinimumCapacity(minimumCapacity);
+    pool_->SetCollectThreshold(collectThreshold);
+    pool_->SetCollectRate(collectRate);
 }
 
 PlayerContext::~PlayerContext() {
