@@ -44,6 +44,10 @@ namespace uranus {
         [[nodiscard]] asio::io_context &GetSocketIOContext() const;
         [[nodiscard]] asio::io_context &GetWorkerIOContext() const;
 
+    protected:
+        int io_num_;
+        int worker_num_;
+
     private:
         asio::io_context ctx_;
 

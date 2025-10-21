@@ -10,5 +10,5 @@ public:
     GameWorld();
     ~GameWorld() override;
 
-
+    void Start() override;
 };

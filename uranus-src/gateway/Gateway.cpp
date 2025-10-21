@@ -1,7 +1,10 @@
 #include "Gateway.h"
 #include "GameServer.h"
 #include "Connection.h"
+#include "ConfigModule.h"
 
+
+using uranus::config::ConfigModule;
 
 Gateway::Gateway(GameServer *server)
     : ServerModule(server),
@@ -21,9 +24,11 @@ Gateway::~Gateway() {
 }
 
 void Gateway::Start() {
-    // TODO: Load Config
+    const auto &config = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
 
-    co_spawn(GetGameServer()->GetMainIOContext(), WaitForClient(8080), detached);
+    const auto port = config["server"]["port"].as<uint16_t>();
+
+    co_spawn(GetGameServer()->GetMainIOContext(), WaitForClient(port), detached);
 }
 
 void Gateway::Stop() {
@@ -96,7 +101,11 @@ awaitable<void> Gateway::WaitForClient(uint16_t port) {
             //     }
             // }
 
+            const auto &config = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
+            const auto expiration = config["server"]["network"]["expiration"].as<int>();
+
             const auto conn = make_shared<Connection>(SslStream(std::move(socket), ssl_context_), this);
+            conn->SetExpiration(expiration);
 
             const auto key = conn->GetKey();
             if (key.empty()) continue;

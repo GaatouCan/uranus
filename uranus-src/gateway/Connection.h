@@ -53,6 +53,8 @@ public:
 
     [[nodiscard]] asio::ip::address RemoteAddress() const;
 
+    void SetExpiration(int sec);
+
     void ConnectToClient();
     void Disconnect();
 

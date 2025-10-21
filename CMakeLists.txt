@@ -82,6 +82,7 @@ endif ()
 add_executable(uranus ${URANUS_FILES})
 target_link_libraries(uranus PUBLIC core)
 target_link_libraries(uranus PUBLIC package-impl)
+target_link_libraries(uranus PUBLIC config-module)
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core-src)
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/package)
 

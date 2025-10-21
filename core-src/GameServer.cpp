@@ -5,7 +5,9 @@
 #include <asio/signal_set.hpp>
 
 namespace uranus {
-    GameServer::GameServer() {
+    GameServer::GameServer()
+        : io_num_(4),
+          worker_num_(8) {
         io_pool_ = make_unique<MultiIOContextPool>();
         worker_pool_ = make_unique<SingleIOContextPool>();
     }
@@ -18,8 +20,8 @@ namespace uranus {
             module->Start();
         }
 
-        worker_pool_->Start(8);
-        io_pool_->Start(4);
+        worker_pool_->Start(worker_num_);
+        io_pool_->Start(io_num_);
 
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {

@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <fstream>
-#include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
 inline constexpr auto kServerConfigFile = "config/config.yaml";

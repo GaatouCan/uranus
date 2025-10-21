@@ -53,6 +53,10 @@ asio::ip::address Connection::RemoteAddress() const {
     return stream_.next_layer().remote_endpoint().address();
 }
 
+void Connection::SetExpiration(const int sec) {
+    expiration_ = std::chrono::seconds(sec);
+}
+
 void Connection::ConnectToClient() {
     received_ = std::chrono::steady_clock::now();
 

@@ -2,7 +2,7 @@
 
 #include "ServerModule.h"
 
-#include <yaml-cpp/node/node.h>
+#include <yaml-cpp/yaml.h>
 #include <nlohmann/json.hpp>
 #include <unordered_map>
 
