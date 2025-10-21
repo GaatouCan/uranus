@@ -4,6 +4,7 @@
 #include "PackageNode.h"
 #include "PackagePool.h"
 #include "ServiceManager.h"
+#include "ConfigModule.h"
 #include "../GameWorld.h"
 #include "../gateway/Gateway.h"
 #include "../gateway/Connection.h"
@@ -12,10 +13,29 @@
 
 using uranus::network::Package;
 using uranus::network::PackageNode;
+using uranus::config::ConfigModule;
+
 
 ServiceContext::ServiceContext(GameWorld *world)
     : ActorContext(world) {
+    const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
+
+    const auto channelSize = cfg["service"]["queueBuffer"].as<int>();
+    const auto minimumCapacity = cfg["service"]["recycler"]["minimumCapacity"].as<int>();
+    const auto halfCollect = cfg["service"]["recycler"]["halfCollect"].as<int>();
+    const auto fullCollect = cfg["service"]["recycler"]["fullCollect"].as<int>();
+    const auto collectThreshold = cfg["service"]["recycler"]["collectThreshold"].as<double>();
+    const auto collectRate = cfg["service"]["recycler"]["collectRate"].as<double>();
+
+    channel_ = make_unique<ActorChannel>(GetIOContext(), channelSize);
+
     pool_ = make_shared<PackagePool>();
+
+    pool_->SetHalfCollect(halfCollect);
+    pool_->SetFullCollect(fullCollect);
+    pool_->SetMinimumCapacity(minimumCapacity);
+    pool_->SetCollectThreshold(collectThreshold);
+    pool_->SetCollectRate(collectRate);
 }
 
 ServiceContext::~ServiceContext() {
@@ -56,7 +76,10 @@ int ServiceContext::Initial(DataAsset *data) {
             __FUNCTION__, static_cast<const void *>(this)));
     }
 
-    pool_->Initial(64);
+    const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
+    const auto initialCapacity  = cfg["service"]["recycler"]["initialCapacity"].as<int>();
+
+    pool_->Initial(initialCapacity);
 
     const auto ret = handle_->Initial(data);
     return ret;

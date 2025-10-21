@@ -20,7 +20,6 @@ using std::make_shared;
 
 class ServiceContext final : public ActorContext {
 
-
 public:
     explicit ServiceContext(GameWorld *world);
     ~ServiceContext() override;

@@ -22,16 +22,14 @@ PlayerContext::PlayerContext(GameWorld *world)
 
     const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
 
-    const auto outputSize = cfg["player"]["queueBuffer"].as<int>();
-
-    const auto initialCapacity      = cfg["player"]["recycler"]["initialCapacity"].as<int>();
-    const auto minimumCapacity      = cfg["player"]["recycler"]["minimumCapacity"].as<int>();
-    const auto halfCollect          = cfg["player"]["recycler"]["halfCollect"].as<int>();
-    const auto fullCollect          = cfg["player"]["recycler"]["fullCollect"].as<int>();
+    const auto channelSize = cfg["player"]["queueBuffer"].as<int>();
+    const auto minimumCapacity = cfg["player"]["recycler"]["minimumCapacity"].as<int>();
+    const auto halfCollect = cfg["player"]["recycler"]["halfCollect"].as<int>();
+    const auto fullCollect = cfg["player"]["recycler"]["fullCollect"].as<int>();
     const auto collectThreshold = cfg["player"]["recycler"]["collectThreshold"].as<double>();
-    const auto collectRate      = cfg["player"]["recycler"]["collectRate"].as<double>();
+    const auto collectRate = cfg["player"]["recycler"]["collectRate"].as<double>();
 
-    channel_ = make_unique<ActorChannel>(GetIOContext(), outputSize);
+    channel_ = make_unique<ActorChannel>(GetIOContext(), channelSize);
 
     pool_ = make_shared<PackagePool>();
 
@@ -66,7 +64,10 @@ int PlayerContext::Initial(DataAsset *data) {
             __FUNCTION__, static_cast<const void *>(this)));
     }
 
-    pool_->Initial(64);
+    const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
+    const auto initialCapacity  = cfg["player"]["recycler"]["initialCapacity"].as<int>();
+
+    pool_->Initial(initialCapacity);
 
     const auto ret = handle_->Initial(data);
     return ret;
