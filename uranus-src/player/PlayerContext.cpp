@@ -4,6 +4,7 @@
 #include "Package.h"
 #include "PackageNode.h"
 #include "PackagePool.h"
+#include "ConfigModule.h"
 #include "../GameWorld.h"
 #include "../gateway/Connection.h"
 #include "../gateway/Gateway.h"
@@ -13,10 +14,23 @@
 
 using uranus::network::Package;
 using uranus::network::PackageNode;
+using uranus::config::ConfigModule;
 
 
 PlayerContext::PlayerContext(GameWorld *world)
     : ActorContext(world) {
+
+    const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
+
+    const auto outputSize = cfg["player"]["queueBuffer"].as<int>();
+
+    const auto initialCapacity      = cfg["server"]["network"]["recycler"]["initialCapacity"].as<int>();
+    const auto minimumCapacity      = cfg["server"]["network"]["recycler"]["minimumCapacity"].as<int>();
+    const auto halfCollect          = cfg["server"]["network"]["recycler"]["halfCollect"].as<int>();
+    const auto fullCollect          = cfg["server"]["network"]["recycler"]["fullCollect"].as<int>();
+    const auto collectThreshold = cfg["server"]["network"]["recycler"]["collectThreshold"].as<double>();
+    const auto collectRate      = cfg["server"]["network"]["recycler"]["collectRate"].as<double>();
+
     pool_ = make_shared<PackagePool>();
 }
 

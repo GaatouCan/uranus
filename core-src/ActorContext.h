@@ -69,6 +69,7 @@ namespace uranus {
         GameServer *const server_;
         asio::io_context &ctx_;
 
+    protected:
         unique_ptr<ActorChannel> channel_;
     };
 }
