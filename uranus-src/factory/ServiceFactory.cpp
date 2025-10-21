@@ -16,7 +16,7 @@ if (res[1] == #name) { \
     return { pService, this, path }; \
 }
 
-void ServiceFactory::LoadService() {
+ServiceFactory::ServiceFactory() {
     for (const auto &entry: std::filesystem::directory_iterator(kCoreServiceDirectory)) {
 #if defined(_WIN32) || defined(_WIN64)
         if (entry.is_regular_file() && entry.path().extension() == ".dll") {
@@ -91,6 +91,9 @@ void ServiceFactory::LoadService() {
             SPDLOG_INFO("Loaded extend service[{}]", filename);
         }
     }
+}
+
+ServiceFactory::~ServiceFactory() {
 }
 
 ServiceHandle ServiceFactory::CreateInstance(const std::string &path) {

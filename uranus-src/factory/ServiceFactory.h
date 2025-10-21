@@ -18,7 +18,10 @@ class ServiceFactory final {
     };
 
 public:
-    void LoadService();
+    ServiceFactory();
+    ~ServiceFactory();
+
+    DISABLE_COPY_MOVE(ServiceFactory)
 
     [[nodiscard]] ServiceHandle CreateInstance(const std::string &path);
     void DestroyInstance(AbstractService *pService, const std::string &path);

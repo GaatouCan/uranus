@@ -7,7 +7,6 @@
 
 PlayerManager::PlayerManager(GameServer *ser)
     : ServerModule(ser) {
-
     factory_ = make_unique<PlayerFactory>();
 }
 
@@ -78,5 +77,5 @@ void PlayerManager::OnPlayerLogout(const int64_t pid) {
 }
 
 void PlayerManager::Start() {
-    factory_->Initial();
+
 }

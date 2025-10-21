@@ -4,15 +4,7 @@
 #include <spdlog/spdlog.h>
 
 
-PlayerFactory::PlayerFactory()
-    : creator_(nullptr),
-      destroyer_(nullptr) {
-}
-
-PlayerFactory::~PlayerFactory() {
-}
-
-void PlayerFactory::Initial() {
+PlayerFactory::PlayerFactory() {
     std::string agent = kPlayerAgentDirectory;
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -42,6 +34,9 @@ void PlayerFactory::Initial() {
     }
 
     SPDLOG_INFO("Loaded player library");
+}
+
+PlayerFactory::~PlayerFactory() {
 }
 
 PlayerHandle PlayerFactory::CreatePlayer() {

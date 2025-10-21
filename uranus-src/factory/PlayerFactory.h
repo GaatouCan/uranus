@@ -14,7 +14,7 @@ public:
     PlayerFactory();
     ~PlayerFactory();
 
-    void Initial();
+    DISABLE_COPY_MOVE(PlayerFactory)
 
     [[nodiscard]] PlayerHandle CreatePlayer();
 

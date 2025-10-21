@@ -10,7 +10,7 @@ ServiceManager::~ServiceManager() {
 }
 
 void ServiceManager::Start() {
-    factory_->LoadService();
+
 }
 
 void ServiceManager::Stop() {

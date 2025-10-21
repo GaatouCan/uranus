@@ -104,11 +104,15 @@ void Connection::Disconnect() {
         return;
     }
 
-    gateway_->RemoveConnection(key_, pid_);
-
     stream_.next_layer().close();
     output_->close();
     watchdog_.cancel();
+
+    gateway_->RemoveConnection(key_, pid_);
+
+    if (auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
+        mgr->OnPlayerLogout(pid_);
+    }
 }
 
 bool Connection::IsConnected() const {
