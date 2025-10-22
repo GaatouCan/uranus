@@ -112,7 +112,10 @@ void Connection::Disconnect() {
     }
 
     stream_.next_layer().close();
+
+    output_->cancel();
     output_->close();
+
     watchdog_.cancel();
 
     gateway_->RemoveConnection(key_, pid_);
@@ -203,6 +206,12 @@ awaitable<void> Connection::WritePackage() {
         while (IsConnected() && output_->is_open()) {
             const auto [ec, msg] = co_await output_->async_receive();
 
+            if (ec == asio::error::operation_aborted ||
+                ec == asio::experimental::error::channel_closed) {
+                Package::ReleaseMessage(msg);
+                break;
+            }
+
             if (msg == nullptr || msg->data == nullptr) {
                 Package::ReleaseMessage(msg);
                 continue;
@@ -211,8 +220,7 @@ awaitable<void> Connection::WritePackage() {
             if (ec) {
                 SPDLOG_ERROR("Connection[{}] - Failed to write package, error: {}", key_, ec.message());
                 Package::ReleaseMessage(msg);
-                this->Disconnect();
-                break;
+                continue;
             }
 
             const auto codec_ec = co_await codec_->Encode(msg);

@@ -32,8 +32,10 @@ namespace uranus {
     }
 
     void ActorContext::Stop() {
-        if (channel_ != nullptr && channel_->is_open())
+        if (channel_ != nullptr && channel_->is_open()) {
+            channel_->cancel();
             channel_->close();
+        }
     }
 
     void ActorContext::SetUpActor() {
@@ -46,51 +48,49 @@ namespace uranus {
         return channel_ == nullptr || !channel_->is_open();
     }
 
-    void ActorContext::PushNode(ChannelNode *node) {
+    void ActorContext::PushNode(unique_ptr<ChannelNode> &&node) const {
         if (!channel_->is_open()) {
-            delete node;
+            // delete node;
             return;
         }
 
-        if (!channel_->try_send_via_dispatch(error_code{}, node)) {
-            co_spawn(ctx_, [self = shared_from_this(), node]() mutable -> awaitable<void> {
-                const auto [ec] = co_await self->channel_->async_send(error_code{}, node);
-                if (ec == asio::experimental::error::channel_closed) {
-                    delete node;
-                }
-            }, detached);
-        }
+        // if (!channel_->try_send_via_dispatch(error_code{}, node)) {
+        //     co_spawn(ctx_, [self = shared_from_this(), node]() mutable -> awaitable<void> {
+        //         const auto [ec] = co_await self->channel_->async_send(error_code{}, node);
+        //         if (ec == asio::experimental::error::channel_closed) {
+        //             delete node;
+        //         }
+        //     }, detached);
+        // }
+        channel_->try_send_via_dispatch(error_code{}, std::move(node));
     }
 
     awaitable<void> ActorContext::Process() {
         try {
             while (channel_->is_open()) {
                 const auto [ec, node] = co_await channel_->async_receive();
-                if (ec == asio::experimental::error::channel_closed) {
+                if (ec == asio::experimental::error::channel_closed ||
+                    ec == asio::error::operation_aborted) {
                     SPDLOG_DEBUG("Actor[{:p}] close channel", static_cast<void *>(this));
-
-                    delete node;
                     break;
+                }
+
+                if (ec) {
+                    SPDLOG_ERROR("Actor[{:p}] error in processing: {}", static_cast<void *>(this), ec.message());
+                    continue;
                 }
 
                 if (node == nullptr)
                     continue;
 
                 node->Execute(this);
-
-                delete node;
-            }
-
-            for (;;) {
-                const bool ok = channel_->try_receive([](std::error_code ec, const ChannelNode *node) {
-                    delete node;
-                });
-                if (!ok)
-                    break;
             }
         } catch (const std::exception &e) {
             SPDLOG_ERROR("Actor[{:p}] - Exception: {}", static_cast<void *>(this), e.what());
         }
+
+        // Clean the channel
+        while (channel_->try_receive([](auto, auto) {})) {}
     }
 
     void ActorContext::CleanUp() {

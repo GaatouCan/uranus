@@ -29,7 +29,7 @@ ServiceContext::ServiceContext(GameWorld *world)
     const auto collectThreshold = cfg["service"]["recycler"]["collectThreshold"].as<double>();
     const auto collectRate = cfg["service"]["recycler"]["collectRate"].as<double>();
 
-    channel_ = make_unique<ConcurrentChannel<ChannelNode *>>(GetIOContext(), channelSize);
+    channel_ = make_unique<ConcurrentChannel<unique_ptr<ChannelNode>>>(GetIOContext(), channelSize);
 
     pool_ = make_shared<PackagePool>();
 
@@ -218,10 +218,10 @@ void ServiceContext::PushMessage(Message *msg) {
         return;
     }
 
-    auto *node = new PackageNode();
+    auto node = make_unique<PackageNode>();
     node->SetMessage(msg);
 
-    this->PushNode(node);
+    this->PushNode(std::move(node));
 }
 
 void ServiceContext::SetUpService(ServiceHandle &&handle) {

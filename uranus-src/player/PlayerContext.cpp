@@ -31,7 +31,7 @@ PlayerContext::PlayerContext(GameWorld *world)
     const auto collect_rate         = cfg["player"]["recycler"]["collectRate"].as<double>();
 
     // Create the processing channel
-    channel_ = make_unique<ConcurrentChannel<ChannelNode *>>(GetIOContext(), channel_size);
+    channel_ = make_unique<ConcurrentChannel<unique_ptr<ChannelNode>>>(GetIOContext(), channel_size);
 
     // Create the package pool
     pool_ = make_shared<PackagePool>();
@@ -201,10 +201,10 @@ void PlayerContext::PushMessage(Message *msg) {
         return;
     }
 
-    auto *node = new PackageNode();
+    auto node = make_unique<PackageNode>();
     node->SetMessage(msg);
 
-    this->PushNode(node);
+    this->PushNode(std::move(node));
 }
 
 void PlayerContext::CleanUp() {

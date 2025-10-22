@@ -60,7 +60,7 @@ namespace uranus {
 
         [[nodiscard]] bool IsChannelClosed() const;
 
-        void PushNode(ChannelNode *node);
+        void PushNode(unique_ptr<ChannelNode> &&node) const;
 
         awaitable<void> Process();
 
@@ -75,6 +75,6 @@ namespace uranus {
 
     protected:
         /// The inner channel to handle the tasks
-        unique_ptr<ConcurrentChannel<ChannelNode *>> channel_;
+        unique_ptr<ConcurrentChannel<unique_ptr<ChannelNode>>> channel_;
     };
 }
