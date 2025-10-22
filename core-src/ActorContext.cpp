@@ -47,8 +47,10 @@ namespace uranus {
     }
 
     void ActorContext::PushNode(ChannelNode *node) {
-        if (!channel_->is_open())
+        if (!channel_->is_open()) {
+            delete node;
             return;
+        }
 
         if (!channel_->try_send_via_dispatch(error_code{}, node)) {
             co_spawn(ctx_, [self = shared_from_this(), node]() mutable -> awaitable<void> {

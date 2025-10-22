@@ -67,10 +67,14 @@ namespace uranus {
         virtual void CleanUp();
 
     private:
+        /// The pointer to the Game Server
         GameServer *const server_;
+
+        /// The reference to the io_context
         asio::io_context &ctx_;
 
     protected:
+        /// The inner channel to handle the tasks
         unique_ptr<ConcurrentChannel<ChannelNode *>> channel_;
     };
 }
