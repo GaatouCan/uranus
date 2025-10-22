@@ -4,8 +4,6 @@
 #include "base/Types.h"
 
 #include <memory>
-#include <asio/experimental/concurrent_channel.hpp>
-
 
 namespace uranus {
 
@@ -23,6 +21,11 @@ namespace uranus {
 
 
     class CORE_API ActorContext : public std::enable_shared_from_this<ActorContext> {
+
+        struct SessionNode {
+            std::function<void(Message *)> handler;
+            asio::executor_work_guard<asio::any_io_executor> work;
+        };
 
     // protected:
     //     using ActorChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, ChannelNode *)>>;
@@ -49,11 +52,10 @@ namespace uranus {
 
         virtual void Send(int64_t target, Message *msg) = 0;
 
-        // virtual void SendToService(int64_t target, Message *msg) = 0;
         virtual void SendToService(const std::string &name, Message *msg) = 0;
 
-        // virtual void SendToPlayer(int64_t pid, Message *msg) = 0;
-        // virtual void SendToClient(int64_t pid, Message *msg) = 0;
+        template<asio::completion_token_for<void(Message *)> CompleteToken>
+        auto AsyncCall(int64_t target, Message *req, CompleteToken &&token);
 
         virtual void PushMessage(Message *msg) = 0;
 
@@ -79,4 +81,14 @@ namespace uranus {
         /// The inner channel to handle the tasks
         unique_ptr<ConcurrentChannel<unique_ptr<ChannelNode>>> channel_;
     };
+
+    template<asio::completion_token_for<void(Message *)> CompleteToken>
+    auto ActorContext::AsyncCall(int64_t target, Message *req, CompleteToken &&token) {
+        auto init = [](asio::completion_handler_for<void(Message *)> auto handler, Message *req) {
+            auto work = asio::make_work_guard(handler);
+            auto node = make_unique<SessionNode>(std::move(handler), std::move(work));
+        };
+
+        return asio::async_initiate<CompleteToken, void(Message *)>(init, token, req);
+    }
 }

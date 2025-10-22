@@ -5,6 +5,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "Message.h"
+
 
 namespace uranus {
     ActorContext::ActorContext(GameServer *ser)
@@ -95,4 +97,14 @@ namespace uranus {
 
     void ActorContext::CleanUp() {
     }
+
+    // void ActorContext::PushSession(int64_t target, Message *req, unique_ptr<SessionNode> &&node) {
+    //     if (req == nullptr || req->data == nullptr) {
+    //         delete req;
+    //         auto alloc = asio::get_associated_allocator(node->handler, asio::recycling_allocator<void>());
+    //         asio::dispatch(node->work.get_executor(),asio::bind_allocator(alloc, [handler = std::move(node->handler)]() mutable{
+    //             std::move(handler)(nullptr);
+    //         }));
+    //     }
+    // }
 }
