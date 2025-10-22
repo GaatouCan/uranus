@@ -11,6 +11,8 @@
 #include "../player/PlayerContext.h"
 #include "../player/PlayerManager.h"
 
+
+using uranus::ChannelNode;
 using uranus::network::Package;
 using uranus::network::PackageNode;
 using uranus::config::ConfigModule;
@@ -27,7 +29,7 @@ ServiceContext::ServiceContext(GameWorld *world)
     const auto collectThreshold = cfg["service"]["recycler"]["collectThreshold"].as<double>();
     const auto collectRate = cfg["service"]["recycler"]["collectRate"].as<double>();
 
-    channel_ = make_unique<ActorChannel>(GetIOContext(), channelSize);
+    channel_ = make_unique<ConcurrentChannel<ChannelNode *>>(GetIOContext(), channelSize);
 
     pool_ = make_shared<PackagePool>();
 

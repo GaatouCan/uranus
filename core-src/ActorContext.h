@@ -24,8 +24,8 @@ namespace uranus {
 
     class CORE_API ActorContext : public std::enable_shared_from_this<ActorContext> {
 
-    protected:
-        using ActorChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, ChannelNode *)>>;
+    // protected:
+    //     using ActorChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, ChannelNode *)>>;
 
     public:
         ActorContext() = delete;
@@ -71,6 +71,6 @@ namespace uranus {
         asio::io_context &ctx_;
 
     protected:
-        unique_ptr<ActorChannel> channel_;
+        unique_ptr<ConcurrentChannel<ChannelNode *>> channel_;
     };
 }

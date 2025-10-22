@@ -15,6 +15,7 @@
 using uranus::network::Package;
 using uranus::network::PackageNode;
 using uranus::config::ConfigModule;
+using uranus::ChannelNode;
 
 
 PlayerContext::PlayerContext(GameWorld *world)
@@ -22,22 +23,25 @@ PlayerContext::PlayerContext(GameWorld *world)
 
     const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
 
-    const auto channelSize = cfg["player"]["queueBuffer"].as<int>();
-    const auto minimumCapacity = cfg["player"]["recycler"]["minimumCapacity"].as<int>();
-    const auto halfCollect = cfg["player"]["recycler"]["halfCollect"].as<int>();
-    const auto fullCollect = cfg["player"]["recycler"]["fullCollect"].as<int>();
-    const auto collectThreshold = cfg["player"]["recycler"]["collectThreshold"].as<double>();
-    const auto collectRate = cfg["player"]["recycler"]["collectRate"].as<double>();
+    const auto channel_size             = cfg["player"]["queueBuffer"].as<int>();
+    const auto minimum_capacity         = cfg["player"]["recycler"]["minimumCapacity"].as<int>();
+    const auto half_collect             = cfg["player"]["recycler"]["halfCollect"].as<int>();
+    const auto full_collect             = cfg["player"]["recycler"]["fullCollect"].as<int>();
+    const auto collect_threshold    = cfg["player"]["recycler"]["collectThreshold"].as<double>();
+    const auto collect_rate         = cfg["player"]["recycler"]["collectRate"].as<double>();
 
-    channel_ = make_unique<ActorChannel>(GetIOContext(), channelSize);
+    // Create the processing channel
+    channel_ = make_unique<ConcurrentChannel<ChannelNode *>>(GetIOContext(), channel_size);
 
+    // Create the package pool
     pool_ = make_shared<PackagePool>();
 
-    pool_->SetHalfCollect(halfCollect);
-    pool_->SetFullCollect(fullCollect);
-    pool_->SetMinimumCapacity(minimumCapacity);
-    pool_->SetCollectThreshold(collectThreshold);
-    pool_->SetCollectRate(collectRate);
+    // Set up the parameters of package pool
+    pool_->SetHalfCollect(half_collect);
+    pool_->SetFullCollect(full_collect);
+    pool_->SetMinimumCapacity(minimum_capacity);
+    pool_->SetCollectThreshold(collect_threshold);
+    pool_->SetCollectRate(collect_rate);
 }
 
 PlayerContext::~PlayerContext() {
