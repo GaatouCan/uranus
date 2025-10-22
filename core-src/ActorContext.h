@@ -80,6 +80,8 @@ namespace uranus {
 
         awaitable<void> Process();
 
+        virtual void OnResponse(Message *msg) = 0;
+
         virtual void CleanUp();
 
     private:
@@ -101,10 +103,10 @@ namespace uranus {
 
     template<asio::completion_token_for<void(Message *)> CompleteToken>
     auto ActorContext::AsyncCall(int64_t target, Message *req, CompleteToken &&token) {
-        auto init = [this, target](asio::completion_handler_for<void(Message *)> auto handler, Message *req) {
+        auto init = [this, target](asio::completion_handler_for<void(Message *)> auto handler, Message *request) {
             auto work = asio::make_work_guard(handler);
             auto node = make_unique<SessionNode>(std::move(handler), std::move(work));
-            this->RemoteCall(target, req, std::move(node));
+            this->RemoteCall(target, request, std::move(node));
         };
 
         return asio::async_initiate<CompleteToken, void(Message *)>(init, token, req);
