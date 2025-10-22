@@ -107,6 +107,58 @@ int ServiceContext::Start() {
     return 1;
 }
 
+void ServiceContext::Send(int64_t target, Message *msg) {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - ServiceContext[{:p}] - Service Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    if (msg == nullptr || msg->data == nullptr) {
+        Package::ReleaseMessage(msg);
+        return;
+    }
+
+    if (msg->type & Message::kToServer) {
+        // TODO
+    } else if (msg->type & Message::kToService) {
+        if (target < 0 || target == handle_->GetServiceID()) {
+            Package::ReleaseMessage(msg);
+            return;
+        }
+        if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+            if (const auto ser = mgr->FindService(target)) {
+                ser->PushMessage(msg);
+                return;
+            }
+        }
+    } else if (msg->type & Message::kToPlayer) {
+        if (target <= 0) {
+            Package::ReleaseMessage(msg);
+            return;
+        }
+        if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
+            if (const auto plr = mgr->FindPlayer(target)) {
+                plr->PushMessage(msg);
+                return;
+            }
+        }
+    } else if (msg->type & Message::kToClient) {
+        if (target <= 0) {
+            Package::ReleaseMessage(msg);
+            return;
+        }
+        if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
+            if (const auto conn = gateway->FindConnection(target)) {
+                conn->SendToClient(msg);
+                return;
+            }
+        }
+    }
+
+    Package::ReleaseMessage(msg);
+}
+
 void ServiceContext::CleanUp() {
     if (handle_.IsValid()) {
         handle_->Stop();
@@ -114,29 +166,29 @@ void ServiceContext::CleanUp() {
     handle_.Release();
 }
 
-void ServiceContext::SendToService(const int64_t target, Message *msg) {
-    if (!handle_.IsValid()) {
-        throw std::runtime_error(std::format(
-            "{} - ServiceContext[{:p}] - Service Handle is invalid",
-            __FUNCTION__, static_cast<const void *>(this)));
-    }
-
-    if (msg == nullptr || msg->data == nullptr || target < 0 || target == handle_->GetServiceID()) {
-        Package::ReleaseMessage(msg);
-        return;
-    }
-
-    msg->type |= Message::kToService;
-
-    if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
-        if (const auto ser = mgr->FindService(target)) {
-            ser->PushMessage(msg);
-            return;
-        }
-    }
-
-    Package::ReleaseMessage(msg);
-}
+// void ServiceContext::SendToService(const int64_t target, Message *msg) {
+//     if (!handle_.IsValid()) {
+//         throw std::runtime_error(std::format(
+//             "{} - ServiceContext[{:p}] - Service Handle is invalid",
+//             __FUNCTION__, static_cast<const void *>(this)));
+//     }
+//
+//     if (msg == nullptr || msg->data == nullptr || target < 0 || target == handle_->GetServiceID()) {
+//         Package::ReleaseMessage(msg);
+//         return;
+//     }
+//
+//     msg->type |= Message::kToService;
+//
+//     if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+//         if (const auto ser = mgr->FindService(target)) {
+//             ser->PushMessage(msg);
+//             return;
+//         }
+//     }
+//
+//     Package::ReleaseMessage(msg);
+// }
 
 void ServiceContext::SendToService(const std::string &name, Message *msg) {
     if (!handle_.IsValid()) {
@@ -157,60 +209,61 @@ void ServiceContext::SendToService(const std::string &name, Message *msg) {
     }
 
     if (target >= 0 || target != handle_->GetServiceID()) {
-        this->SendToService(target, msg);
+        msg->type |= Message::kToService;
+        this->Send(target, msg);
         return;
     }
 
     Package::ReleaseMessage(msg);
 }
 
-void ServiceContext::SendToPlayer(const int64_t pid, Message *msg) {
-    if (!handle_.IsValid()) {
-        throw std::runtime_error(std::format(
-            "{} - ServiceContext[{:p}] - Service Handle is invalid",
-            __FUNCTION__, static_cast<const void *>(this)));
-    }
-
-    if (msg == nullptr || msg->data == nullptr || pid <= 0) {
-        Package::ReleaseMessage(msg);
-        return;
-    }
-
-    msg->type |= Message::kToPlayer;
-
-    if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
-        if (const auto plr = mgr->FindPlayer(pid)) {
-            plr->PushMessage(msg);
-            return;
-        }
-    }
-
-    Package::ReleaseMessage(msg);
-}
-
-void ServiceContext::SendToClient(const int64_t pid, Message *msg) {
-    if (!handle_.IsValid()) {
-        throw std::runtime_error(std::format(
-            "{} - ServiceContext[{:p}] - Service Handle is invalid",
-            __FUNCTION__, static_cast<const void *>(this)));
-    }
-
-    if (msg == nullptr || msg->data == nullptr || pid <= 0) {
-        Package::ReleaseMessage(msg);
-        return;
-    }
-
-    msg->type |= Message::kToClient;
-
-    if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
-        if (const auto conn = gateway->FindConnection(pid)) {
-            conn->SendToClient(msg);
-            return;
-        }
-    }
-
-    Package::ReleaseMessage(msg);
-}
+// void ServiceContext::SendToPlayer(const int64_t pid, Message *msg) {
+//     if (!handle_.IsValid()) {
+//         throw std::runtime_error(std::format(
+//             "{} - ServiceContext[{:p}] - Service Handle is invalid",
+//             __FUNCTION__, static_cast<const void *>(this)));
+//     }
+//
+//     if (msg == nullptr || msg->data == nullptr || pid <= 0) {
+//         Package::ReleaseMessage(msg);
+//         return;
+//     }
+//
+//     msg->type |= Message::kToPlayer;
+//
+//     if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
+//         if (const auto plr = mgr->FindPlayer(pid)) {
+//             plr->PushMessage(msg);
+//             return;
+//         }
+//     }
+//
+//     Package::ReleaseMessage(msg);
+// }
+//
+// void ServiceContext::SendToClient(const int64_t pid, Message *msg) {
+//     if (!handle_.IsValid()) {
+//         throw std::runtime_error(std::format(
+//             "{} - ServiceContext[{:p}] - Service Handle is invalid",
+//             __FUNCTION__, static_cast<const void *>(this)));
+//     }
+//
+//     if (msg == nullptr || msg->data == nullptr || pid <= 0) {
+//         Package::ReleaseMessage(msg);
+//         return;
+//     }
+//
+//     msg->type |= Message::kToClient;
+//
+//     if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
+//         if (const auto conn = gateway->FindConnection(pid)) {
+//             conn->SendToClient(msg);
+//             return;
+//         }
+//     }
+//
+//     Package::ReleaseMessage(msg);
+// }
 
 void ServiceContext::PushMessage(Message *msg) {
     if (msg == nullptr || msg->data == nullptr || IsChannelClosed()) {

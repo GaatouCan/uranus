@@ -33,11 +33,9 @@ public:
     int Initial(DataAsset *data) override;
     int Start() override;
 
-    void SendToService(int64_t target, Message *msg) override;
-    void SendToService(const std::string &name, Message *msg) override;
+    void Send(int64_t target, Message *msg) override;
 
-    void SendToPlayer(int64_t pid, Message *msg) override;
-    void SendToClient(int64_t pid, Message *msg) override;
+    void SendToService(const std::string &name, Message *msg) override;
 
     void PushMessage(Message *msg) override;
 

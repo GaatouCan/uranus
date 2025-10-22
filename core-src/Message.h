@@ -17,6 +17,8 @@ namespace uranus {
             kFromPlayer     = 1 << 5,
             kFromService    = 1 << 6,
             kFromServer     = 1 << 7,
+            kRequest        = 1 << 8,
+            kResponse       = 1 << 9,
         };
 
         int32_t type;

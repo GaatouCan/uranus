@@ -47,11 +47,13 @@ namespace uranus {
 
         [[nodiscard]] virtual Message *BuildMessage() = 0;
 
-        virtual void SendToService(int64_t target, Message *msg) = 0;
+        virtual void Send(int64_t target, Message *msg) = 0;
+
+        // virtual void SendToService(int64_t target, Message *msg) = 0;
         virtual void SendToService(const std::string &name, Message *msg) = 0;
 
-        virtual void SendToPlayer(int64_t pid, Message *msg) = 0;
-        virtual void SendToClient(int64_t pid, Message *msg) = 0;
+        // virtual void SendToPlayer(int64_t pid, Message *msg) = 0;
+        // virtual void SendToClient(int64_t pid, Message *msg) = 0;
 
         virtual void PushMessage(Message *msg) = 0;
 

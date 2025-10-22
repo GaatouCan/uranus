@@ -1,5 +1,6 @@
 #include "AbstractService.h"
 #include "ActorContext.h"
+#include "Message.h"
 
 namespace uranus {
     AbstractService::AbstractService()
@@ -19,8 +20,13 @@ namespace uranus {
         return id_;
     }
 
+    void AbstractService::Send(const int64_t target, Message *msg) {
+        GetActorContext()->Send(target, msg);
+    }
+
     void AbstractService::SendToService(const int64_t target, Message *msg) const {
-        GetActorContext()->SendToService(target, msg);
+        msg->type |= Message::kToService;
+        GetActorContext()->Send(target, msg);
     }
 
     void AbstractService::SendToService(const std::string &target, Message *msg) const {
@@ -28,10 +34,12 @@ namespace uranus {
     }
 
     void AbstractService::SendToPlayer(const int64_t pid, Message *msg) const {
-        GetActorContext()->SendToPlayer(pid, msg);
+        msg->type |= Message::kToPlayer;
+        GetActorContext()->Send(pid, msg);
     }
 
     void AbstractService::SendToClient(const int64_t pid, Message *msg) const {
-        GetActorContext()->SendToClient(pid, msg);
+        msg->type |= Message::kToClient;
+        GetActorContext()->Send(pid, msg);
     }
 }
