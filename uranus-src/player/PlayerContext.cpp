@@ -201,7 +201,7 @@ void PlayerContext::SendToService(const std::string &name, Message *msg) {
     Package::ReleaseMessage(msg);
 }
 
-void PlayerContext::RemoteCall(int64_t target, Message *msg, std::unique_ptr<SessionNode> &&node) {
+void PlayerContext::RemoteCall(const int64_t target, Message *msg, std::unique_ptr<SessionNode> &&node) {
     if (msg == nullptr || msg->data == nullptr || ((msg->type  & Message::kRequest) == 0)) {
         auto alloc = asio::get_associated_allocator(node->handler, asio::recycling_allocator<void>());
         asio::dispatch(node->work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node->handler)]() mutable {
@@ -215,10 +215,14 @@ void PlayerContext::RemoteCall(int64_t target, Message *msg, std::unique_ptr<Ses
     if (msg->type & Message::kToService) {
         if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
             if (const auto ser = mgr->FindService(target)) {
-                const auto sess_id = sess_id_alloc_.Allocate();
+                const auto sess_id = this->AllocateSessionID();
+
+                msg->type |= Message::kRequest;
                 msg->session = sess_id;
-                // TODO: ser->PushRequest(msg);
-                sessions_.insert_or_assign(sess_id, std::move(node));
+
+                ser->PushMessage(msg);
+
+                this->PushSession(sess_id, std::move(node));
                 return;
             }
         }

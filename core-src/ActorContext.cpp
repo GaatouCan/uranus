@@ -67,6 +67,43 @@ namespace uranus {
         channel_->try_send_via_dispatch(error_code{}, std::move(node));
     }
 
+    int32_t ActorContext::AllocateSessionID() {
+        int32_t id = sess_id_alloc_.Allocate();
+
+        {
+            shared_lock lock(sess_mutex_);
+            while (sessions_.contains(id)) {
+                id = sess_id_alloc_.Allocate();
+            }
+        }
+
+        return id;
+    }
+
+    void ActorContext::RecycleSessionID(const int32_t id) {
+        sess_id_alloc_.Recycle(id);
+    }
+
+    void ActorContext::PushSession(const int32_t id, unique_ptr<SessionNode> &&node) {
+        unique_lock lock(sess_mutex_);
+        sessions_.insert_or_assign(id, std::move(node));
+    }
+
+    unique_ptr<ActorContext::SessionNode> ActorContext::TakeSession(const int32_t id) {
+        unique_lock lock(sess_mutex_);
+
+        const auto it = sessions_.find(id);
+
+        if (it == sessions_.end()) {
+            return nullptr;
+        }
+
+        auto node = std::move(it->second);
+        sessions_.erase(it);
+
+        return std::move(node);
+    }
+
     awaitable<void> ActorContext::Process() {
         try {
             while (channel_->is_open()) {

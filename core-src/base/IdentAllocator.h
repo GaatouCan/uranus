@@ -15,10 +15,10 @@ class IdentAllocator {
     using IntegralType     = std::conditional_t<bConcurrent, std::atomic<Type>, Type>;
 
 public:
-    Type AllocateTS();
+    // Type AllocateTS();
     Type Allocate();
 
-    void RecycleTS(Type id);
+    // void RecycleTS(Type id);
     void Recycle(Type id);
 
     Type GetUsage() const;
@@ -32,16 +32,20 @@ private:
 
 template<class Type, bool bConcurrent>
 requires std::is_integral_v<Type>
-inline Type IdentAllocator<Type, bConcurrent>::AllocateTS() {
+inline Type IdentAllocator<Type, bConcurrent>::Allocate() {
     if constexpr (bConcurrent) {
-        std::unique_lock lock(mtx_);
-        if (const auto iter = set_.begin(); iter != set_.end()) {
-            const auto res = *iter;
-            set_.erase(iter);
+        {
+            std::unique_lock lock(mtx_);
+            if (const auto iter = set_.begin(); iter != set_.end()) {
+                const auto res = *iter;
+                set_.erase(iter);
 
-            ++usage_;
-            return res;
+                usage_.fetch_add(1, std::memory_order_relaxed);
+                return res;
+            }
         }
+        usage_.fetch_add(1, std::memory_order_relaxed);
+        return ++next_;
     } else {
         if (const auto iter = set_.begin(); iter != set_.end()) {
             const auto res = *iter;
@@ -50,57 +54,57 @@ inline Type IdentAllocator<Type, bConcurrent>::AllocateTS() {
             ++usage_;
             return res;
         }
-    }
-
-    ++usage_;
-    return ++next_;
-}
-
-template<class Type, bool bConcurrent>
-requires std::is_integral_v<Type>
-Type IdentAllocator<Type, bConcurrent>::Allocate() {
-    if (const auto iter = set_.begin(); iter != set_.end()) {
-        const auto res = *iter;
-        set_.erase(iter);
-
         ++usage_;
-        return res;
-    }
-
-    ++usage_;
-    return ++next_;
-}
-
-template<class Type, bool bConcurrent>
-requires std::is_integral_v<Type>
-inline void IdentAllocator<Type, bConcurrent>::RecycleTS(Type id) {
-    if constexpr (bConcurrent) {
-        std::unique_lock lock(mtx_);
-        set_.emplace(id);
-    } else {
-        set_.emplace(id);
-    }
-
-    --usage_;
-    if constexpr (bConcurrent) {
-        usage_ = usage_.load() > 0 ? usage_.load() : 0;
-    } else {
-        usage_ = usage_ > 0 ? usage_ : 0;
+        return ++next_;
     }
 }
+
+// template<class Type, bool bConcurrent>
+// requires std::is_integral_v<Type>
+// Type IdentAllocator<Type, bConcurrent>::Allocate() {
+//     if (const auto iter = set_.begin(); iter != set_.end()) {
+//         const auto res = *iter;
+//         set_.erase(iter);
+//
+//         ++usage_;
+//         return res;
+//     }
+//
+//     ++usage_;
+//     return ++next_;
+// }
 
 template<class Type, bool bConcurrent>
 requires std::is_integral_v<Type>
 inline void IdentAllocator<Type, bConcurrent>::Recycle(Type id) {
-    set_.emplace(id);
-
-    --usage_;
     if constexpr (bConcurrent) {
+        std::unique_lock lock(mtx_);
+        set_.emplace(id);
+    } else {
+        set_.emplace(id);
+    }
+
+    if constexpr (bConcurrent) {
+        usage_.fetch_sub(1, std::memory_order_release);
         usage_ = usage_.load() > 0 ? usage_.load() : 0;
     } else {
+        --usage_;
         usage_ = usage_ > 0 ? usage_ : 0;
     }
 }
+
+// template<class Type, bool bConcurrent>
+// requires std::is_integral_v<Type>
+// inline void IdentAllocator<Type, bConcurrent>::Recycle(Type id) {
+//     set_.emplace(id);
+//
+//     --usage_;
+//     if constexpr (bConcurrent) {
+//         usage_ = usage_.load() > 0 ? usage_.load() : 0;
+//     } else {
+//         usage_ = usage_ > 0 ? usage_ : 0;
+//     }
+// }
 
 template<class Type, bool bConcurrent>
 requires std::is_integral_v<Type>

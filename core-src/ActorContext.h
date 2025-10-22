@@ -5,6 +5,7 @@
 #include "base/IdentAllocator.h"
 
 #include <memory>
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace uranus {
@@ -14,6 +15,9 @@ namespace uranus {
     using std::make_unique;
     using std::shared_ptr;
     using std::make_shared;
+    using std::shared_mutex;
+    using std::shared_lock;
+    using std::unique_lock;
 
     class DataAsset;
     class GameServer;
@@ -68,6 +72,12 @@ namespace uranus {
 
         void PushNode(unique_ptr<ChannelNode> &&node) const;
 
+        int32_t AllocateSessionID();
+        void RecycleSessionID(int32_t id);
+
+        void PushSession(int32_t id, unique_ptr<SessionNode> &&node);
+        unique_ptr<SessionNode> TakeSession(int32_t id);
+
         awaitable<void> Process();
 
         virtual void CleanUp();
@@ -83,7 +93,9 @@ namespace uranus {
         /// The inner channel to handle the tasks
         unique_ptr<ConcurrentChannel<unique_ptr<ChannelNode>>> channel_;
 
-        IdentAllocator<int32_t, false> sess_id_alloc_;
+        IdentAllocator<int32_t, true> sess_id_alloc_;
+
+        mutable shared_mutex sess_mutex_;
         std::unordered_map<int32_t, unique_ptr<SessionNode>> sessions_;
     };
 
