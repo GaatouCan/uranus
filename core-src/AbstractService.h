@@ -18,7 +18,7 @@ namespace uranus {
 
         [[nodiscard]] virtual std::string GetServiceName() const = 0;
 
-        void Send(int64_t target, Message *msg);
+        void Send(int64_t target, Message *msg) const;
 
         void SendToService(int64_t target, Message *msg) const;
         void SendToService(const std::string &target, Message *msg) const;

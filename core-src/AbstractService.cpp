@@ -20,7 +20,7 @@ namespace uranus {
         return id_;
     }
 
-    void AbstractService::Send(const int64_t target, Message *msg) {
+    void AbstractService::Send(const int64_t target, Message *msg) const {
         GetActorContext()->Send(target, msg);
     }
 

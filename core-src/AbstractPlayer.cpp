@@ -22,7 +22,7 @@ namespace uranus {
         return id_;
     }
 
-    void AbstractPlayer::Send(const int64_t target, Message *msg) {
+    void AbstractPlayer::Send(const int64_t target, Message *msg) const {
         GetActorContext()->Send(target, msg);
     }
 
