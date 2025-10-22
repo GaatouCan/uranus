@@ -242,15 +242,16 @@ void PlayerContext::PushMessage(Message *msg) {
         return;
     }
 
-    if ((msg->type & Message::kRequest) && msg->session > 0) {
+    // if ((msg->type & Message::kRequest) && msg->session > 0) {
+    //
+    // } else if ((msg->type & Message::kResponse) && msg->session > 0) {
+    //
+    // } else {
+    auto node = make_unique<PackageNode>();
+    node->SetMessage(msg);
 
-    } else if ((msg->type & Message::kResponse) && msg->session > 0) {
-
-    } else {
-        auto node = make_unique<PackageNode>();
-        node->SetMessage(msg);
-        this->PushNode(std::move(node));
-    }
+    this->PushNode(std::move(node));
+    // }
 }
 
 void PlayerContext::CleanUp() {
