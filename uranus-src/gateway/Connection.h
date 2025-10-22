@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Common.h"
 #include "base/Types.h"
 
 #include <memory>
@@ -36,13 +37,13 @@ using SslStream = asio::ssl::stream<TcpSocket>;
 
 class Connection final : public std::enable_shared_from_this<Connection> {
 
-    // using OutputChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, Message *)>>;
-
 public:
     Connection() = delete;
 
     Connection(SslStream &&stream, Gateway *gateway);
     ~Connection() ;
+
+    DISABLE_COPY_MOVE(Connection)
 
     [[nodiscard]] std::string GetKey() const;
 
@@ -70,19 +71,33 @@ private:
     awaitable<void> Watchdog();
 
 private:
+    /// The Tcp socket with ssl
     SslStream stream_;
+
+    /// The pointer to the gateway module
     Gateway *const gateway_;
 
+    /// The unique key of this connection
     std::string key_;
 
+    /// The codec for encoding/decoding the message
     unique_ptr<MessageCodec> codec_;
+
+    /// The Object pool of the package
     shared_ptr<PackagePool> pool_;
 
+    /// For output buffer
     unique_ptr<ConcurrentChannel<Message *>> output_;
 
+    /// Record the player id mapping the client
     int64_t pid_;
 
+    /// Idle state timer
     SteadyTimer watchdog_;
+
+    /// Watchdog expiration
     SteadyDuration expiration_;
+
+    /// Will update after login and received the message
     SteadyTimePoint received_;
 };
