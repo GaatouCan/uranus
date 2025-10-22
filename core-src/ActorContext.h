@@ -2,8 +2,10 @@
 
 #include "Common.h"
 #include "base/Types.h"
+#include "base/IdentAllocator.h"
 
 #include <memory>
+#include <unordered_map>
 
 namespace uranus {
 
@@ -22,13 +24,11 @@ namespace uranus {
 
     class CORE_API ActorContext : public std::enable_shared_from_this<ActorContext> {
 
+    protected:
         struct SessionNode {
             std::function<void(Message *)> handler;
             asio::executor_work_guard<asio::any_io_executor> work;
         };
-
-    // protected:
-    //     using ActorChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, ChannelNode *)>>;
 
     public:
         ActorContext() = delete;
@@ -53,6 +53,8 @@ namespace uranus {
         virtual void Send(int64_t target, Message *msg) = 0;
 
         virtual void SendToService(const std::string &name, Message *msg) = 0;
+
+        virtual void RemoteCall(int64_t target, Message *msg, unique_ptr<SessionNode> &&node) = 0;
 
         template<asio::completion_token_for<void(Message *)> CompleteToken>
         auto AsyncCall(int64_t target, Message *req, CompleteToken &&token);
@@ -80,13 +82,17 @@ namespace uranus {
     protected:
         /// The inner channel to handle the tasks
         unique_ptr<ConcurrentChannel<unique_ptr<ChannelNode>>> channel_;
+
+        IdentAllocator<int32_t, false> sess_id_alloc_;
+        std::unordered_map<int32_t, unique_ptr<SessionNode>> sessions_;
     };
 
     template<asio::completion_token_for<void(Message *)> CompleteToken>
     auto ActorContext::AsyncCall(int64_t target, Message *req, CompleteToken &&token) {
-        auto init = [](asio::completion_handler_for<void(Message *)> auto handler, Message *req) {
+        auto init = [this, target](asio::completion_handler_for<void(Message *)> auto handler, Message *req) {
             auto work = asio::make_work_guard(handler);
             auto node = make_unique<SessionNode>(std::move(handler), std::move(work));
+            this->RemoteCall(target, req, std::move(node));
         };
 
         return asio::async_initiate<CompleteToken, void(Message *)>(init, token, req);

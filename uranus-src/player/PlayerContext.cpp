@@ -201,6 +201,37 @@ void PlayerContext::SendToService(const std::string &name, Message *msg) {
     Package::ReleaseMessage(msg);
 }
 
+void PlayerContext::RemoteCall(int64_t target, Message *msg, std::unique_ptr<SessionNode> &&node) {
+    if (msg == nullptr || msg->data == nullptr || ((msg->type  & Message::kRequest) == 0)) {
+        auto alloc = asio::get_associated_allocator(node->handler, asio::recycling_allocator<void>());
+        asio::dispatch(node->work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node->handler)]() mutable {
+            std::move(handler)(nullptr);
+        }));
+
+        Package::ReleaseMessage(msg);
+        return;
+    }
+
+    if (msg->type & Message::kToService) {
+        if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+            if (const auto ser = mgr->FindService(target)) {
+                const auto sess_id = sess_id_alloc_.Allocate();
+                msg->session = sess_id;
+                // TODO: ser->PushRequest(msg);
+                sessions_.insert_or_assign(sess_id, std::move(node));
+                return;
+            }
+        }
+    }
+
+    auto alloc = asio::get_associated_allocator(node->handler, asio::recycling_allocator<void>());
+    asio::dispatch(node->work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node->handler)]() mutable {
+        std::move(handler)(nullptr);
+    }));
+
+    Package::ReleaseMessage(msg);
+}
+
 // void PlayerContext::SendToPlayer(int64_t pid, Message *msg) {
 //     // Player can not send to other player directly,
 //     // so this method will do nothing but only release the message
