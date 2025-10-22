@@ -80,6 +80,7 @@ namespace uranus {
 
         awaitable<void> Process();
 
+        virtual void OnRequest(Message *msg) = 0;
         virtual void OnResponse(Message *msg) = 0;
 
         virtual void CleanUp();
