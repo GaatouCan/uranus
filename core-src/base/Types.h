@@ -2,6 +2,7 @@
 
 #include <asio.hpp>
 #include <chrono>
+#include <asio/experimental/concurrent_channel.hpp>
 
 using default_token = asio::as_tuple_t<asio::use_awaitable_t<>>;
 
@@ -21,3 +22,5 @@ using SystemTimer       = default_token::as_default_on_t<asio::system_timer>;
 using SystemTimePoint   = std::chrono::system_clock::time_point;
 using SystemDuration    = std::chrono::system_clock::duration;
 
+template <typename T>
+using ConcurrentChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(std::error_code, T)>>;

@@ -1,4 +1,5 @@
 #include "Connection.h"
+#include "Gateway.h"
 #include "PackagePool.h"
 #include "Message.h"
 #include "base/Utils.h"
@@ -8,8 +9,6 @@
 #include "../login/LoginAuth.h"
 #include "../player/PlayerManager.h"
 #include "../player/PlayerContext.h"
-// #include "../service/ServiceManager.h"
-// #include "../service/ServiceContext.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
@@ -18,6 +17,7 @@
 using namespace asio::experimental::awaitable_operators;
 using uranus::network::PackageCodec;
 using uranus::config::ConfigModule;
+
 
 Connection::Connection(SslStream &&stream, Gateway *gateway)
     : stream_(std::move(stream)),
@@ -28,32 +28,39 @@ Connection::Connection(SslStream &&stream, Gateway *gateway)
 
     const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
 
-    const auto expiration = cfg["server"]["network"]["expiration"].as<int>();
-    const auto outputSize = cfg["server"]["network"]["outputBuffer"].as<int>();
+    // Read the parameters from config
+    const auto expiration               = cfg["server"]["network"]["expiration"].as<int>();
+    const auto output_size              = cfg["server"]["network"]["outputBuffer"].as<int>();
+    const auto initial_capacity         = cfg["server"]["network"]["recycler"]["initialCapacity"].as<int>();
+    const auto minimum_capacity         = cfg["server"]["network"]["recycler"]["minimumCapacity"].as<int>();
+    const auto half_collect             = cfg["server"]["network"]["recycler"]["halfCollect"].as<int>();
+    const auto full_collect             = cfg["server"]["network"]["recycler"]["fullCollect"].as<int>();
+    const auto collect_threshold    = cfg["server"]["network"]["recycler"]["collectThreshold"].as<double>();
+    const auto collect_rate         = cfg["server"]["network"]["recycler"]["collectRate"].as<double>();
 
-    const auto initialCapacity      = cfg["server"]["network"]["recycler"]["initialCapacity"].as<int>();
-    const auto minimumCapacity      = cfg["server"]["network"]["recycler"]["minimumCapacity"].as<int>();
-    const auto halfCollect          = cfg["server"]["network"]["recycler"]["halfCollect"].as<int>();
-    const auto fullCollect          = cfg["server"]["network"]["recycler"]["fullCollect"].as<int>();
-    const auto collectThreshold = cfg["server"]["network"]["recycler"]["collectThreshold"].as<double>();
-    const auto collectRate      = cfg["server"]["network"]["recycler"]["collectRate"].as<double>();
-
+    // Set the watchdog timeout
     expiration_ = std::chrono::seconds(expiration);
 
+    // Create the package codec
     codec_ = make_unique<PackageCodec>(stream_);
 
+    // Create the package pool
     pool_ = make_shared<PackagePool>();
 
-    pool_->SetHalfCollect(halfCollect);
-    pool_->SetFullCollect(fullCollect);
-    pool_->SetMinimumCapacity(minimumCapacity);
-    pool_->SetCollectThreshold(collectThreshold);
-    pool_->SetCollectRate(collectRate);
+    // Set up the parameters of package pool
+    pool_->SetHalfCollect(half_collect);
+    pool_->SetFullCollect(full_collect);
+    pool_->SetMinimumCapacity(minimum_capacity);
+    pool_->SetCollectThreshold(collect_threshold);
+    pool_->SetCollectRate(collect_rate);
 
-    pool_->Initial(initialCapacity);
+    // Initial the package pool
+    pool_->Initial(initial_capacity);
 
-    output_ = make_unique<OutputChannel>(stream_.get_executor(), outputSize);
+    // Create the output channel
+    output_ = make_unique<ConcurrentChannel<Message *>>(stream_.get_executor(), output_size);
 
+    // Generate the unique key
     key_ = fmt::format("{}-{}", RemoteAddress().to_string(), utils::UnixTime());
 }
 

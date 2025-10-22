@@ -4,9 +4,7 @@
 
 #include <memory>
 #include <asio/ssl/stream.hpp>
-#include <asio/experimental/concurrent_channel.hpp>
 
-#include "Gateway.h"
 
 namespace uranus {
 
@@ -38,7 +36,7 @@ using SslStream = asio::ssl::stream<TcpSocket>;
 
 class Connection final : public std::enable_shared_from_this<Connection> {
 
-    using OutputChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, Message *)>>;
+    // using OutputChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, Message *)>>;
 
 public:
     Connection() = delete;
@@ -80,7 +78,7 @@ private:
     unique_ptr<MessageCodec> codec_;
     shared_ptr<PackagePool> pool_;
 
-    unique_ptr<OutputChannel> output_;
+    unique_ptr<ConcurrentChannel<Message *>> output_;
 
     int64_t pid_;
 
