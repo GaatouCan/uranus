@@ -242,10 +242,15 @@ void PlayerContext::PushMessage(Message *msg) {
         return;
     }
 
-    auto node = make_unique<PackageNode>();
-    node->SetMessage(msg);
+    if ((msg->type & Message::kRequest) && msg->session > 0) {
 
-    this->PushNode(std::move(node));
+    } else if ((msg->type & Message::kResponse) && msg->session > 0) {
+
+    } else {
+        auto node = make_unique<PackageNode>();
+        node->SetMessage(msg);
+        this->PushNode(std::move(node));
+    }
 }
 
 void PlayerContext::CleanUp() {
