@@ -187,12 +187,24 @@ void PlayerContext::SendToService(const std::string &name, const Message &msg) {
 }
 
 void PlayerContext::RemoteCall(const int64_t target, Message req, SessionNode &&node) {
-    if (req.data == nullptr || ((req.type & Message::kRequest) == 0)) {
-        auto alloc = asio::get_associated_allocator(node.handler, asio::recycling_allocator<void>());
-        asio::dispatch(node.work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node.handler)]() mutable {
-            std::move(handler)(std::nullopt);
-        }));
+    auto dispose = [](SessionNode &&sess) {
+        auto alloc = asio::get_associated_allocator(
+            sess.handler,
+            asio::recycling_allocator<void>()
+        );
+        asio::dispatch(
+            sess.work.get_executor(),
+            asio::bind_allocator(
+                alloc,
+                [handler = std::move(sess.handler)]() mutable {
+                    std::move(handler)(std::nullopt);
+                }
+            )
+        );
+    };
 
+    if (req.data == nullptr || ((req.type & Message::kRequest) == 0)) {
+        dispose(std::move(node));
         this->DisposeMessage(req);
         return;
     }
@@ -213,11 +225,7 @@ void PlayerContext::RemoteCall(const int64_t target, Message req, SessionNode &&
         }
     }
 
-    auto alloc = asio::get_associated_allocator(node.handler, asio::recycling_allocator<void>());
-    asio::dispatch(node.work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node.handler)]() mutable {
-        std::move(handler)(std::nullopt);
-    }));
-
+    dispose(std::move(node));
     this->DisposeMessage(req);
 }
 
