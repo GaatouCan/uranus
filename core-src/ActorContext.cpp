@@ -41,7 +41,7 @@ namespace uranus {
 
     void ActorContext::PushMessage(const Message &msg) {
         if (!channel_->is_open()) {
-            this->ReleaseMessage(msg);
+            this->DisposeMessage(msg);
             return;
         }
 
@@ -50,7 +50,7 @@ namespace uranus {
                 const auto [ec] = co_await channel_->async_send(error_code{}, msg);
                 if (ec == asio::experimental::error::channel_closed ||
                     ec == asio::error::operation_aborted) {
-                    this->ReleaseMessage(msg);
+                    this->DisposeMessage(msg);
                 }
             }, detached);
         }
@@ -104,18 +104,18 @@ namespace uranus {
                 if (ec == asio::experimental::error::channel_closed ||
                     ec == asio::error::operation_aborted) {
                     SPDLOG_DEBUG("Actor[{:p}] close channel", static_cast<void *>(this));
-                    this->ReleaseMessage(msg);
+                    this->DisposeMessage(msg);
                     break;
                 }
 
                 if (ec) {
                     SPDLOG_ERROR("Actor[{:p}] error in processing: {}", static_cast<void *>(this), ec.message());
-                    this->ReleaseMessage(msg);
+                    this->DisposeMessage(msg);
                     continue;
                 }
 
                 this->HandleMessage(msg);
-                this->ReleaseMessage(msg);
+                this->DisposeMessage(msg);
             }
         } catch (const std::exception &e) {
             SPDLOG_ERROR("Actor[{:p}] - Exception: {}", static_cast<void *>(this), e.what());
@@ -123,7 +123,7 @@ namespace uranus {
 
         // Clean the channel
         while (channel_->try_receive([this](auto, const auto &msg) {
-            this->ReleaseMessage(msg);
+            this->DisposeMessage(msg);
         })) {}
     }
 

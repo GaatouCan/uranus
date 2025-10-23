@@ -19,7 +19,7 @@ namespace uranus {
 
         virtual awaitable<error_code> Initial() = 0;
 
-        virtual awaitable<error_code> Encode(Message *msg) = 0;
-        virtual awaitable<error_code> Decode(Message *msg) = 0;
+        virtual awaitable<error_code> Encode(const Message &msg) = 0;
+        virtual awaitable<error_code> Decode(const Message &msg) = 0;
     };
 }

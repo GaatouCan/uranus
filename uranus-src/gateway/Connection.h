@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "Message.h"
 #include "base/Types.h"
 
 #include <memory>
@@ -9,9 +9,7 @@
 
 namespace uranus {
 
-    struct Message;
     class MessageCodec;
-
     class GameServer;
 
     namespace network {
@@ -62,7 +60,7 @@ public:
     void SetPlayerID(int64_t pid);
     [[nodiscard]] int64_t GetPlayerID() const;
 
-    void SendToClient(Message *msg);
+    void SendToClient(const Message &msg);
 
 private:
     awaitable<void> ReadPackage();
@@ -87,7 +85,7 @@ private:
     shared_ptr<PackagePool> pool_;
 
     /// For output buffer
-    unique_ptr<ConcurrentChannel<Message *>> output_;
+    unique_ptr<ConcurrentChannel<Message>> output_;
 
     /// Record the player id mapping the client
     int64_t pid_;

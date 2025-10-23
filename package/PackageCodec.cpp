@@ -23,11 +23,11 @@ namespace uranus::network {
         co_return ec;
     }
 
-    awaitable<error_code> PackageCodec::Encode(Message *msg) {
-        if (msg == nullptr)
-            co_return MakeErrorCode(PackageErrc::kNullMessage);
+    awaitable<error_code> PackageCodec::Encode(const Message &msg) {
+        // if (msg == nullptr)
+        //     co_return MakeErrorCode(PackageErrc::kNullMessage);
 
-        auto *pkg = static_cast<Package *>(msg->data);
+        auto *pkg = static_cast<Package *>(msg.data);
 
         Package::PackageHeader header{};
         memset(&header, 0, Package::kPackageHeaderSize);
@@ -75,11 +75,11 @@ namespace uranus::network {
         co_return MakeErrorCode(PackageErrc::kOk);
     }
 
-    awaitable<error_code> PackageCodec::Decode(Message *msg) {
-        if (msg == nullptr)
-            co_return MakeErrorCode(PackageErrc::kNullMessage);
+    awaitable<error_code> PackageCodec::Decode(const Message &msg) {
+        // if (msg == nullptr)
+        //     co_return MakeErrorCode(PackageErrc::kNullMessage);
 
-        auto *pkg = static_cast<Package *>(msg->data);
+        auto *pkg = static_cast<Package *>(msg.data);
 
         const auto [header_ec, header_len] = co_await async_read(stream_, asio::buffer(&pkg->header_, Package::kPackageHeaderSize));
 

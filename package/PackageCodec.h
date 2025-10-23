@@ -19,7 +19,7 @@ namespace uranus::network {
 
         awaitable<error_code> Initial() override;
 
-        awaitable<error_code> Encode(Message *msg) override;
-        awaitable<error_code> Decode(Message *msg) override;
+        awaitable<error_code> Encode(const Message &msg) override;
+        awaitable<error_code> Decode(const Message &msg) override;
     };
 }

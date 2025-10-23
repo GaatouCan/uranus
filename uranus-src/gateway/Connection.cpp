@@ -58,7 +58,7 @@ Connection::Connection(SslStream &&stream, Gateway *gateway)
     pool_->Initial(initial_capacity);
 
     // Create the output channel
-    output_ = make_unique<ConcurrentChannel<Message *>>(stream_.get_executor(), output_size);
+    output_ = make_unique<ConcurrentChannel<Message>>(stream_.get_executor(), output_size);
 
     // Generate the unique key
     key_ = fmt::format("{}-{}", RemoteAddress().to_string(), utils::UnixTime());
@@ -140,9 +140,7 @@ int64_t Connection::GetPlayerID() const {
     return pid_;
 }
 
-void Connection::SendToClient(Message *msg) {
-    if (msg == nullptr) return;
-
+void Connection::SendToClient(const Message &msg) {
     if (!IsConnected()) {
         Package::ReleaseMessage(msg);
         return;
@@ -151,7 +149,8 @@ void Connection::SendToClient(Message *msg) {
     if (!output_->try_send_via_dispatch(error_code{}, msg)) {
         co_spawn(stream_.get_executor(), [self = shared_from_this(), msg]() mutable -> awaitable<void> {
             const auto [ec] = co_await self->output_->async_send(error_code{}, msg);
-            if (ec == asio::experimental::error::channel_closed) {
+            if (ec == asio::experimental::error::channel_closed ||
+                ec == asio::error::operation_aborted) {
                 Package::ReleaseMessage(msg);
             }
         }, detached);
@@ -161,13 +160,13 @@ void Connection::SendToClient(Message *msg) {
 awaitable<void> Connection::ReadPackage() {
     try {
         while (IsConnected()) {
-            auto *msg = new Message();
+            Message msg;
             auto *pkg = pool_->Acquire();
 
-            msg->type |= (Message::kFromClient | Message::kToPlayer);
-            msg->session = 0;
-            msg->data = reinterpret_cast<void *>(pkg);
-            msg->length = sizeof(Package);
+            msg.type        = (Message::kFromClient | Message::kToPlayer);
+            msg.session     = 0;
+            msg.data        = reinterpret_cast<void *>(pkg);
+            msg.length      = sizeof(Package);
 
             const auto ec = co_await codec_->Decode(msg);
             if (ec) {
@@ -179,7 +178,7 @@ awaitable<void> Connection::ReadPackage() {
 
             if (pid_ < 0) {
                 if (auto *auth = GetGameServer()->GetModule<LoginAuth>()) {
-                    auth->OnPlayerLogin(shared_from_this(), static_cast<Package *>(msg->data));
+                    auth->OnPlayerLogin(shared_from_this(), static_cast<Package *>(msg.data));
                 }
                 Package::ReleaseMessage(msg);
                 continue;
@@ -212,7 +211,7 @@ awaitable<void> Connection::WritePackage() {
                 break;
             }
 
-            if (msg == nullptr || msg->data == nullptr) {
+            if (msg.data == nullptr) {
                 Package::ReleaseMessage(msg);
                 continue;
             }
@@ -224,7 +223,6 @@ awaitable<void> Connection::WritePackage() {
             }
 
             const auto codec_ec = co_await codec_->Encode(msg);
-
             Package::ReleaseMessage(msg);
 
             if (codec_ec) {
@@ -233,14 +231,9 @@ awaitable<void> Connection::WritePackage() {
             }
         }
 
-        while (true) {
-            const bool ok = output_->try_receive([](error_code ec, Message *msg) {
-                Package::ReleaseMessage(msg);
-            });
-
-            if (!ok)
-                break;
-        }
+        while (output_->try_receive([](auto, const auto &msg) {
+            Package::ReleaseMessage(msg);
+        })) {}
     } catch (const std::exception &e) {
         SPDLOG_ERROR("Connection[{}] - Exception: {}", key_, e.what());
     }

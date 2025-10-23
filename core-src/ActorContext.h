@@ -79,7 +79,7 @@ namespace uranus {
 
         virtual void HandleMessage(const Message &msg) = 0;
 
-        virtual void ReleaseMessage(const Message &msg) = 0;
+        virtual void DisposeMessage(const Message &msg) = 0;
 
         //virtual void OnRequest(const Message &req) = 0;
         //virtual void OnResponse(const Message &res) = 0;
