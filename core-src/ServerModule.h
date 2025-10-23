@@ -7,6 +7,9 @@ namespace uranus {
 
     class GameServer;
 
+    /**
+     * The base abstract class for the base module in game server
+     */
     class CORE_API ServerModule {
 
     public:

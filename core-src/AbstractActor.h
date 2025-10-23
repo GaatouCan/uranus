@@ -31,7 +31,10 @@ namespace uranus {
         virtual void OnRequest(const Message &req, Message &res);
 
     protected:
+        /// Get the ActorContext which manages this actor
         [[nodiscard]] ActorContext *GetActorContext() const;
+
+        /// Get the pointer to the GameServer
         [[nodiscard]] GameServer *GetGameServer() const;
 
         template<class T>
@@ -42,6 +45,7 @@ namespace uranus {
         void SetUpContext(ActorContext *ctx);
 
     private:
+        /// The pointer to the context manages this actor
         ActorContext *ctx_;
     };
 

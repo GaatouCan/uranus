@@ -46,6 +46,8 @@ namespace uranus {
         }
 
         if (!channel_->try_send_via_dispatch(error_code{}, msg)) {
+            // If the channel is full
+            // Resend the message in coroutine
             co_spawn(ctx_, [self = shared_from_this(), this, msg]() mutable -> awaitable<void> {
                 const auto [ec] = co_await channel_->async_send(error_code{}, msg);
                 if (ec == asio::experimental::error::channel_closed ||
@@ -128,6 +130,7 @@ namespace uranus {
     }
 
     void ActorContext::CleanUp() {
+        // Clean the session still not replied
         for (const auto &sess : sessions_ | std::views::values) {
             auto alloc = asio::get_associated_allocator(
                 sess.handler,
@@ -138,7 +141,7 @@ namespace uranus {
                 sess.work.get_executor(),
                 asio::bind_allocator(
                     alloc,
-                    [handler = std::move(sess.handler)]() mutable {
+                    [handler = sess.handler]() mutable {
                         std::move(handler)(std::nullopt);
                     }
                 )
