@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option optimize_for = LITE_RUNTIME;
+
+package Login;
+
+message Heartbeat {
+  int64 player_id = 1;
+  string message = 2;
+}
+
+message LoginRequest {
+  int64 player_id = 1;
+  string token = 2;
+}
+
+message LoginResponse {
+  enum ResultType {
+    Success = 0;
+    TokenError = 1;
+    PlayerIDError = 2;
+    Repeated = 3;
+  }
+
+  int64 player_id = 1;
+  ResultType result = 2;
+}

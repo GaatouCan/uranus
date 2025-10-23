@@ -28,6 +28,8 @@ list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/libmimalloc)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/nlohmann_json)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/YAML_CPP)
+list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/protobuf)
+list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/zlib)
 
 find_package(spdlog CONFIG REQUIRED)
 find_package(asio CONFIG REQUIRED)
@@ -65,6 +67,7 @@ set_target_properties(core PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DI
 
 add_subdirectory(config_module)
 add_subdirectory(package)
+add_subdirectory(protocol)
 
 # Uranus executable
 file(GLOB_RECURSE URANUS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.cpp)
