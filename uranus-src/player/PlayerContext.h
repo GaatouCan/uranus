@@ -45,12 +45,6 @@ public:
 
     void RemoteCall(int64_t target, Message req, SessionNode &&node) override;
 
-    // void PushMessage(const Message &msg) override;
-
-    // void OnRequest(Message *req) override;
-    //
-    // void OnResponse(Message *res) override;
-
 protected:
     void CleanUp() override;
 

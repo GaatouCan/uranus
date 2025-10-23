@@ -1,7 +1,6 @@
 #include "ServiceContext.h"
 #include "AbstractService.h"
 #include "Message.h"
-#include "PackageNode.h"
 #include "PackagePool.h"
 #include "ServiceManager.h"
 #include "ConfigModule.h"
@@ -14,7 +13,6 @@
 
 using uranus::ChannelNode;
 using uranus::network::Package;
-using uranus::network::PackageNode;
 using uranus::config::ConfigModule;
 
 
@@ -29,7 +27,7 @@ ServiceContext::ServiceContext(GameWorld *world)
     const auto collectThreshold = cfg["service"]["recycler"]["collectThreshold"].as<double>();
     const auto collectRate = cfg["service"]["recycler"]["collectRate"].as<double>();
 
-    channel_ = make_unique<ConcurrentChannel<unique_ptr<ChannelNode>>>(GetIOContext(), channelSize);
+    channel_ = make_unique<ConcurrentChannel<Message>>(GetIOContext(), channelSize);
 
     pool_ = make_shared<PackagePool>();
 
@@ -67,17 +65,17 @@ GameWorld *ServiceContext::GetWorld() const {
     return dynamic_cast<GameWorld *>(GetGameServer());
 }
 
-Message *ServiceContext::BuildMessage() {
-    auto *msg = new Message();
+Message ServiceContext::BuildMessage() {
+    Message msg;
 
-    msg->type = Message::kFromService;
-    msg->source = handle_->GetServiceID();
-    msg->session = 0;
+    msg.type = Message::kFromService;
+    msg.source = handle_->GetServiceID();
+    msg.session = 0;
 
     auto *pkg = pool_->Acquire();
 
-    msg->data = pkg;
-    msg->length = sizeof(Package);
+    msg.data = pkg;
+    msg.length = sizeof(Package);
 
     return msg;
 }
@@ -118,23 +116,23 @@ int ServiceContext::Start() {
     return 1;
 }
 
-void ServiceContext::Send(int64_t target, Message *msg) {
+void ServiceContext::Send(const int64_t target, const Message &msg) {
     if (!handle_.IsValid()) {
         throw std::runtime_error(std::format(
             "{} - ServiceContext[{:p}] - Service Handle is invalid",
             __FUNCTION__, static_cast<const void *>(this)));
     }
 
-    if (msg == nullptr || msg->data == nullptr) {
-        Package::ReleaseMessage(msg);
+    if (msg.data == nullptr) {
+        this->DisposeMessage(msg);
         return;
     }
 
-    if (msg->type & Message::kToServer) {
+    if (msg.type & Message::kToServer) {
         // TODO
-    } else if (msg->type & Message::kToService) {
+    } else if (msg.type & Message::kToService) {
         if (target < 0 || target == handle_->GetServiceID()) {
-            Package::ReleaseMessage(msg);
+            this->DisposeMessage(msg);
             return;
         }
         if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
@@ -143,9 +141,9 @@ void ServiceContext::Send(int64_t target, Message *msg) {
                 return;
             }
         }
-    } else if (msg->type & Message::kToPlayer) {
+    } else if (msg.type & Message::kToPlayer) {
         if (target <= 0) {
-            Package::ReleaseMessage(msg);
+            this->DisposeMessage(msg);
             return;
         }
         if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
@@ -154,9 +152,9 @@ void ServiceContext::Send(int64_t target, Message *msg) {
                 return;
             }
         }
-    } else if (msg->type & Message::kToClient) {
+    } else if (msg.type & Message::kToClient) {
         if (target <= 0) {
-            Package::ReleaseMessage(msg);
+            this->DisposeMessage(msg);
             return;
         }
         if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
@@ -167,7 +165,7 @@ void ServiceContext::Send(int64_t target, Message *msg) {
         }
     }
 
-    Package::ReleaseMessage(msg);
+    this->DisposeMessage(msg);
 }
 
 void ServiceContext::CleanUp() {
@@ -178,15 +176,94 @@ void ServiceContext::CleanUp() {
     handle_.Release();
 }
 
-void ServiceContext::SendToService(const std::string &name, Message *msg) {
+void ServiceContext::HandleMessage(const Message &msg) {
+    if (msg.data == nullptr)
+        return;
+
+    if ((msg.type & Message::kToService) == 0) {
+        this->DisposeMessage(msg);
+        return;
+    }
+
+    if (msg.type & Message::kRequest) {
+        if ((msg.type & Message::kFromService) == 0 &&
+            (msg.type & Message::kFromServer) == 0 &&
+            (msg.type & Message::kFromPlayer) == 0) {
+            return;
+        }
+
+        auto res = this->BuildMessage();
+
+        res.type |= Message::kResponse;
+        res.session = msg.session;
+
+        handle_->OnRequest(msg, res);
+
+        if (msg.type & Message::kFromService) {
+            res.type |= Message::kToService;
+            if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+                if (const auto ser = mgr->FindService(msg.source)) {
+                    ser->PushMessage(res);
+                    return;
+                }
+            }
+        } else if (msg.type & Message::kFromPlayer) {
+            res.type |= Message::kToPlayer;
+            if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
+                if (const auto plr = mgr->FindPlayer(msg.source)) {
+                    plr->PushMessage(res);
+                    return;
+                }
+            }
+        } else if (msg.type & Message::kFromServer) {
+            // TODO
+        }
+    } else if (msg.type & Message::kResponse) {
+        if (msg.session < 0) {
+            this->DisposeMessage(msg);
+            return;
+        }
+
+        const auto op = this->TakeSession(msg.session);
+        if (!op.has_value()) {
+            this->DisposeMessage(msg);
+            return;
+        }
+
+        auto [handler, work] = std::move(op.value());
+        auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
+        asio::dispatch(
+            work.get_executor(),
+            asio::bind_allocator(
+                alloc,
+                [handle = std::move(handler), msg]() mutable {
+                    std::move(handle)(msg);
+                }
+            )
+        );
+    } else {
+        handle_->OnReceive(msg);
+    }
+
+    this->DisposeMessage(msg);
+}
+
+void ServiceContext::DisposeMessage(const Message &msg) {
+    Package::ReleaseMessage(msg);
+}
+
+void ServiceContext::SendToService(const std::string &name, const Message &msg) {
     if (!handle_.IsValid()) {
         throw std::runtime_error(std::format(
             "{} - ServiceContext[{:p}] - Service Handle is invalid",
             __FUNCTION__, static_cast<const void *>(this)));
     }
 
-    if (msg == nullptr || msg->data == nullptr || name.empty()) {
-        Package::ReleaseMessage(msg);
+    if (msg.data == nullptr)
+        return;
+
+    if (name.empty()) {
+        this->DisposeMessage(msg);
         return;
     }
 
@@ -197,48 +274,47 @@ void ServiceContext::SendToService(const std::string &name, Message *msg) {
     }
 
     if (target >= 0 || target != handle_->GetServiceID()) {
-        msg->type |= Message::kToService;
         this->Send(target, msg);
         return;
     }
 
-    Package::ReleaseMessage(msg);
+    this->DisposeMessage(msg);
 }
 
-void ServiceContext::RemoteCall(const int64_t target, Message *msg, std::unique_ptr<SessionNode> &&node) {
-    if (msg == nullptr || msg->data == nullptr || ((msg->type  & Message::kRequest) == 0)) {
-        auto alloc = asio::get_associated_allocator(node->handler, asio::recycling_allocator<void>());
-        asio::dispatch(node->work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node->handler)]() mutable {
-            std::move(handler)(nullptr);
+void ServiceContext::RemoteCall(const int64_t target, Message req, SessionNode &&node) {
+    if (req.data == nullptr || ((req.type  & Message::kRequest) == 0)) {
+        auto alloc = asio::get_associated_allocator(node.handler, asio::recycling_allocator<void>());
+        asio::dispatch(node.work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node.handler)]() mutable {
+            std::move(handler)(std::nullopt);
         }));
 
-        Package::ReleaseMessage(msg);
+        this->DisposeMessage(req);
         return;
     }
 
-    if (msg->type & Message::kToService) {
+    if (req.type & Message::kToService) {
         if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
             if (const auto ser = mgr->FindService(target)) {
                 const auto sess_id = this->AllocateSessionID();
 
-                msg->type |= Message::kRequest;
-                msg->session = sess_id;
+                req.type |= Message::kRequest;
+                req.session = sess_id;
 
-                ser->PushMessage(msg);
+                ser->PushMessage(req);
 
                 this->PushSession(sess_id, std::move(node));
                 return;
             }
         }
-    } else if (msg->type & Message::kToPlayer) {
+    } else if (req.type & Message::kToPlayer) {
         if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
             if (const auto plr = mgr->FindPlayer(target)) {
                 const auto sess_id = this->AllocateSessionID();
 
-                msg->type |= Message::kRequest;
-                msg->session = sess_id;
+                req.type |= Message::kRequest;
+                req.session = sess_id;
 
-                plr->PushMessage(msg);
+                plr->PushMessage(req);
 
                 this->PushSession(sess_id, std::move(node));
                 return;
@@ -246,27 +322,27 @@ void ServiceContext::RemoteCall(const int64_t target, Message *msg, std::unique_
         }
     }
 
-    auto alloc = asio::get_associated_allocator(node->handler, asio::recycling_allocator<void>());
-    asio::dispatch(node->work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node->handler)]() mutable {
-        std::move(handler)(nullptr);
+    auto alloc = asio::get_associated_allocator(node.handler, asio::recycling_allocator<void>());
+    asio::dispatch(node.work.get_executor(), asio::bind_allocator(alloc, [handler = std::move(node.handler)]() mutable {
+        std::move(handler)(std::nullopt);
     }));
 
-    Package::ReleaseMessage(msg);
+    this->DisposeMessage(req);
 }
 
-void ServiceContext::PushMessage(Message *msg) {
-    if (msg == nullptr || msg->data == nullptr || IsChannelClosed()) {
-        Package::ReleaseMessage(msg);
-        return;
-    }
+// void ServiceContext::PushMessage(Message *msg) {
+//     if (msg == nullptr || msg->data == nullptr || IsChannelClosed()) {
+//         Package::ReleaseMessage(msg);
+//         return;
+//     }
+//
+//     auto node = make_unique<PackageNode>();
+//     node->SetMessage(msg);
+//
+//     this->PushNode(std::move(node));
+// }
 
-    auto node = make_unique<PackageNode>();
-    node->SetMessage(msg);
-
-    this->PushNode(std::move(node));
-}
-
-void ServiceContext::OnRequest(Message *req) {
+/*void ServiceContext::OnRequest(Message *req) {
     // msg will be released in ::~PackageNode
     if (req == nullptr || req->data == nullptr || (req->type & Message::kRequest) == 0) {
         return;
@@ -332,7 +408,7 @@ void ServiceContext::OnResponse(Message *res) {
             }
         )
     );
-}
+}*/
 
 void ServiceContext::SetUpService(ServiceHandle &&handle) {
     handle_ = std::move(handle);

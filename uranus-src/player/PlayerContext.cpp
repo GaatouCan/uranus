@@ -269,23 +269,26 @@ void PlayerContext::HandleMessage(const Message &msg) {
             this->DisposeMessage(msg);
             return;
         }
+
         const auto op = this->TakeSession(msg.session);
         if (!op.has_value()) {
-            Package::ReleaseMessage(msg);
+            this->DisposeMessage(msg);
             return;
         }
 
-        auto sess = std::move(op.value());
-        auto alloc = asio::get_associated_allocator(sess.handler, asio::recycling_allocator<void>());
+        auto [handler, work] = std::move(op.value());
+        auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
         asio::dispatch(
-            sess.work.get_executor(),
+            work.get_executor(),
             asio::bind_allocator(
                 alloc,
-                [handler = std::move(sess.handler), msg]() mutable {
-                    std::move(handler)(msg);
+                [handle = std::move(handler), msg]() mutable {
+                    std::move(handle)(msg);
                 }
             )
         );
+    } else {
+        handle_->OnReceive(msg);
     }
 
     this->DisposeMessage(msg);
