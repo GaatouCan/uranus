@@ -77,7 +77,7 @@ namespace uranus::network {
 
         static constexpr size_t kPackageHeaderSize = sizeof(PackageHeader);
 
-        static void ReleaseMessage(const Message *msg);
+        static void ReleaseMessage(const Message &msg);
 
     private:
         Recycler<Package>::Handle handle_;

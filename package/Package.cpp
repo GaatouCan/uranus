@@ -63,12 +63,12 @@ namespace uranus::network {
         return {payload_.begin(), payload_.end()};
     }
 
-    void Package::ReleaseMessage(const Message *msg) {
-        if (msg == nullptr)
-            return;
+    void Package::ReleaseMessage(const Message &msg) {
+        // if (msg == nullptr)
+        //     return;
 
-        if (msg->data == nullptr) {
-            delete msg;
+        if (msg.data == nullptr) {
+            // delete msg;
             return;
         }
 
@@ -77,9 +77,9 @@ namespace uranus::network {
         //     return;
         // }
 
-        auto *pkg = static_cast<Package *>(msg->data);
+        auto *pkg = static_cast<Package *>(msg.data);
         pkg->Recycle();
 
-        delete msg;
+        // delete msg;
     }
 }
