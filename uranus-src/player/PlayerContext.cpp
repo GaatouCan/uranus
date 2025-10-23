@@ -57,6 +57,16 @@ AbstractActor *PlayerContext::GetActor() const {
     return handle_.Get();
 }
 
+AbstractPlayer *PlayerContext::GetPlayer() const {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - PlayerContext[{:p}] - Player Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    return handle_.Get();
+}
+
 GameWorld *PlayerContext::GetWorld() const {
     return dynamic_cast<GameWorld *>(GetGameServer());
 }

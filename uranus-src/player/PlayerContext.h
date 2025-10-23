@@ -30,6 +30,7 @@ public:
     ~PlayerContext() override;
 
     [[nodiscard]] AbstractActor *GetActor() const override;
+    [[nodiscard]] AbstractPlayer *GetPlayer() const;
 
     [[nodiscard]] GameWorld *GetWorld() const;
 
