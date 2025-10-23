@@ -113,7 +113,7 @@ Message *PlayerContext::BuildMessage() {
     return msg;
 }
 
-void PlayerContext::Send(int64_t target, Message *msg) {
+void PlayerContext::Send(const int64_t target, Message *msg) {
     if (!handle_.IsValid()) {
         throw std::runtime_error(std::format(
             "{} - PlayerContext[{:p}] - Player Handle is invalid",
