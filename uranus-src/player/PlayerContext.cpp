@@ -43,6 +43,7 @@ PlayerContext::PlayerContext(GameWorld *world)
 }
 
 PlayerContext::~PlayerContext() {
+    CleanUp();
 }
 
 AbstractActor *PlayerContext::GetActor() const {

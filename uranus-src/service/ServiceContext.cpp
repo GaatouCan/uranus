@@ -20,25 +20,26 @@ ServiceContext::ServiceContext(GameWorld *world)
     : ActorContext(world) {
     const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
 
-    const auto channelSize = cfg["service"]["queueBuffer"].as<int>();
-    const auto minimumCapacity = cfg["service"]["recycler"]["minimumCapacity"].as<int>();
-    const auto halfCollect = cfg["service"]["recycler"]["halfCollect"].as<int>();
-    const auto fullCollect = cfg["service"]["recycler"]["fullCollect"].as<int>();
-    const auto collectThreshold = cfg["service"]["recycler"]["collectThreshold"].as<double>();
-    const auto collectRate = cfg["service"]["recycler"]["collectRate"].as<double>();
+    const auto channel_size             = cfg["service"]["queueBuffer"].as<int>();
+    const auto minimum_capacity         = cfg["service"]["recycler"]["minimumCapacity"].as<int>();
+    const auto half_collect             = cfg["service"]["recycler"]["halfCollect"].as<int>();
+    const auto full_collect             = cfg["service"]["recycler"]["fullCollect"].as<int>();
+    const auto collect_threshold    = cfg["service"]["recycler"]["collectThreshold"].as<double>();
+    const auto collect_rate         = cfg["service"]["recycler"]["collectRate"].as<double>();
 
-    channel_ = make_unique<ConcurrentChannel<Message>>(GetIOContext(), channelSize);
+    channel_ = make_unique<ConcurrentChannel<Message>>(GetIOContext(), channel_size);
 
     pool_ = make_shared<PackagePool>();
 
-    pool_->SetHalfCollect(halfCollect);
-    pool_->SetFullCollect(fullCollect);
-    pool_->SetMinimumCapacity(minimumCapacity);
-    pool_->SetCollectThreshold(collectThreshold);
-    pool_->SetCollectRate(collectRate);
+    pool_->SetHalfCollect(half_collect);
+    pool_->SetFullCollect(full_collect);
+    pool_->SetMinimumCapacity(minimum_capacity);
+    pool_->SetCollectThreshold(collect_threshold);
+    pool_->SetCollectRate(collect_rate);
 }
 
 ServiceContext::~ServiceContext() {
+    CleanUp();
 }
 
 AbstractActor *ServiceContext::GetActor() const {
@@ -88,9 +89,9 @@ int ServiceContext::Initial(DataAsset *data) {
     }
 
     const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
-    const auto initialCapacity  = cfg["service"]["recycler"]["initialCapacity"].as<int>();
+    const auto capacity  = cfg["service"]["recycler"]["initialCapacity"].as<int>();
 
-    pool_->Initial(initialCapacity);
+    pool_->Initial(capacity);
 
     const auto ret = handle_->Initial(data);
     return ret;
