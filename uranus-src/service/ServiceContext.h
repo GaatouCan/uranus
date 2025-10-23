@@ -37,7 +37,13 @@ public:
 
     void SendToService(const std::string &name, Message *msg) override;
 
+    void RemoteCall(int64_t target, Message *msg, std::unique_ptr<SessionNode> &&node) override;
+
     void PushMessage(Message *msg) override;
+
+    void OnRequest(Message *req) override;
+
+    void OnResponse(Message *res) override;
 
 protected:
     void CleanUp() override;
