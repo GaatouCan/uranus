@@ -99,8 +99,8 @@ int PlayerContext::Start() {
     }
 
     co_spawn(GetIOContext(), [self = shared_from_this(), this] mutable -> awaitable<void> {
-        co_await this->Process();
-        this->CleanUp();
+        co_await Process();
+        CleanUp();
     }, detached);
 
 
@@ -137,7 +137,7 @@ void PlayerContext::Send(const int64_t target, const Message &msg) {
         // TODO
     } else if (msg.type & Message::kToService) {
         if (target < 0) {
-            this->DisposeMessage(msg);
+            DisposeMessage(msg);
             return;
         }
         if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
@@ -148,7 +148,7 @@ void PlayerContext::Send(const int64_t target, const Message &msg) {
         }
     } else if (msg.type & Message::kToClient) {
         if (target != handle_->GetPlayerID()) {
-            this->DisposeMessage(msg);
+            DisposeMessage(msg);
             return;
         }
         if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
@@ -159,7 +159,7 @@ void PlayerContext::Send(const int64_t target, const Message &msg) {
         }
     }
 
-    this->DisposeMessage(msg);
+    DisposeMessage(msg);
 }
 
 void PlayerContext::SendToService(const std::string &name, const Message &msg) {
@@ -173,7 +173,7 @@ void PlayerContext::SendToService(const std::string &name, const Message &msg) {
         return;
 
     if (name.empty()) {
-        this->DisposeMessage(msg);
+        DisposeMessage(msg);
         return;
     }
 
@@ -184,7 +184,7 @@ void PlayerContext::SendToService(const std::string &name, const Message &msg) {
         }
     }
 
-    this->DisposeMessage(msg);
+    DisposeMessage(msg);
 }
 
 void PlayerContext::RemoteCall(const int64_t target, Message req, SessionNode &&node) {
@@ -206,28 +206,28 @@ void PlayerContext::RemoteCall(const int64_t target, Message req, SessionNode &&
 
     if (req.data == nullptr || ((req.type & Message::kRequest) == 0)) {
         dispose(std::move(node));
-        this->DisposeMessage(req);
+        DisposeMessage(req);
         return;
     }
 
     if (req.type & Message::kToService) {
         if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
             if (const auto ser = mgr->FindService(target)) {
-                const auto sess_id = this->AllocateSessionID();
+                const auto sess_id = AllocateSessionID();
 
                 req.type |= Message::kRequest;
                 req.session = sess_id;
 
                 ser->PushMessage(req);
 
-                this->PushSession(sess_id, std::move(node));
+                PushSession(sess_id, std::move(node));
                 return;
             }
         }
     }
 
     dispose(std::move(node));
-    this->DisposeMessage(req);
+    DisposeMessage(req);
 }
 
 void PlayerContext::CleanUp() {
@@ -243,7 +243,7 @@ void PlayerContext::HandleMessage(const Message &msg) {
         return;
 
     if ((msg.type & Message::kToPlayer)== 0) {
-        this->DisposeMessage(msg);
+        DisposeMessage(msg);
         return;
     }
 
@@ -251,11 +251,11 @@ void PlayerContext::HandleMessage(const Message &msg) {
         // Only Handle From Service Or From Server
         if ((msg.type & Message::kFromService) == 0 &&
             (msg.type & Message::kFromServer) == 0) {
-            this->DisposeMessage(msg);
+            DisposeMessage(msg);
             return;
         }
 
-        auto res = this->BuildMessage();
+        auto res = BuildMessage();
 
         res.type |= Message::kResponse;
         res.session = msg.session;
@@ -274,16 +274,16 @@ void PlayerContext::HandleMessage(const Message &msg) {
             // TODO
         }
 
-        this->DisposeMessage(res);
+        DisposeMessage(res);
     } else if (msg.type & Message::kResponse) {
         if (msg.session < 0) {
-            this->DisposeMessage(msg);
+            DisposeMessage(msg);
             return;
         }
 
-        const auto op = this->TakeSession(msg.session);
+        const auto op = TakeSession(msg.session);
         if (!op.has_value()) {
-            this->DisposeMessage(msg);
+            DisposeMessage(msg);
             return;
         }
 
@@ -302,7 +302,7 @@ void PlayerContext::HandleMessage(const Message &msg) {
         handle_->OnReceive(msg);
     }
 
-    this->DisposeMessage(msg);
+    DisposeMessage(msg);
 }
 
 void PlayerContext::DisposeMessage(const Message &msg) {
@@ -311,5 +311,5 @@ void PlayerContext::DisposeMessage(const Message &msg) {
 
 void PlayerContext::SetUpPlayer(PlayerHandle &&handle) {
     handle_ = std::move(handle);
-    this->SetUpActor();
+    SetUpActor();
 }
