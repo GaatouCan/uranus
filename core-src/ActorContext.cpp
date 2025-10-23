@@ -114,8 +114,8 @@ namespace uranus {
                     continue;
                 }
 
+                // ::HandleMessage must manage the resource in msg
                 this->HandleMessage(msg);
-                this->DisposeMessage(msg);
             }
         } catch (const std::exception &e) {
             SPDLOG_ERROR("Actor[{:p}] - Exception: {}", static_cast<void *>(this), e.what());

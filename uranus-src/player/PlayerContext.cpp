@@ -264,6 +264,8 @@ void PlayerContext::HandleMessage(const Message &msg) {
         } else if (msg.type & Message::kFromServer) {
             // TODO
         }
+
+        this->DisposeMessage(res);
     } else if (msg.type & Message::kResponse) {
         if (msg.session < 0) {
             this->DisposeMessage(msg);

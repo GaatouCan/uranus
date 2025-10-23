@@ -218,6 +218,8 @@ void ServiceContext::HandleMessage(const Message &msg) {
         } else if (msg.type & Message::kFromServer) {
             // TODO
         }
+
+        this->DisposeMessage(res);
     } else if (msg.type & Message::kResponse) {
         if (msg.session < 0) {
             this->DisposeMessage(msg);
@@ -329,86 +331,6 @@ void ServiceContext::RemoteCall(const int64_t target, Message req, SessionNode &
 
     this->DisposeMessage(req);
 }
-
-// void ServiceContext::PushMessage(Message *msg) {
-//     if (msg == nullptr || msg->data == nullptr || IsChannelClosed()) {
-//         Package::ReleaseMessage(msg);
-//         return;
-//     }
-//
-//     auto node = make_unique<PackageNode>();
-//     node->SetMessage(msg);
-//
-//     this->PushNode(std::move(node));
-// }
-
-/*void ServiceContext::OnRequest(Message *req) {
-    // msg will be released in ::~PackageNode
-    if (req == nullptr || req->data == nullptr || (req->type & Message::kRequest) == 0) {
-        return;
-    }
-
-    if ((req->type & Message::kFromService) == 0 &&
-        (req->type & Message::kFromServer) == 0 &&
-        (req->type & Message::kFromPlayer) == 0) {
-        return;
-    }
-
-    auto *res = this->BuildMessage();
-
-    res->type |= Message::kResponse;
-    res->session = req->session;
-
-    handle_->OnRequest(req, res);
-
-    if (req->type & Message::kFromService) {
-        res->type |= Message::kToService;
-        if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
-            if (const auto ser = mgr->FindService(req->source)) {
-                ser->PushMessage(res);
-                return;
-            }
-        }
-    } else if (req->type & Message::kFromPlayer) {
-        res->type |= Message::kToPlayer;
-        if (const auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
-            if (const auto plr = mgr->FindPlayer(req->source)) {
-                plr->PushMessage(res);
-                return;
-            }
-        }
-    } else if (req->type & Message::kFromServer) {
-        // TODO
-    }
-
-    // If not return earlier, release the response
-    Package::ReleaseMessage(res);
-}
-
-void ServiceContext::OnResponse(Message *res) {
-    // response 's life cycle handled by caller
-    if (res == nullptr || res->data == nullptr || (res->type & Message::kResponse) == 0 || res->session < 0) {
-        Package::ReleaseMessage(res);
-        return;
-    }
-
-    const auto sess = this->TakeSession(res->session);
-    if (sess == nullptr) {
-        Package::ReleaseMessage(res);
-        return;
-    }
-
-    auto alloc = asio::get_associated_allocator(sess->handler, asio::recycling_allocator<void>());
-    asio::dispatch(
-        sess->work.get_executor(),
-        asio::bind_allocator(
-            alloc,
-            [handler = std::move(sess->handler), res]() mutable {
-                std::move(handler)(res);
-            }
-        )
-    );
-}*/
 
 void ServiceContext::SetUpService(ServiceHandle &&handle) {
     handle_ = std::move(handle);
