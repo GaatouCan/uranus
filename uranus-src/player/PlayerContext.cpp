@@ -77,9 +77,9 @@ int PlayerContext::Initial(DataAsset *data) {
     }
 
     const auto &cfg = GetGameServer()->GetModule<ConfigModule>()->GetServerConfig();
-    const auto initialCapacity  = cfg["player"]["recycler"]["initialCapacity"].as<int>();
+    const auto capacity  = cfg["player"]["recycler"]["initialCapacity"].as<int>();
 
-    pool_->Initial(initialCapacity);
+    pool_->Initial(capacity);
 
     const auto ret = handle_->Initial(data);
     return ret;

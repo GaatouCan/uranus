@@ -56,7 +56,9 @@ private:
     void SetUpPlayer(PlayerHandle &&handle);
 
 private:
+    // The handle for player instance
     PlayerHandle handle_;
 
+    // The package pool for message
     shared_ptr<PackagePool> pool_;
 };
