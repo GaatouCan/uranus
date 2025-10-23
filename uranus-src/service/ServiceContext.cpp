@@ -233,7 +233,7 @@ void ServiceContext::HandleMessage(const Message &msg) {
             return;
         }
 
-        auto [handler, work] = std::move(op.value());
+        auto [handler, work] = op.value();
         auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
         asio::dispatch(
             work.get_executor(),
