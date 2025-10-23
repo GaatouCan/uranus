@@ -22,9 +22,12 @@ namespace uranus {
         virtual int Start();
         virtual void Stop();
 
+        /// Handle while receive message
         virtual void OnReceive(const Message &msg);
 
-        virtual void OnRequest(const Message &msg, Message &res);
+        /// Handle while receive request from other actor,
+        /// and write back to the res
+        virtual void OnRequest(const Message &req, Message &res);
 
     protected:
         [[nodiscard]] ActorContext *GetActorContext() const;
