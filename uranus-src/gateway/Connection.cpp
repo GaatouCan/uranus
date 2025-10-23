@@ -65,7 +65,7 @@ Connection::Connection(SslStream &&stream, Gateway *gateway)
 }
 
 Connection::~Connection() {
-    this->Disconnect();
+    Disconnect();
 }
 
 std::string Connection::GetKey() const {
@@ -173,7 +173,7 @@ awaitable<void> Connection::ReadPackage() {
             if (ec) {
                 SPDLOG_ERROR("Connection[{}] - Failed to read package, error: {}", key_, ec.message());
                 Package::ReleaseMessage(msg);
-                this->Disconnect();
+                Disconnect();
                 break;
             }
 
@@ -227,7 +227,7 @@ awaitable<void> Connection::WritePackage() {
             Package::ReleaseMessage(msg);
 
             if (codec_ec) {
-                this->Disconnect();
+                Disconnect();
                 break;
             }
         }
@@ -261,7 +261,7 @@ awaitable<void> Connection::Watchdog() {
         } while (received_ + expiration_ > now);
 
         if (IsConnected()) {
-            this->Disconnect();
+            Disconnect();
         }
     } catch (const std::exception &e) {
         SPDLOG_ERROR("Connection[{}] - Exception: {}", key_, e.what());

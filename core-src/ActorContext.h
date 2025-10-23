@@ -120,7 +120,7 @@ namespace uranus {
     auto ActorContext::AsyncCall(int64_t target, const Message &req, CompleteToken &&token) {
         auto init = [this, target](asio::completion_handler_for<void(optional<Message>)> auto handler, const Message &request) {
             auto work = asio::make_work_guard(handler);
-            this->RemoteCall(target, request, SessionNode{std::move(handler), std::move(work)});
+            RemoteCall(target, request, SessionNode{std::move(handler), std::move(work)});
         };
 
         return asio::async_initiate<CompleteToken, void(optional<Message>)>(init, token, req);

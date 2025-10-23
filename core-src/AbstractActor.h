@@ -51,6 +51,6 @@ namespace uranus {
 
     template<class T> requires std::is_base_of_v<ServerModule, T>
     T *AbstractActor::GetServerModule() const {
-        return this->GetGameServer()->GetModule<T>();
+        return GetGameServer()->GetModule<T>();
     }
 }

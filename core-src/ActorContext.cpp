@@ -41,7 +41,7 @@ namespace uranus {
 
     void ActorContext::PushMessage(const Message &msg) {
         if (!channel_->is_open()) {
-            this->DisposeMessage(msg);
+            DisposeMessage(msg);
             return;
         }
 
@@ -52,14 +52,14 @@ namespace uranus {
                 const auto [ec] = co_await channel_->async_send(error_code{}, msg);
                 if (ec == asio::experimental::error::channel_closed ||
                     ec == asio::error::operation_aborted) {
-                    this->DisposeMessage(msg);
+                    DisposeMessage(msg);
                 }
             }, detached);
         }
     }
 
     void ActorContext::SetUpActor() {
-        if (auto *actor = this->GetActor(); actor != nullptr) {
+        if (auto *actor = GetActor(); actor != nullptr) {
             actor->SetUpContext(this);
         }
     }
@@ -106,18 +106,18 @@ namespace uranus {
                 if (ec == asio::experimental::error::channel_closed ||
                     ec == asio::error::operation_aborted) {
                     SPDLOG_DEBUG("Actor[{:p}] close channel", static_cast<void *>(this));
-                    this->DisposeMessage(msg);
+                    DisposeMessage(msg);
                     break;
                 }
 
                 if (ec) {
                     SPDLOG_ERROR("Actor[{:p}] error in processing: {}", static_cast<void *>(this), ec.message());
-                    this->DisposeMessage(msg);
+                    DisposeMessage(msg);
                     continue;
                 }
 
                 // ::HandleMessage must manage the resource in msg
-                this->HandleMessage(msg);
+                HandleMessage(msg);
             }
         } catch (const std::exception &e) {
             SPDLOG_ERROR("Actor[{:p}] - Exception: {}", static_cast<void *>(this), e.what());
@@ -125,7 +125,7 @@ namespace uranus {
 
         // Clean the channel
         while (channel_->try_receive([this](auto, const auto &msg) {
-            this->DisposeMessage(msg);
+            DisposeMessage(msg);
         })) {}
     }
 

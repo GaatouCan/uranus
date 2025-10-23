@@ -80,8 +80,8 @@ shared_ptr<ServiceContext> ServiceManager::FindService(const int64_t sid) const 
 }
 
 shared_ptr<ServiceContext> ServiceManager::FindService(const std::string &name) const {
-    if (const auto sid = this->FindServiceID(name); sid >= 0) {
-        return this->FindService(sid);
+    if (const auto sid = FindServiceID(name); sid >= 0) {
+        return FindService(sid);
     }
     return nullptr;
 }

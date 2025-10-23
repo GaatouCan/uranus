@@ -57,7 +57,7 @@ shared_ptr<Connection> Gateway::FindConnection(const int64_t pid) const {
     if (key.empty())
         return nullptr;
 
-    return this->FindConnection(key);
+    return FindConnection(key);
 }
 
 void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {

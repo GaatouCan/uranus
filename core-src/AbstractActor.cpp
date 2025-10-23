@@ -41,7 +41,7 @@ namespace uranus {
     }
 
     GameServer *AbstractActor::GetGameServer() const {
-        return this->GetActorContext()->GetGameServer();
+        return GetActorContext()->GetGameServer();
     }
 
     void AbstractActor::SetUpContext(ActorContext *ctx) {
