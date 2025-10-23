@@ -6,7 +6,10 @@
 
 
 namespace uranus {
-
+    /**
+     * The most basic data structure of the framework;
+     * It used to pass data between the actors
+     */
     struct CORE_API Message final {
 
         enum MessageType {
@@ -22,12 +25,21 @@ namespace uranus {
             kResponse       = 1 << 9,
         };
 
+        /// Define what to do about this message
         int32_t type        = 0;
+
+        /// If it is used to remote call,
+        /// this field is the unique key to the session
         int32_t session     = 0;
 
+        /// Record who send this message
         int64_t source      = 0;
 
+        /// The pointer to the custom protocol
         void *  data        = nullptr;
+
+        /// The length of the custom protocol,
+        /// It can be zero if you do not need to check the size of the protocol
         size_t  length      = 0;
 
         Message()   = default;

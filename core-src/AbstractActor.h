@@ -8,6 +8,7 @@ namespace uranus {
 
     class DataAsset;
 
+    /// The base abstract actor
     class CORE_API AbstractActor {
 
         friend class ActorContext;
