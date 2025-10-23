@@ -57,7 +57,7 @@ namespace uranus {
 
         virtual void SendToService(const std::string &name, const Message &msg) = 0;
 
-        virtual void RemoteCall(int64_t target, const Message &msg, SessionNode &&node) = 0;
+        virtual void RemoteCall(int64_t target, Message msg, SessionNode &&node) = 0;
 
         template<asio::completion_token_for<void(optional<Message>)> CompleteToken>
         auto AsyncCall(int64_t target, const Message &req, CompleteToken &&token);

@@ -37,22 +37,25 @@ public:
     int Initial(DataAsset *data) override;
     int Start() override;
 
-    [[nodiscard]] Message *BuildMessage() override;
+    [[nodiscard]] Message BuildMessage() override;
 
-    void Send(int64_t target, Message *msg) override;
+    void Send(int64_t target, const Message &msg) override;
 
-    void SendToService(const std::string &name, Message *msg) override;
+    void SendToService(const std::string &name, const Message &msg) override;
 
-    void RemoteCall(int64_t target, Message *msg, std::unique_ptr<SessionNode> &&node) override;
+    void RemoteCall(int64_t target, Message req, SessionNode &&node) override;
 
-    void PushMessage(Message *msg) override;
+    // void PushMessage(const Message &msg) override;
 
-    void OnRequest(Message *req) override;
-
-    void OnResponse(Message *res) override;
+    // void OnRequest(Message *req) override;
+    //
+    // void OnResponse(Message *res) override;
 
 protected:
     void CleanUp() override;
+
+    void HandleMessage(const Message &msg) override;
+    void DisposeMessage(const Message &msg) override;
 
 private:
     void SetUpPlayer(PlayerHandle &&handle);

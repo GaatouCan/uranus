@@ -165,6 +165,7 @@ awaitable<void> Connection::ReadPackage() {
 
             msg.type        = (Message::kFromClient | Message::kToPlayer);
             msg.session     = 0;
+            msg.source      = pid_;
             msg.data        = reinterpret_cast<void *>(pkg);
             msg.length      = sizeof(Package);
 
