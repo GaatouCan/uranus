@@ -1,4 +1,7 @@
 #include "ActorContext.h"
+
+#include <ranges>
+
 #include "AbstractActor.h"
 #include "GameServer.h"
 #include "ChannelNode.h"
@@ -11,7 +14,8 @@
 namespace uranus {
     ActorContext::ActorContext(GameServer *ser)
         : server_(ser),
-          ctx_(server_->GetWorkerIOContext()) {
+          ctx_(server_->GetWorkerIOContext()),
+          sess_id_alloc_() {
     }
 
     ActorContext::~ActorContext() {
@@ -52,29 +56,17 @@ namespace uranus {
 
     void ActorContext::PushNode(unique_ptr<ChannelNode> &&node) const {
         if (!channel_->is_open()) {
-            // delete node;
             return;
         }
 
-        // if (!channel_->try_send_via_dispatch(error_code{}, node)) {
-        //     co_spawn(ctx_, [self = shared_from_this(), node]() mutable -> awaitable<void> {
-        //         const auto [ec] = co_await self->channel_->async_send(error_code{}, node);
-        //         if (ec == asio::experimental::error::channel_closed) {
-        //             delete node;
-        //         }
-        //     }, detached);
-        // }
         channel_->try_send_via_dispatch(error_code{}, std::move(node));
     }
 
     int32_t ActorContext::AllocateSessionID() {
         int32_t id = sess_id_alloc_.Allocate();
 
-        {
-            shared_lock lock(sess_mutex_);
-            while (sessions_.contains(id)) {
-                id = sess_id_alloc_.Allocate();
-            }
+        while (sessions_.contains(id)) {
+            id = sess_id_alloc_.Allocate();
         }
 
         return id;
@@ -85,13 +77,10 @@ namespace uranus {
     }
 
     void ActorContext::PushSession(const int32_t id, unique_ptr<SessionNode> &&node) {
-        unique_lock lock(sess_mutex_);
         sessions_.insert_or_assign(id, std::move(node));
     }
 
     unique_ptr<ActorContext::SessionNode> ActorContext::TakeSession(const int32_t id) {
-        unique_lock lock(sess_mutex_);
-
         const auto it = sessions_.find(id);
 
         if (it == sessions_.end()) {
@@ -133,15 +122,22 @@ namespace uranus {
     }
 
     void ActorContext::CleanUp() {
-    }
+        for (const auto &sess : sessions_ | std::views::values) {
+            auto alloc = asio::get_associated_allocator(
+                sess->handler,
+                asio::recycling_allocator<void>()
+            );
 
-    // void ActorContext::PushSession(int64_t target, Message *req, unique_ptr<SessionNode> &&node) {
-    //     if (req == nullptr || req->data == nullptr) {
-    //         delete req;
-    //         auto alloc = asio::get_associated_allocator(node->handler, asio::recycling_allocator<void>());
-    //         asio::dispatch(node->work.get_executor(),asio::bind_allocator(alloc, [handler = std::move(node->handler)]() mutable{
-    //             std::move(handler)(nullptr);
-    //         }));
-    //     }
-    // }
+            asio::dispatch(
+                sess->work.get_executor(),
+                asio::bind_allocator(
+                    alloc,
+                    [handler = std::move(sess->handler)]() mutable {
+                        std::move(handler)(nullptr);
+                    }
+                )
+            );
+        }
+        sessions_.clear();
+    }
 }

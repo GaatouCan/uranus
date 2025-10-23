@@ -154,30 +154,6 @@ void PlayerContext::Send(const int64_t target, Message *msg) {
     Package::ReleaseMessage(msg);
 }
 
-// void PlayerContext::SendToService(const int64_t target, Message *msg) {
-//     if (!handle_.IsValid()) {
-//         throw std::runtime_error(std::format(
-//             "{} - PlayerContext[{:p}] - Player Handle is invalid",
-//             __FUNCTION__, static_cast<const void *>(this)));
-//     }
-//
-//     if (msg == nullptr || msg->data == nullptr || target < 0) {
-//         Package::ReleaseMessage(msg);
-//         return;
-//     }
-//
-//     msg->type |= Message::kToService;
-//
-//     if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
-//         if (const auto ser = mgr->FindService(target)) {
-//             ser->PushMessage(msg);
-//             return;
-//         }
-//     }
-//
-//     Package::ReleaseMessage(msg);
-// }
-
 void PlayerContext::SendToService(const std::string &name, Message *msg) {
     if (!handle_.IsValid()) {
         throw std::runtime_error(std::format(
@@ -236,41 +212,6 @@ void PlayerContext::RemoteCall(const int64_t target, Message *msg, std::unique_p
 
     Package::ReleaseMessage(msg);
 }
-
-// void PlayerContext::SendToPlayer(int64_t pid, Message *msg) {
-//     // Player can not send to other player directly,
-//     // so this method will do nothing but only release the message
-//     Package::ReleaseMessage(msg);
-// }
-//
-// void PlayerContext::SendToClient(const int64_t pid, Message *msg) {
-//     if (!handle_.IsValid()) {
-//         throw std::runtime_error(std::format(
-//             "{} - PlayerContext[{:p}] - Player Handle is invalid",
-//             __FUNCTION__, static_cast<const void *>(this)));
-//     }
-//
-//     if (msg == nullptr || msg->data == nullptr) {
-//         Package::ReleaseMessage(msg);
-//         return;
-//     }
-//
-//     if (pid <= 0 || pid != handle_->GetPlayerID()) {
-//         Package::ReleaseMessage(msg);
-//         return;
-//     }
-//
-//     msg->type |= Message::kToClient;
-//
-//     if (const auto *gateway = GetGameServer()->GetModule<Gateway>()) {
-//         if (const auto conn = gateway->FindConnection(pid)) {
-//             conn->SendToClient(msg);
-//             return;
-//         }
-//     }
-//
-//     Package::ReleaseMessage(msg);
-// }
 
 void PlayerContext::PushMessage(Message *msg) {
     if (msg == nullptr || msg->data == nullptr || IsChannelClosed()) {
@@ -344,6 +285,7 @@ void PlayerContext::OnResponse(Message *res) {
 }
 
 void PlayerContext::CleanUp() {
+    ActorContext::CleanUp();
     if (handle_) {
         handle_->Stop();
     }
