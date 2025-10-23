@@ -26,7 +26,7 @@ void PlayerManager::OnPlayerLogin(const int64_t pid) {
     }
 
     if (old != nullptr) {
-        // TODO: Handle Old
+        old->Stop();
     }
 
     auto plr = factory_->CreatePlayer();
