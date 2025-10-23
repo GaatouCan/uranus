@@ -1,5 +1,6 @@
 #pragma once
 
+#include "base/IdentAllocator.h"
 #include "ServerModule.h"
 
 #include <memory>
@@ -41,6 +42,8 @@ public:
 
 private:
     unique_ptr<ServiceFactory> factory_;
+
+    IdentAllocator<int64_t, true> id_alloc_;
 
     mutable shared_mutex mutex_;
     unordered_map<int64_t, shared_ptr<ServiceContext>> services_;

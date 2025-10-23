@@ -53,6 +53,16 @@ AbstractActor *ServiceContext::GetActor() const {
     return handle_.Get();
 }
 
+AbstractService *ServiceContext::GetService() const {
+    if (!handle_.IsValid()) {
+        throw std::runtime_error(std::format(
+            "{} - ServiceContext[{:p}] - Service Handle is invalid",
+            __FUNCTION__, static_cast<const void *>(this)));
+    }
+
+    return handle_.Get();
+}
+
 GameWorld *ServiceContext::GetWorld() const {
     return dynamic_cast<GameWorld *>(GetGameServer());
 }

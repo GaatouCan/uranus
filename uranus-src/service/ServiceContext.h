@@ -20,11 +20,14 @@ using std::make_shared;
 
 class ServiceContext final : public ActorContext {
 
+    friend class ServiceManager;
+
 public:
     explicit ServiceContext(GameWorld *world);
     ~ServiceContext() override;
 
     [[nodiscard]] AbstractActor *GetActor() const override;
+    [[nodiscard]] AbstractService *GetService() const;
 
     [[nodiscard]] GameWorld *GetWorld() const;
 
