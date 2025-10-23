@@ -40,13 +40,14 @@ public:
 
     void SendToService(const std::string &name, const Message &msg) override;
 
+protected:
     void RemoteCall(int64_t target, Message req, SessionNode &&node) override;
 
-protected:
-    void CleanUp() override;
-
     void HandleMessage(const Message &msg) override;
+
     void DisposeMessage(const Message &msg) override;
+
+    void CleanUp() override;
 
 private:
     void SetUpService(ServiceHandle &&handle);
