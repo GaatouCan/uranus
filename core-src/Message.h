@@ -30,8 +30,8 @@ namespace uranus {
         void *  data        = nullptr;
         size_t  length      = 0;
 
-        Message() = default;
-        ~Message() = default;
+        Message()   = default;
+        ~Message()  = default;
 
         Message(const Message &rhs) {
             type    = rhs.type;
@@ -43,7 +43,7 @@ namespace uranus {
 
         Message &operator=(const Message &rhs) {
             if (this != &rhs) {
-                type = rhs.type;
+                type    = rhs.type;
                 session = rhs.session;
                 source  = rhs.source;
                 data    = rhs.data;
