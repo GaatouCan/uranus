@@ -1,14 +1,9 @@
 #include "ActorContext.h"
-
-#include <ranges>
-
 #include "AbstractActor.h"
 #include "GameServer.h"
-#include "ChannelNode.h"
 
+#include <ranges>
 #include <spdlog/spdlog.h>
-
-#include "Message.h"
 
 
 namespace uranus {
@@ -44,6 +39,23 @@ namespace uranus {
         }
     }
 
+    void ActorContext::PushMessage(const Message &msg) {
+        if (!channel_->is_open()) {
+            this->ReleaseMessage(msg);
+            return;
+        }
+
+        if (!channel_->try_send_via_dispatch(error_code{}, msg)) {
+            co_spawn(ctx_, [self = shared_from_this(), this, msg]() mutable -> awaitable<void> {
+                const auto [ec] = co_await channel_->async_send(error_code{}, msg);
+                if (ec == asio::experimental::error::channel_closed ||
+                    ec == asio::error::operation_aborted) {
+                    this->ReleaseMessage(msg);
+                }
+            }, detached);
+        }
+    }
+
     void ActorContext::SetUpActor() {
         if (auto *actor = this->GetActor(); actor != nullptr) {
             actor->SetUpContext(this);
@@ -52,14 +64,6 @@ namespace uranus {
 
     bool ActorContext::IsChannelClosed() const {
         return channel_ == nullptr || !channel_->is_open();
-    }
-
-    void ActorContext::PushNode(unique_ptr<ChannelNode> &&node) const {
-        if (!channel_->is_open()) {
-            return;
-        }
-
-        channel_->try_send_via_dispatch(error_code{}, std::move(node));
     }
 
     int32_t ActorContext::AllocateSessionID() {
@@ -76,64 +80,66 @@ namespace uranus {
         sess_id_alloc_.Recycle(id);
     }
 
-    void ActorContext::PushSession(const int32_t id, unique_ptr<SessionNode> &&node) {
-        sessions_.insert_or_assign(id, std::move(node));
+    void ActorContext::PushSession(const int32_t id, SessionNode &&node) {
+        sessions_.emplace(id, std::move(node));
     }
 
-    unique_ptr<ActorContext::SessionNode> ActorContext::TakeSession(const int32_t id) {
+    std::optional<ActorContext::SessionNode> ActorContext::TakeSession(const int32_t id) {
         const auto it = sessions_.find(id);
 
         if (it == sessions_.end()) {
-            return nullptr;
+            return std::nullopt;
         }
 
         auto node = std::move(it->second);
         sessions_.erase(it);
 
-        return std::move(node);
+        return node;
     }
 
     awaitable<void> ActorContext::Process() {
         try {
             while (channel_->is_open()) {
-                const auto [ec, node] = co_await channel_->async_receive();
+                const auto [ec, msg] = co_await channel_->async_receive();
                 if (ec == asio::experimental::error::channel_closed ||
                     ec == asio::error::operation_aborted) {
                     SPDLOG_DEBUG("Actor[{:p}] close channel", static_cast<void *>(this));
+                    this->ReleaseMessage(msg);
                     break;
                 }
 
                 if (ec) {
                     SPDLOG_ERROR("Actor[{:p}] error in processing: {}", static_cast<void *>(this), ec.message());
+                    this->ReleaseMessage(msg);
                     continue;
                 }
 
-                if (node == nullptr)
-                    continue;
-
-                node->Execute(this);
+                this->HandleMessage(msg);
+                this->ReleaseMessage(msg);
             }
         } catch (const std::exception &e) {
             SPDLOG_ERROR("Actor[{:p}] - Exception: {}", static_cast<void *>(this), e.what());
         }
 
         // Clean the channel
-        while (channel_->try_receive([](auto, auto) {})) {}
+        while (channel_->try_receive([this](auto, const auto &msg) {
+            this->ReleaseMessage(msg);
+        })) {}
     }
 
     void ActorContext::CleanUp() {
         for (const auto &sess : sessions_ | std::views::values) {
             auto alloc = asio::get_associated_allocator(
-                sess->handler,
+                sess.handler,
                 asio::recycling_allocator<void>()
             );
 
             asio::dispatch(
-                sess->work.get_executor(),
+                sess.work.get_executor(),
                 asio::bind_allocator(
                     alloc,
-                    [handler = std::move(sess->handler)]() mutable {
-                        std::move(handler)(nullptr);
+                    [handler = std::move(sess.handler)]() mutable {
+                        std::move(handler)(std::nullopt);
                     }
                 )
             );

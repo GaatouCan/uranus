@@ -24,7 +24,10 @@ namespace uranus {
     void AbstractActor::Stop() {
     }
 
-    void AbstractActor::OnReceive(Message *msg) {
+    void AbstractActor::OnReceive(const Message &msg) {
+    }
+
+    void AbstractActor::OnRequest(const Message &msg, Message &res) {
     }
 
     ActorContext *AbstractActor::GetActorContext() const {

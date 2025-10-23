@@ -22,21 +22,22 @@ namespace uranus {
         return id_;
     }
 
-    void AbstractPlayer::Send(const int64_t target, Message *msg) const {
+    void AbstractPlayer::Send(const int64_t target, const Message &msg) const {
         GetActorContext()->Send(target, msg);
     }
 
-    void AbstractPlayer::SendToService(const int64_t target, Message *msg) const {
-        msg->type |= Message::kToService;
+    void AbstractPlayer::SendToService(const int64_t target, Message msg) const {
+        msg.type |= Message::kToService;
         GetActorContext()->Send(target, msg);
     }
 
-    void AbstractPlayer::SendToService(const std::string &name, Message *msg) const {
+    void AbstractPlayer::SendToService(const std::string &name, Message msg) const {
+        msg.type |= Message::kToService;
         GetActorContext()->SendToService(name, msg);
     }
 
-    void AbstractPlayer::SendToClient(Message *msg) const {
-        msg->type |= Message::kToClient;
+    void AbstractPlayer::SendToClient(Message msg) const {
+        msg.type |= Message::kToClient;
         GetActorContext()->Send(id_, msg);
     }
 }

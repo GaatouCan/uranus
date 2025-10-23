@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "Message.h"
 #include "base/Types.h"
 #include "base/IdentAllocator.h"
 
@@ -12,25 +12,24 @@ namespace uranus {
 
     using std::error_code;
     using std::unique_ptr;
-    using std::make_unique;
     using std::shared_ptr;
     using std::make_shared;
+    using std::make_unique;
     using std::shared_mutex;
     using std::shared_lock;
     using std::unique_lock;
+    using std::optional;
 
     class DataAsset;
     class GameServer;
     class AbstractActor;
     class ChannelNode;
-    struct Message;
-
 
     class CORE_API ActorContext : public std::enable_shared_from_this<ActorContext> {
 
     protected:
         struct SessionNode {
-            std::function<void(Message *)> handler;
+            std::function<void(optional<Message>)> handler;
             asio::executor_work_guard<asio::any_io_executor> work;
         };
 
@@ -52,36 +51,38 @@ namespace uranus {
         virtual int Start();
         virtual void Stop();
 
-        [[nodiscard]] virtual Message *BuildMessage() = 0;
+        [[nodiscard]] virtual Message BuildMessage() = 0;
 
-        virtual void Send(int64_t target, Message *msg) = 0;
+        virtual void Send(int64_t target, const Message &msg) = 0;
 
-        virtual void SendToService(const std::string &name, Message *msg) = 0;
+        virtual void SendToService(const std::string &name, const Message &msg) = 0;
 
-        virtual void RemoteCall(int64_t target, Message *msg, unique_ptr<SessionNode> &&node) = 0;
+        virtual void RemoteCall(int64_t target, const Message &msg, SessionNode &&node) = 0;
 
-        template<asio::completion_token_for<void(Message *)> CompleteToken>
-        auto AsyncCall(int64_t target, Message *req, CompleteToken &&token);
+        template<asio::completion_token_for<void(optional<Message>)> CompleteToken>
+        auto AsyncCall(int64_t target, const Message &req, CompleteToken &&token);
 
-        virtual void PushMessage(Message *msg) = 0;
-
-        virtual void OnRequest(Message *msg) = 0;
-        virtual void OnResponse(Message *msg) = 0;
+        void PushMessage(const Message &msg);
 
     protected:
         void SetUpActor();
 
         [[nodiscard]] bool IsChannelClosed() const;
 
-        void PushNode(unique_ptr<ChannelNode> &&node) const;
-
         int32_t AllocateSessionID();
         void RecycleSessionID(int32_t id);
 
-        void PushSession(int32_t id, unique_ptr<SessionNode> &&node);
-        unique_ptr<SessionNode> TakeSession(int32_t id);
+        void PushSession(int32_t id, SessionNode &&node);
+        std::optional<SessionNode> TakeSession(int32_t id);
 
         awaitable<void> Process();
+
+        virtual void HandleMessage(const Message &msg) = 0;
+
+        virtual void ReleaseMessage(const Message &msg) = 0;
+
+        //virtual void OnRequest(const Message &req) = 0;
+        //virtual void OnResponse(const Message &res) = 0;
 
         virtual void CleanUp();
 
@@ -94,20 +95,19 @@ namespace uranus {
 
     protected:
         /// The inner channel to handle the tasks
-        unique_ptr<ConcurrentChannel<unique_ptr<ChannelNode>>> channel_;
+        unique_ptr<ConcurrentChannel<Message>> channel_;
 
         IdentAllocator<int32_t, false> sess_id_alloc_;
-        std::unordered_map<int32_t, unique_ptr<SessionNode>> sessions_;
+        std::unordered_map<int32_t, SessionNode> sessions_;
     };
 
-    template<asio::completion_token_for<void(Message *)> CompleteToken>
-    auto ActorContext::AsyncCall(int64_t target, Message *req, CompleteToken &&token) {
-        auto init = [this, target](asio::completion_handler_for<void(Message *)> auto handler, Message *request) {
+    template<asio::completion_token_for<void(optional<Message>)> CompleteToken>
+    auto ActorContext::AsyncCall(int64_t target, const Message &req, CompleteToken &&token) {
+        auto init = [this, target](asio::completion_handler_for<void(optional<Message>)> auto handler, const Message &request) {
             auto work = asio::make_work_guard(handler);
-            auto node = make_unique<SessionNode>(std::move(handler), std::move(work));
-            this->RemoteCall(target, request, std::move(node));
+            this->RemoteCall(target, request, SessionNode{std::move(handler), std::move(work)});
         };
 
-        return asio::async_initiate<CompleteToken, void(Message *)>(init, token, req);
+        return asio::async_initiate<CompleteToken, void(optional<Message>)>(init, token, req);
     }
 }

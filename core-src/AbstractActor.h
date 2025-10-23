@@ -1,12 +1,12 @@
 #pragma once
 
+#include "Message.h"
 #include "GameServer.h"
 
 
 namespace uranus {
 
     class DataAsset;
-    struct Message;
 
     class CORE_API AbstractActor {
 
@@ -22,14 +22,13 @@ namespace uranus {
         virtual int Start();
         virtual void Stop();
 
-        virtual void OnReceive(Message *msg);
+        virtual void OnReceive(const Message &msg);
 
-        virtual void OnRequest(Message *req, Message *res) = 0;
+        virtual void OnRequest(const Message &msg, Message &res);
 
     protected:
         [[nodiscard]] ActorContext *GetActorContext() const;
         [[nodiscard]] GameServer *GetGameServer() const;
-
 
         template<class T>
         requires std::is_base_of_v<ServerModule, T>
