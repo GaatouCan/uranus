@@ -1,7 +1,9 @@
 #include "GameWorld.h"
 #include "ConfigModule.h"
 #include "gateway/Gateway.h"
+#include "login/LoginAuth.h"
 #include "player/PlayerManager.h"
+#include "service/ServiceManager.h"
 
 using uranus::config::ConfigModule;
 
@@ -26,7 +28,9 @@ int main(int argc, char **argv) {
     auto *world = new GameWorld();
 
     world->CreateModule<ConfigModule>();
+    world->CreateModule<LoginAuth>();
     world->CreateModule<PlayerManager>();
+    world->CreateModule<ServiceManager>();
     world->CreateModule<Gateway>();
 
     world->Start();
