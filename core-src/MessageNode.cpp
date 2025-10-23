@@ -17,7 +17,15 @@ namespace uranus {
     }
 
     void MessageNode::Execute(ActorContext *ctx) {
-        if (msg_) {
+        if (msg_ == nullptr)
+            return;
+
+        if (msg_->type & Message::kRequest) {
+            ctx->OnRequest(msg_);
+        } else if (msg_->type & Message::kResponse) {
+            ctx->OnResponse(msg_);
+            msg_ = nullptr;
+        } else {
             ctx->GetActor()->OnReceive(msg_);
         }
     }

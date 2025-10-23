@@ -61,6 +61,7 @@ Message *ServiceContext::BuildMessage() {
     auto *msg = new Message();
 
     msg->type = Message::kFromService;
+    msg->source = handle_->GetServiceID();
     msg->session = 0;
 
     auto *pkg = pool_->Acquire();

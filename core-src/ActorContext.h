@@ -65,6 +65,9 @@ namespace uranus {
 
         virtual void PushMessage(Message *msg) = 0;
 
+        virtual void OnRequest(Message *msg) = 0;
+        virtual void OnResponse(Message *msg) = 0;
+
     protected:
         void SetUpActor();
 
@@ -79,9 +82,6 @@ namespace uranus {
         unique_ptr<SessionNode> TakeSession(int32_t id);
 
         awaitable<void> Process();
-
-        virtual void OnRequest(Message *msg) = 0;
-        virtual void OnResponse(Message *msg) = 0;
 
         virtual void CleanUp();
 

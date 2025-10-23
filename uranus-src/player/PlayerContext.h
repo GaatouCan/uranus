@@ -46,6 +46,10 @@ public:
 
     void PushMessage(Message *msg) override;
 
+    void OnRequest(Message *req) override;
+
+    void OnResponse(Message *res) override;
+
 protected:
     void CleanUp() override;
 

@@ -102,6 +102,7 @@ Message *PlayerContext::BuildMessage() {
     auto *msg = new Message();
 
     msg->type = Message::kFromPlayer;
+    msg->source = handle_->GetPlayerID();
     msg->session = 0;
 
     auto *pkg = pool_->Acquire();
@@ -277,16 +278,69 @@ void PlayerContext::PushMessage(Message *msg) {
         return;
     }
 
-    // if ((msg->type & Message::kRequest) && msg->session > 0) {
-    //
-    // } else if ((msg->type & Message::kResponse) && msg->session > 0) {
-    //
-    // } else {
     auto node = make_unique<PackageNode>();
     node->SetMessage(msg);
 
     this->PushNode(std::move(node));
-    // }
+}
+
+void PlayerContext::OnRequest(Message *req) {
+    // msg will be released in ::~PackageNode
+    if (req == nullptr || req->data == nullptr || (req->type & Message::kRequest) == 0) {
+        return;
+    }
+
+    // Only Handle From Service Or From Server
+    if ((req->type & Message::kFromService) == 0 &&
+        (req->type & Message::kFromServer) == 0) {
+        return;
+    }
+
+    auto *res = this->BuildMessage();
+
+    res->type |= Message::kResponse;
+    res->session = req->session;
+
+    handle_->OnRequest(req, res);
+
+    if (req->type & Message::kFromService) {
+        res->type |= Message::kToService;
+        if (const auto *mgr = GetGameServer()->GetModule<ServiceManager>()) {
+            if (const auto ser = mgr->FindService(req->source)) {
+                ser->PushMessage(res);
+                return;
+            }
+        }
+    } else if (req->type & Message::kFromServer) {
+        // TODO
+    }
+
+    // If not return earlier, release the response
+    Package::ReleaseMessage(res);
+}
+
+void PlayerContext::OnResponse(Message *res) {
+    if (res == nullptr || res->data == nullptr || (res->type & Message::kResponse) == 0 || res->session < 0) {
+        Package::ReleaseMessage(res);
+        return;
+    }
+
+    const auto sess = this->TakeSession(res->session);
+    if (sess == nullptr) {
+        Package::ReleaseMessage(res);
+        return;
+    }
+
+    auto alloc = asio::get_associated_allocator(sess->handler, asio::recycling_allocator<void>());
+    asio::dispatch(
+        sess->work.get_executor(),
+        asio::bind_allocator(
+            alloc,
+            [handler = std::move(sess->handler), res]() mutable {
+                std::move(handler)(res);
+            }
+        )
+    );
 }
 
 void PlayerContext::CleanUp() {

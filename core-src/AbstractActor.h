@@ -24,6 +24,8 @@ namespace uranus {
 
         virtual void OnReceive(Message *msg);
 
+        virtual void OnRequest(Message *req, Message *res) = 0;
+
     protected:
         [[nodiscard]] ActorContext *GetActorContext() const;
         [[nodiscard]] GameServer *GetGameServer() const;
