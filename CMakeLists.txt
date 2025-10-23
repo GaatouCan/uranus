@@ -89,5 +89,8 @@ target_link_libraries(uranus PUBLIC config-module)
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core-src)
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/package)
 
+# link login protocol
+target_link_libraries(uranus PUBLIC pb_login)
+
 set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
