@@ -22,13 +22,13 @@ namespace uranus {
             kResponse       = 1 << 9,
         };
 
-        int32_t type = 0;
+        int32_t type        = 0;
+        int32_t session     = 0;
 
-        int32_t session = 0;
-        int64_t source = 0;
+        int64_t source      = 0;
 
-        void *  data = nullptr;
-        size_t  length = 0;
+        void *  data        = nullptr;
+        size_t  length      = 0;
 
         Message() = default;
         ~Message() = default;
