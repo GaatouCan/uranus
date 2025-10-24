@@ -1,12 +1,14 @@
 #include "Gateway.h"
-#include "GameServer.h"
 #include "Connection.h"
 #include "ConfigModule.h"
+#include "Package.h"
 #include "../player/PlayerManager.h"
 #include "../GameWorld.h"
+#include "../other/FixedPackageID.h"
 
 #include <spdlog/spdlog.h>
 
+#include <login.pb.h>
 
 
 using uranus::config::ConfigModule;
@@ -71,23 +73,62 @@ void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
 
         // As soon as possible remove the old connection
         RemoveConnection(old_key, pid);
-        // TODO
+
+        auto msg = old->BuildMessage();
+        msg.type = (Message::kFromServer | Message::kToClient);
+
+        Login::LoginRepeated res;
+        res.set_player_id(pid);
+        res.set_addr(conn->RemoteAddress().to_string());
+
+        auto *pkg = static_cast<Package *>(msg.data);
+
+        pkg->SetPackageID(static_cast<int32_t>(FixedPackageID::kLoginRepeated));
+        pkg->SetData(res.SerializeAsString());
+
+        old->SendToClient(msg);
     }
 
     auto *mgr = GetGameServer()->GetModule<PlayerManager>();
     if (const auto ret = mgr->OnPlayerLogin(pid); ret != 1) {
         // As soon as possible remove the connection
         RemoveConnection(conn->GetKey(), pid);
-        // TODO
+
+        auto msg = conn->BuildMessage();
+        msg.type = (Message::kFromServer | Message::kToClient);
+
+        Login::LoginFailed res;
+        res.set_player_id(pid);
+        res.set_result(ret);
+
+        auto *pkg = static_cast<Package *>(msg.data);
+
+        pkg->SetPackageID(static_cast<int32_t>(FixedPackageID::kLoginFailed));
+        pkg->SetData(res.SerializeAsString());
+
+        conn->SendToClient(msg);
+
         return;
     }
 
+    // Add mapping to player id
     {
         std::unique_lock lock(player_mutex_);
         pid_to_key_[conn->GetPlayerID()] = conn->GetKey();
     }
 
-    // TODO
+    auto msg = conn->BuildMessage();
+    msg.type = (Message::kFromServer | Message::kToClient);
+
+    Login::LoginSuccess res;
+    res.set_player_id(pid);
+
+    auto *pkg = static_cast<Package *>(msg.data);
+
+    pkg->SetPackageID(static_cast<int32_t>(FixedPackageID::kLoginSuccess));
+    pkg->SetData(res.SerializeAsString());
+
+    conn->SendToClient(msg);
 }
 
 void Gateway::RemoveConnection(const std::string &key, const int64_t pid) {
@@ -147,5 +188,6 @@ awaitable<void> Gateway::WaitForClient(uint16_t port) {
             conn->ConnectToClient();
         }
     } catch (std::exception &e) {
+        SPDLOG_ERROR("{}", e.what());
     }
 }

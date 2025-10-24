@@ -81,6 +81,17 @@ GameServer *Connection::GetGameServer() const {
     return gateway_->GetGameServer();
 }
 
+Message Connection::BuildMessage() const {
+    Message msg;
+
+    auto *pkg = pool_->Acquire();
+
+    msg.data = reinterpret_cast<void *>(pkg);
+    msg.length = sizeof(Package);
+
+    return msg;
+}
+
 asio::ip::address Connection::RemoteAddress() const {
     return stream_.next_layer().remote_endpoint().address();
 }

@@ -48,6 +48,8 @@ public:
     [[nodiscard]] Gateway *GetGateway() const;
     [[nodiscard]] GameServer *GetGameServer() const;
 
+    [[nodiscard]] Message BuildMessage() const;
+
     [[nodiscard]] asio::ip::address RemoteAddress() const;
 
     void SetExpiration(int sec);
