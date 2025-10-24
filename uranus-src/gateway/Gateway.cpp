@@ -38,6 +38,12 @@ void Gateway::Start() {
 }
 
 void Gateway::Stop() {
+    for (const auto &conn : conn_map_ | std::views::values) {
+        conn->Disconnect();
+    }
+
+    conn_map_.clear();
+    pid_to_key_.clear();
 }
 
 shared_ptr<Connection> Gateway::FindConnection(const std::string &key) const {
@@ -65,6 +71,9 @@ shared_ptr<Connection> Gateway::FindConnection(const int64_t pid) const {
 }
 
 void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
+    if (!GetGameServer()->IsRunning())
+        return;
+
     const auto pid = conn->GetPlayerID();
 
     if (const shared_ptr<Connection> old = FindConnection(pid); old != nullptr) {

@@ -39,6 +39,8 @@ public:
 
     void Start() override;
 
+    void Stop() override;
+
 private:
     unique_ptr<PlayerFactory> factory_;
 

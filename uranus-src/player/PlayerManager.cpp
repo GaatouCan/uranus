@@ -4,6 +4,7 @@
 #include "../GameWorld.h"
 #include "../factory/PlayerFactory.h"
 
+#include <ranges>
 #include <spdlog/spdlog.h>
 
 
@@ -16,6 +17,9 @@ PlayerManager::~PlayerManager() {
 }
 
 int PlayerManager::OnPlayerLogin(const int64_t pid) {
+    if (!GetGameServer()->IsRunning())
+        return 0;
+
     shared_ptr<PlayerContext> old;
 
     {
@@ -63,6 +67,9 @@ shared_ptr<PlayerContext> PlayerManager::FindPlayer(const int64_t pid) const {
 }
 
 void PlayerManager::OnPlayerLogout(const int64_t pid) {
+    if (!GetGameServer()->IsRunning())
+        return;
+
     shared_ptr<PlayerContext> ctx;
 
     {
@@ -83,4 +90,10 @@ void PlayerManager::OnPlayerLogout(const int64_t pid) {
 
 void PlayerManager::Start() {
 
+}
+
+void PlayerManager::Stop() {
+    for (const auto &plr : players_ | std::views::values) {
+        plr->Stop();
+    }
 }

@@ -50,19 +50,23 @@ void ServiceManager::Start() {
             continue;
         }
 
-        SPDLOG_INFO("Service [{}] initial success", path);
+        SPDLOG_INFO("Service [{} - {}] - Initial success", path, sid);
         services_[sid] = ctx;
     }
 
     for (const auto &ctx : services_ | std::views::values) {
-        SPDLOG_INFO("Start service[{}]", ctx->GetService()->GetServiceName());
+        SPDLOG_INFO("Start service[{} - {}]",
+            ctx->GetService()->GetServiceName(),
+            ctx->GetService()->GetServiceID());
         ctx->Start();
     }
 }
 
 void ServiceManager::Stop() {
     for (const auto &ctx : services_ | std::views::values) {
-        SPDLOG_INFO("Stop service[{}]", ctx->GetService()->GetServiceName());
+        SPDLOG_INFO("Stop service[{} - {}]",
+            ctx->GetService()->GetServiceName(),
+            ctx->GetService()->GetServiceID());
         ctx->Stop();
     }
 }
