@@ -7,7 +7,6 @@
 #include "../other/FixedPackageID.h"
 
 #include <spdlog/spdlog.h>
-
 #include <login.pb.h>
 
 
@@ -71,6 +70,9 @@ void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
     if (const shared_ptr<Connection> old = FindConnection(pid); old != nullptr) {
         const auto old_key = old->GetKey();
 
+        SPDLOG_WARN("Player[{}] - Has already logged in, remove and disconnect the old connection[{}]",
+            pid, old_key);
+
         // As soon as possible remove the old connection
         RemoveConnection(old_key, pid);
 
@@ -91,6 +93,8 @@ void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
 
     auto *mgr = GetGameServer()->GetModule<PlayerManager>();
     if (const auto ret = mgr->OnPlayerLogin(pid); ret != 1) {
+        SPDLOG_WARN("Player[{}] - Login failed with code {}", pid, ret);
+
         // As soon as possible remove the connection
         RemoveConnection(conn->GetKey(), pid);
 
@@ -117,6 +121,8 @@ void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
         pid_to_key_[conn->GetPlayerID()] = conn->GetKey();
     }
 
+    SPDLOG_INFO("Player[{}] - Login success with connection[{}]", pid, conn->GetKey());
+
     auto msg = conn->BuildMessage();
     msg.type = (Message::kFromServer | Message::kToClient);
 
@@ -132,6 +138,9 @@ void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
 }
 
 void Gateway::RemoveConnection(const std::string &key, const int64_t pid) {
+    if (!GetGameServer()->IsRunning())
+        return;
+
     {
         std::unique_lock lock(mutex_);
         conn_map_.erase(key);
@@ -141,6 +150,8 @@ void Gateway::RemoveConnection(const std::string &key, const int64_t pid) {
         std::unique_lock lock(player_mutex_);
         pid_to_key_.erase(pid);
     }
+
+    SPDLOG_INFO("Remove connection[{}] for player[{}]", key, pid);
 }
 
 awaitable<void> Gateway::WaitForClient(uint16_t port) {

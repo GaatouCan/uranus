@@ -1,9 +1,11 @@
 #include "PlayerManager.h"
-
 #include "AbstractPlayer.h"
 #include "PlayerContext.h"
 #include "../GameWorld.h"
 #include "../factory/PlayerFactory.h"
+
+#include <spdlog/spdlog.h>
+
 
 PlayerManager::PlayerManager(GameServer *ser)
     : ServerModule(ser) {
@@ -36,13 +38,13 @@ int PlayerManager::OnPlayerLogin(const int64_t pid) {
     ctx->SetUpPlayer(std::move(plr));
 
     if (const auto ret = ctx->Initial(nullptr); ret != 1) {
-        // TODO
+        SPDLOG_ERROR("Player[{}] - Failed to initial context, code: {}", pid, ret);
         ctx->Stop();
         return ret;
     }
 
     if (const auto ret = ctx->Start(); ret != 1) {
-        // TODO
+        SPDLOG_ERROR("Player[{}] - Failed to strat context, code: {}", pid, ret);
         ctx->Stop();
         return ret;
     }
@@ -50,6 +52,7 @@ int PlayerManager::OnPlayerLogin(const int64_t pid) {
     unique_lock lock{mutex_};
     players_.insert_or_assign(pid, ctx);
 
+    SPDLOG_INFO("Player[{}] - Create player context success", pid);
     return 1;
 }
 

@@ -41,6 +41,8 @@ namespace uranus {
 
         asio::io_context &GetMainIOContext();
 
+        [[nodiscard]] bool IsRunning() const;
+
         [[nodiscard]] asio::io_context &GetSocketIOContext() const;
         [[nodiscard]] asio::io_context &GetWorkerIOContext() const;
 

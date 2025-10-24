@@ -50,6 +50,10 @@ namespace uranus {
         return ctx_;
     }
 
+    bool GameServer::IsRunning() const {
+        return !ctx_.stopped();
+    }
+
     asio::io_context &GameServer::GetSocketIOContext() const {
         return io_pool_->GetIOContext();
     }
