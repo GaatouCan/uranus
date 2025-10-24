@@ -2,8 +2,11 @@
 #include "GameServer.h"
 #include "Connection.h"
 #include "ConfigModule.h"
+#include "../player/PlayerManager.h"
+#include "../GameWorld.h"
 
 #include <spdlog/spdlog.h>
+
 
 
 using uranus::config::ConfigModule;
@@ -37,7 +40,7 @@ void Gateway::Stop() {
 }
 
 shared_ptr<Connection> Gateway::FindConnection(const std::string &key) const {
-    std::unique_lock lock(mutex_);
+    std::shared_lock lock(mutex_);
     const auto it = conn_map_.find(key);
     return it == conn_map_.end() ? nullptr : it->second;
 }
@@ -61,8 +64,30 @@ shared_ptr<Connection> Gateway::FindConnection(const int64_t pid) const {
 }
 
 void Gateway::OnPlayerLogin(const shared_ptr<Connection> &conn) {
-    std::unique_lock lock(player_mutex_);
-    pid_to_key_[conn->GetPlayerID()] = conn->GetKey();
+    const auto pid = conn->GetPlayerID();
+
+    if (const shared_ptr<Connection> old = FindConnection(pid); old != nullptr) {
+        const auto old_key = old->GetKey();
+
+        // As soon as possible remove the old connection
+        RemoveConnection(old_key, pid);
+        // TODO
+    }
+
+    auto *mgr = GetGameServer()->GetModule<PlayerManager>();
+    if (const auto ret = mgr->OnPlayerLogin(pid); ret != 1) {
+        // As soon as possible remove the connection
+        RemoveConnection(conn->GetKey(), pid);
+        // TODO
+        return;
+    }
+
+    {
+        std::unique_lock lock(player_mutex_);
+        pid_to_key_[conn->GetPlayerID()] = conn->GetKey();
+    }
+
+    // TODO
 }
 
 void Gateway::RemoveConnection(const std::string &key, const int64_t pid) {

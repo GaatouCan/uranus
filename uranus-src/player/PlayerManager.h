@@ -32,7 +32,7 @@ public:
         return "PlayerManager";
     }
 
-    void OnPlayerLogin(int64_t pid);
+    int OnPlayerLogin(int64_t pid);
     void OnPlayerLogout(int64_t pid);
 
     [[nodiscard]] shared_ptr<PlayerContext> FindPlayer(int64_t pid) const;

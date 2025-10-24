@@ -4,24 +4,26 @@ option optimize_for = LITE_RUNTIME;
 
 package Login;
 
-message Heartbeat {
-  int64 player_id = 1;
-  string message = 2;
-}
-
 message LoginRequest {
   int64 player_id = 1;
   string token = 2;
 }
 
-message LoginResponse {
-  enum ResultType {
-    Success = 0;
-    TokenError = 1;
-    PlayerIDError = 2;
-    Repeated = 3;
-  }
-
+message LoginSuccess {
   int64 player_id = 1;
-  ResultType result = 2;
+}
+
+message LoginFailed {
+  int64 player_id = 1;
+  int32 result = 2;
+}
+
+message LoginRepeated {
+  int64 player_id = 1;
+  string addr = 2;
+}
+
+message Heartbeat {
+  int64 player_id = 1;
+  string message = 2;
 }

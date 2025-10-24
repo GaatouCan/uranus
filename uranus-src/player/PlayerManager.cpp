@@ -13,7 +13,7 @@ PlayerManager::PlayerManager(GameServer *ser)
 PlayerManager::~PlayerManager() {
 }
 
-void PlayerManager::OnPlayerLogin(const int64_t pid) {
+int PlayerManager::OnPlayerLogin(const int64_t pid) {
     shared_ptr<PlayerContext> old;
 
     {
@@ -38,17 +38,19 @@ void PlayerManager::OnPlayerLogin(const int64_t pid) {
     if (const auto ret = ctx->Initial(nullptr); ret != 1) {
         // TODO
         ctx->Stop();
-        return;
+        return ret;
     }
 
     if (const auto ret = ctx->Start(); ret != 1) {
         // TODO
         ctx->Stop();
-        return;
+        return ret;
     }
 
     unique_lock lock{mutex_};
     players_.insert_or_assign(pid, ctx);
+
+    return 1;
 }
 
 shared_ptr<PlayerContext> PlayerManager::FindPlayer(const int64_t pid) const {

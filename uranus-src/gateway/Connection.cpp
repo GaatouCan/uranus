@@ -9,6 +9,7 @@
 #include "../login/LoginAuth.h"
 #include "../player/PlayerManager.h"
 #include "../player/PlayerContext.h"
+#include "../other/FixedPackageID.h"
 
 #include <asio/experimental/awaitable_operators.hpp>
 #include <spdlog/spdlog.h>
@@ -111,17 +112,26 @@ void Connection::Disconnect() {
         return;
     }
 
+    // Close the tcp socket
     stream_.next_layer().close();
 
+    // Close the output channel
     output_->cancel();
     output_->close();
 
+    // cancel the watchdog timer
     watchdog_.cancel();
 
-    gateway_->RemoveConnection(key_, pid_);
+    // Remove the connection from Gateway
+    if (!key_.empty()) {
+        gateway_->RemoveConnection(key_, pid_);
+    }
 
-    if (auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
-        mgr->OnPlayerLogout(pid_);
+    // Tell PlayerManager the client is offline(If player id is valid)
+    if (pid_ > 0) {
+        if (auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
+            mgr->OnPlayerLogout(pid_);
+        }
     }
 }
 
@@ -218,18 +228,32 @@ awaitable<void> Connection::WritePackage() {
             }
 
             if (ec) {
-                SPDLOG_ERROR("Connection[{}] - Failed to write package, error: {}", key_, ec.message());
+                SPDLOG_ERROR("Connection[{}] - Failed to get message, error: {}", key_, ec.message());
                 Package::ReleaseMessage(msg);
                 continue;
             }
 
-            const auto codec_ec = co_await codec_->Encode(msg);
-            Package::ReleaseMessage(msg);
-
-            if (codec_ec) {
+            // If failed to write, close the connection
+            if (const auto codec_ec = co_await codec_->Encode(msg)) {
+                SPDLOG_ERROR("Connection[{}] - Failed to write message, error: {}", key_, codec_ec.message());
+                Package::ReleaseMessage(msg);
                 Disconnect();
                 break;
             }
+
+            auto *pkg = static_cast<Package *>(msg.data);
+
+            if (pkg->GetPackageID() == static_cast<int>(FixedPackageID::kLoginRepeated) ||
+                pkg->GetPackageID() == static_cast<int>(FixedPackageID::kLoginFailed)) {
+                // Clean the key and player id to sure that will not affect the new connection
+                key_.clear();
+                pid_ = kInvalidPlayerID;
+                Package::ReleaseMessage(msg);
+                Disconnect();
+                break;
+            }
+
+            Package::ReleaseMessage(msg);
         }
 
         while (output_->try_receive([](auto, const auto &msg) {
