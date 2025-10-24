@@ -27,7 +27,7 @@ void LoginAuth::OnPlayerLogin(const shared_ptr<Connection> &conn, Package *pkg) 
 
     conn->SetPlayerID(request.player_id());
 
-    auto *gateway = GetGameServer()->GetModule<Gateway>());
+    auto *gateway = GetGameServer()->GetModule<Gateway>();
     gateway->OnPlayerLogin(conn);
 }
 
