@@ -110,6 +110,8 @@ void Connection::ConnectToClient() {
             self->Disconnect();
         }
 
+        SPDLOG_INFO("Connection[{}] - Initial codec success.", self->key_);
+
         co_await (
             self->ReadPackage() &&
             self->WritePackage() &&
@@ -152,7 +154,7 @@ bool Connection::IsConnected() const {
 
 void Connection::SetPlayerID(const int64_t pid) {
     pid_ = pid;
-    // gateway_->OnPlayerLogin(shared_from_this());
+    SPDLOG_INFO("Connection[{}] - Bind to player id: {}", key_, pid);
 }
 
 int64_t Connection::GetPlayerID() const {

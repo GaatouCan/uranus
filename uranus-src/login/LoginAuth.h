@@ -26,6 +26,6 @@ public:
         return "Login Auth";
     }
 
-    void OnPlayerLogin(const shared_ptr<Connection> &conn, Package *pkg);
+    void OnPlayerLogin(const shared_ptr<Connection> &conn, const Package *pkg) const;
     void OnPlayerLogout(const shared_ptr<Connection> &conn, int64_t pid);
 };

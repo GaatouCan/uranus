@@ -149,6 +149,8 @@ awaitable<void> Gateway::WaitForClient(uint16_t port) {
         acceptor_.bind({asio::ip::tcp::v4(), port});
         acceptor_.listen(port);
 
+        SPDLOG_INFO("Waiting for client on port: {}", port);
+
         while (true) {
             auto [ec, socket] = co_await acceptor_.async_accept(GetGameServer()->GetSocketIOContext());
 
@@ -177,7 +179,7 @@ awaitable<void> Gateway::WaitForClient(uint16_t port) {
             {
                 std::unique_lock lock(mutex_);
                 if (conn_map_.contains(key)) {
-                    // SPDLOG_WARN("{} - Connection[{}] has already exist", __FUNCTION__, key);
+                    SPDLOG_WARN("Connection[{}] has already exist", key);
                     conn->Disconnect();
                     continue;
                 }

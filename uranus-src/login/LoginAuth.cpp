@@ -15,7 +15,7 @@ LoginAuth::LoginAuth(GameServer *ser)
 LoginAuth::~LoginAuth() {
 }
 
-void LoginAuth::OnPlayerLogin(const shared_ptr<Connection> &conn, Package *pkg) {
+void LoginAuth::OnPlayerLogin(const shared_ptr<Connection> &conn, const Package *pkg) const {
     if (conn == nullptr || pkg == nullptr)
         return;
 
