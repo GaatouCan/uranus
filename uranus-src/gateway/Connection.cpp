@@ -131,7 +131,7 @@ bool Connection::IsConnected() const {
 
 void Connection::SetPlayerID(const int64_t pid) {
     pid_ = pid;
-    gateway_->OnPlayerLogin(shared_from_this());
+    // gateway_->OnPlayerLogin(shared_from_this());
 }
 
 int64_t Connection::GetPlayerID() const {
