@@ -2,7 +2,6 @@
 #include "Package.h"
 #include "../GameWorld.h"
 #include "../gateway/Connection.h"
-#include "../gateway/Gateway.h"
 #include "../player/PlayerManager.h"
 
 #include <login.pb.h>
@@ -27,9 +26,9 @@ void LoginAuth::OnPlayerLogin(const shared_ptr<Connection> &conn, Package *pkg) 
 
     conn->SetPlayerID(request.player_id());
 
-    if (auto *gateway = GetGameServer()->GetModule<Gateway>()) {
-        gateway->OnPlayerLogin(conn);
-    }
+    // if (auto *gateway = GetGameServer()->GetModule<Gateway>()) {
+    //     gateway->OnPlayerLogin(conn);
+    // }
 
     if (auto *mgr = GetGameServer()->GetModule<PlayerManager>()) {
         mgr->OnPlayerLogin(request.player_id());
