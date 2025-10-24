@@ -5,16 +5,15 @@
 
 
 PlayerFactory::PlayerFactory() {
-    std::string agent = kPlayerAgentDirectory;
+    std::string path = kPlayerLibraryDirectory;
 
 #if defined(_WIN32) || defined(_WIN64)
-    agent += "/agent.dll";
+    path += "/player.dll";
 #else
-    agent += "/libagent.so";
+    path += "/libplayer.so";
 #endif
 
-
-    library_ = SharedLibrary(agent);
+    library_ = SharedLibrary(path);
 
     if (!library_.IsValid()) {
         SPDLOG_CRITICAL("Failed to load player library");

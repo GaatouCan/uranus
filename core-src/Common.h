@@ -108,7 +108,7 @@ inline constexpr int kGatewayInternalID     = -11;
 
 inline constexpr auto kCoreServiceDirectory    = "service";
 inline constexpr auto kExtendServiceDirectory  = "extend";
-inline constexpr auto kPlayerAgentDirectory    = "agent";
+inline constexpr auto kPlayerLibraryDirectory    = "player";
 
 inline constexpr int kHeartbeatPackageID        = 1001;
 inline constexpr int kAuthRequestPackageID      = 1002;
