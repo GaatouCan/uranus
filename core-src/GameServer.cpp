@@ -22,8 +22,11 @@ namespace uranus {
             module->Start();
         }
 
-        worker_pool_->Start(worker_num_);
+        SPDLOG_INFO("IO run with {} threads", io_num_);
         io_pool_->Start(io_num_);
+
+        SPDLOG_INFO("Worker run with {} threads", worker_num_);
+        worker_pool_->Start(worker_num_);
 
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
