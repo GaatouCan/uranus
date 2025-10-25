@@ -33,6 +33,7 @@ namespace uranus {
             Stop();
         });
 
+        SPDLOG_INFO("Game server started");
         ctx_.run();
     }
 
