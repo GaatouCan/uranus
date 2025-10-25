@@ -15,6 +15,9 @@ namespace protocol {
 
     ProtocolRouter::ProtocolRouter(GamePlayer *plr)
         : player_(plr) {
+
+        // Begin register protocol here
+        Register(1101, &ChatController::OnRequest);
     }
 
     ProtocolRouter::~ProtocolRouter() {
