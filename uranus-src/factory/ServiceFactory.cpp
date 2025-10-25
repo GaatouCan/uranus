@@ -17,6 +17,24 @@ if (res[1] == #name) { \
 }
 
 ServiceFactory::ServiceFactory() {
+    if (const auto core_dir = std::filesystem::path(kCoreServiceDirectory); !std::filesystem::exists(core_dir)) {
+        try {
+            std::filesystem::create_directory(core_dir);
+        } catch (const std::exception &e) {
+            SPDLOG_ERROR("{} - {}", __FUNCTION__, e.what());
+            exit(-1);
+        }
+    }
+
+    if (const auto extend_dir = std::filesystem::path(kExtendServiceDirectory); !std::filesystem::exists(extend_dir)) {
+        try {
+            std::filesystem::create_directory(extend_dir);
+        } catch (const std::exception &e) {
+            SPDLOG_ERROR("{} - {}", __FUNCTION__, e.what());
+            exit(-2);
+        }
+    }
+
     for (const auto &entry: std::filesystem::directory_iterator(kCoreServiceDirectory)) {
 #if defined(_WIN32) || defined(_WIN64)
         if (entry.is_regular_file() && entry.path().extension() == ".dll") {

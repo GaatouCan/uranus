@@ -3,6 +3,7 @@
 #include "base/MultiIOContextPool.h"
 
 #include <asio/signal_set.hpp>
+#include <spdlog/spdlog.h>
 
 namespace uranus {
     GameServer::GameServer()
@@ -17,6 +18,7 @@ namespace uranus {
 
     void GameServer::Start() {
         for (const auto &module: ordered_) {
+            SPDLOG_INFO("Start module[{}]", module->GetModuleName());
             module->Start();
         }
 
@@ -41,6 +43,7 @@ namespace uranus {
         worker_pool_->Stop();
 
         for (auto iter = ordered_.rbegin(); iter != ordered_.rend(); ++iter) {
+            SPDLOG_INFO("Stop module[{}]", (*iter)->GetModuleName());
             (*iter)->Stop();
         }
         ordered_.clear();
