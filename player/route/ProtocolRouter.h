@@ -57,7 +57,13 @@ namespace protocol {
         }
 
         if (const auto type = (id / 100); !controllers_.contains(type)) {
-            controllers_.insert_or_assign(type, CreateController(static_cast<ControllerType>(type)));
+            auto ctrl = CreateController(static_cast<ControllerType>(type));
+
+            if (ctrl == nullptr) {
+                throw std::out_of_range("ProtocolRouter::Register(): Could not create controller");
+            }
+
+            controllers_.insert_or_assign(type, std::move(ctrl));
         }
 
         functors_[id] = [fn](AbstractController *ctrl, GamePlayer *plr, const Message &msg) {
