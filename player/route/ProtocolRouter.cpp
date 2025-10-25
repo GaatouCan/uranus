@@ -2,10 +2,13 @@
 #include "ControllerType.h"
 #include "controllers/ChatController.h"
 
+#define REGISTER_CONTROLLER(ty, ctrl) \
+    case ControllerType::ty: return make_unique<ctrl>();
+
 namespace protocol {
     unique_ptr<AbstractController> ProtocolRouter::CreateController(const ControllerType type) {
         switch (type) {
-            case ControllerType::kChat: return make_unique<ChatController>();
+            REGISTER_CONTROLLER(kChat, ChatController)
             default: return nullptr;
         }
     }
@@ -40,3 +43,6 @@ namespace protocol {
         std::invoke(func_iter->second, ctrl, player_, msg);
     }
 }
+
+
+#undef REGISTER_CONTROLLER
