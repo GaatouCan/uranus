@@ -1,6 +1,6 @@
 #include "GamePlayer.h"
 #include "route/ProtocolRouter.h"
-#include "Package.h";
+#include "Package.h"
 
 
 using uranus::network::Package;
