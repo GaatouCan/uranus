@@ -11,7 +11,7 @@ if (MSVC)
 endif ()
 
 add_library(game-player SHARED ${GAME_PLAYER})
-target_link_libraries(game-player PUBLIC core)
+target_link_libraries(game-player PUBLIC package-impl)
 target_compile_definitions(game-player PRIVATE URANUS_SERVICE)
 
 set_target_properties(game-player PROPERTIES OUTPUT_NAME "player")
