@@ -50,6 +50,8 @@ namespace uranus {
             (*iter)->Stop();
         }
         ordered_.clear();
+
+        SPDLOG_INFO("Game server shutdown");
     }
 
     asio::io_context &GameServer::GetMainIOContext() {

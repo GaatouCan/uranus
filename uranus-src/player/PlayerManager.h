@@ -29,7 +29,7 @@ public:
     ~PlayerManager() override;
 
     [[nodiscard]] constexpr const char *GetModuleName() const override {
-        return "PlayerManager";
+        return "Player Manager";
     }
 
     int OnPlayerLogin(int64_t pid);
