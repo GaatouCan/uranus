@@ -10,6 +10,7 @@
 #include <tuple>
 
 namespace uranus::network {
+
     using default_token = asio::as_tuple_t<asio::use_awaitable_t<> >;
     using namespace asio::experimental::awaitable_operators;
 
@@ -68,7 +69,7 @@ namespace uranus::network {
 
 
     template<class Codec>
-    requires std::is_base_of_v<Codec, MessageCodec<typename Codec::type> >
+    requires std::is_base_of_v<Codec, MessageCodec<typename Codec::type>>
     class Connection final : public std::enable_shared_from_this<Connection<Codec> > {
     public:
         Connection() = delete;
@@ -190,6 +191,7 @@ namespace uranus::network {
                     }
                 }
             } catch (const std::exception &e) {
+
             }
         }
 
