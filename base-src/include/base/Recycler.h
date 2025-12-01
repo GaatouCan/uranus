@@ -321,11 +321,7 @@ public:                                                 \
     static type##Pool &instance();                      \
 protected:                                              \
     type *create(const Handle &handle) const override;  \
-};                                                      \
-inline auto type::make() {                              \
-    return type##Unique{type##Pool::instance().acquire(), RecyclerDeleter() }; \
-}
-
+};
 
 
 #define IMPLEMENT_RECYCLER(type)                        \
@@ -340,18 +336,11 @@ type *type##Pool::create(const Handle &handle) const {  \
 }
 
 
-#define DECLARE_RECYCLER_GET(type)                                  \
-protected:                                                          \
-    struct RecyclerDeleter {                                        \
-        void operator()(type *p) const noexcept {                   \
-            if (p != nullptr) { p->recycle(); }                     \
-        }                                                           \
-    };                                                              \
-    using type##Handle = Recycler<type>::Handle;                    \
-public:                                                             \
-    using type##Unique = std::unique_ptr<type, RecyclerDeleter>;    \
-    static type *get();                                             \
-    static auto make();
+#define DECLARE_RECYCLER_GET(type)                          \
+protected:                                                  \
+    using type##RecyclerHandle = Recycler<type>::Handle;    \
+public:                                                     \
+    static type *get();
 
 
 #define IMPLEMENT_RECYCLER_GET(type)            \
