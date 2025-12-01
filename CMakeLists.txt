@@ -20,8 +20,17 @@ add_compile_definitions(ASIO_STANDALONE)
 add_compile_definitions(ASIO_HAS_CO_AWAIT)
 
 # Import Third Library
-set(THIRD_LIBRARY_DIR D:/library/install)
-set(CMAKE_INSTALL_PREFIX D:/library/install/uranus)
+
+if (WIN32)
+    set(THIRD_LIBRARY_DIR D:/library/install)
+    set(CMAKE_INSTALL_PREFIX D:/library/install/uranus)
+elseif (APPLE)
+    set(THIRD_LIBRARY_DIR ~/Documents/library/install)
+    set(CMAKE_INSTALL_PREFIX ~/Documents/library/install/uranus)
+elseif (UNIX)
+    set(THIRD_LIBRARY_DIR ~/Documents/library/install)
+    set(CMAKE_INSTALL_PREFIX ~/Documents/library/install/uranus)
+endif ()
 
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/spdlog)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
