@@ -31,68 +31,13 @@ list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/YAML_CPP)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/protobuf)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/zlib)
 
+include(GenerateExportHeader)
+
 find_package(spdlog CONFIG REQUIRED)
 find_package(asio CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
-
-# The Core Library
-file(GLOB_RECURSE CORE_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/core-src/*.h)
-file(GLOB_RECURSE CORE_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/core-src/*.cpp)
-file(GLOB_RECURSE CORE_FILES  ${CORE_HEADER} ${CORE_SOURCE})
+find_package(OpenSSL COMPONENTS REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 
-if (MSVC)
-    foreach(file ${CORE_FILES})
-        get_filename_component(PARENT_DIR "${file}" DIRECTORY)
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
-        string(REPLACE "/" "\\" GROUP "${GROUP}")
-        set(GROUP "${GROUP}")
-        source_group("${GROUP}" FILES "${file}")
-    endforeach()
-endif ()
-
-add_library(core SHARED ${CORE_FILES})
-target_compile_definitions(core PRIVATE URANUS_EXPORT)
-target_link_libraries(core PUBLIC spdlog::spdlog)
-target_link_libraries(core PUBLIC asio::asio)
-target_link_libraries(core PUBLIC mimalloc)
-target_include_directories(core PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/core-src>
-        $<INSTALL_INTERFACE:include>
-)
-
-set_target_properties(core PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
-set_target_properties(core PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
-set_target_properties(core PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output/lib)
-
-add_subdirectory(config_module)
-add_subdirectory(package)
-add_subdirectory(protocol)
-
-# Uranus executable
-file(GLOB_RECURSE URANUS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.h ${CMAKE_CURRENT_SOURCE_DIR}/uranus-src/*.cpp)
-
-if (MSVC)
-    foreach(file ${URANUS_FILES})
-        get_filename_component(PARENT_DIR "${file}" DIRECTORY)
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
-        string(REPLACE "/" "\\" GROUP "${GROUP}")
-        set(GROUP "${GROUP}")
-        source_group("${GROUP}" FILES "${file}")
-    endforeach()
-endif ()
-
-add_executable(uranus ${URANUS_FILES})
-target_link_libraries(uranus PUBLIC core)
-target_link_libraries(uranus PUBLIC package-impl)
-target_link_libraries(uranus PUBLIC config-module)
-target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/core-src)
-target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/package)
-
-# link login protocol
-target_link_libraries(uranus PUBLIC pb_login)
-
-set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
-set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
-
-add_subdirectory(player)
+add_subdirectory(base-src)
