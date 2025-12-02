@@ -234,7 +234,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires ConnectionConcept<Codec, Handler>
+    requires ConnectionConcept<Codec, Handler>
     bool ConnectionImpl<Codec, Handler>::isConnected() const {
 #ifdef URANUS_SSL
         return socket_.next_layer().is_open();
@@ -329,7 +329,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires ConnectionConcept<Codec, Handler>
+    requires ConnectionConcept<Codec, Handler>
     awaitable<void> ConnectionImpl<Codec, Handler>::readMessage() {
         try {
             while (isConnected()) {
