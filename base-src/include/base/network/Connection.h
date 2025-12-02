@@ -107,11 +107,14 @@ namespace uranus::network {
         Connection &conn_;
     };
 
+    template<class Codec, class Handler>
+    concept ConnectionConcept = std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
+                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>;
+
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     class ConnectionImpl final : public Connection, public std::enable_shared_from_this<ConnectionImpl<Codec, Handler> > {
 
     public:
@@ -159,45 +162,43 @@ namespace uranus::network {
     };
 
     template<typename T>
-        requires std::is_base_of_v<Message, T>
+    requires std::is_base_of_v<Message, T>
     MessageCodec<T>::MessageCodec(Connection &conn)
         : conn_(conn) {
     }
 
     template<typename T>
-        requires std::is_base_of_v<Message, T>
+    requires std::is_base_of_v<Message, T>
     Connection &MessageCodec<T>::getConnection() const {
         return conn_;
     }
 
     template<typename T>
-        requires std::is_base_of_v<Message, T>
+    requires std::is_base_of_v<Message, T>
     TcpSocket &MessageCodec<T>::getSocket() const {
         return conn_.getSocket();
     }
 
     template<typename T>
-        requires std::is_base_of_v<Message, T>
+    requires std::is_base_of_v<Message, T>
     ConnectionHandler<T>::ConnectionHandler(Connection &conn)
         : conn_(conn) {
     }
 
     template<typename T>
-        requires std::is_base_of_v<Message, T>
+    requires std::is_base_of_v<Message, T>
     ConnectionHandler<T>::~ConnectionHandler() {
     }
 
     template<typename T>
-        requires std::is_base_of_v<Message, T>
+    requires std::is_base_of_v<Message, T>
     Connection &ConnectionHandler<T>::getConnection() const {
         return conn_;
     }
 
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     ConnectionImpl<Codec, Handler>::ConnectionImpl(TcpSocket &&socket)
         : socket_(std::move(socket)),
           codec_(*this),
@@ -206,40 +207,30 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     ConnectionImpl<Codec, Handler>::~ConnectionImpl() {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     TcpSocket &ConnectionImpl<Codec, Handler>::getSocket() {
         return socket_;
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     Codec &ConnectionImpl<Codec, Handler>::getCodec() {
         return codec_;
     }
 
     template<class Codec, class Handler>
-    requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-             std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-             std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     Handler &ConnectionImpl<Codec, Handler>::getHandler() {
         return handler_;
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+        requires ConnectionConcept<Codec, Handler>
     bool ConnectionImpl<Codec, Handler>::isConnected() const {
 #ifdef URANUS_SSL
         return socket_.next_layer().is_open();
@@ -249,9 +240,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     void ConnectionImpl<Codec, Handler>::connect() {
         co_spawn(getExecutor(), [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
@@ -272,9 +261,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     void ConnectionImpl<Codec, Handler>::disconnect() {
         if (!isConnected())
             return;
@@ -292,9 +279,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     void ConnectionImpl<Codec, Handler>::send(MessageHandleType &&msg) {
         if (msg == nullptr)
             return;
@@ -306,17 +291,13 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     void ConnectionImpl<Codec, Handler>::send(MessageType *msg) {
         send({msg, Message::Deleter::make()});
     }
 
     template<class Codec, class Handler>
-    requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-        std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-         std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     void ConnectionImpl<Codec, Handler>::sendMessage(MessageHandle &&msg) {
         if (msg == nullptr)
             return;
@@ -328,9 +309,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-    requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-        std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-        std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     void ConnectionImpl<Codec, Handler>::sendMessage(Message *msg) {
         if (msg == nullptr)
             return;
@@ -341,9 +320,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+        requires ConnectionConcept<Codec, Handler>
     awaitable<void> ConnectionImpl<Codec, Handler>::readMessage() {
         try {
             while (isConnected()) {
@@ -364,9 +341,7 @@ namespace uranus::network {
     }
 
     template<class Codec, class Handler>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
-                 std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::Type>
+    requires ConnectionConcept<Codec, Handler>
     awaitable<void> ConnectionImpl<Codec, Handler>::writeMessage() {
         try {
             while (isConnected() && output_.is_open()) {
