@@ -1,8 +1,8 @@
 #pragma once
 
-#include "base.export.h"
-#include "Message.h"
-#include "noncopy.h"
+#include "base/base.export.h"
+#include "base/Message.h"
+#include "base/noncopy.h"
 
 namespace uranus {
     class Message;
@@ -20,6 +20,6 @@ namespace uranus::actor {
         DISABLE_COPY_MOVE(Actor)
 
     protected:
-        virtual void onMessage(const Message *msg) = 0;
+        virtual void onMessage(const Envelope &envelope) = 0;
     };
 }

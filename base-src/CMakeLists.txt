@@ -25,6 +25,7 @@ target_include_directories(base
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/base
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
 target_link_libraries(base PUBLIC asio::asio)
 target_link_libraries(base PUBLIC mimalloc)
 target_link_libraries(base PUBLIC OpenSSL::SSL OpenSSL::Crypto)
