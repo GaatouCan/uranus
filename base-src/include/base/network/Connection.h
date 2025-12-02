@@ -7,6 +7,7 @@
 #include <asio/experimental/concurrent_channel.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
 #include <tuple>
+#include <memory>
 
 #ifdef URANUS_SSL
 #include <asio/ssl.hpp>
