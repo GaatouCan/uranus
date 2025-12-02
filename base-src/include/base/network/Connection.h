@@ -244,8 +244,7 @@ namespace uranus::network {
     void ConnectionImpl<Codec, Handler>::connect() {
         co_spawn(getExecutor(), [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
-            const auto [ec] = co_await self->codec_.getSocket().async_handshake(asio::ssl::stream_base::server);
-            if (ec) {
+            if (const auto [ec] = co_await self->codec_.getSocket().async_handshake(asio::ssl::stream_base::server); ec) {
                 self->disconnect();
                 co_return;
             }
