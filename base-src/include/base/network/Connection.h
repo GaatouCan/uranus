@@ -47,8 +47,8 @@ namespace uranus::network {
 
         [[nodiscard]] virtual bool isConnected() const = 0;
 
-        virtual void send(MessageHandle &&msg) = 0;
-        virtual void send(Message *msg) = 0;
+        //virtual void send(MessageHandle &&msg) = 0;
+        //virtual void send(Message *msg) = 0;
     };
 
     template<typename T>
@@ -115,6 +115,9 @@ namespace uranus::network {
     class ConnectionImpl final : public Connection, public std::enable_shared_from_this<ConnectionImpl<Codec, Handler> > {
 
     public:
+        using MessageType = Codec::Type;
+        using MessageHandleType = Codec::HandleType;
+
         ConnectionImpl() = delete;
 
         explicit ConnectionImpl(TcpSocket &&socket);
@@ -136,8 +139,8 @@ namespace uranus::network {
         void connect() override;
         void disconnect() override;
 
-        void send(MessageHandle &&msg) override;
-        void send(Message *msg) override;
+        void send(MessageHandleType &&msg);
+        void send(MessageType *msg);
 
     private:
         awaitable<void> readMessage();
@@ -149,7 +152,7 @@ namespace uranus::network {
         Codec codec_;
         Handler handler_;
 
-        ConcurrentChannel<MessageHandle> output_;
+        ConcurrentChannel<MessageHandleType> output_;
     };
 
     template<typename T>
@@ -289,7 +292,7 @@ namespace uranus::network {
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
                  std::is_same_v<typename Codec::Type, typename Handler::Type>
-    void ConnectionImpl<Codec, Handler>::send(MessageHandle &&msg) {
+    void ConnectionImpl<Codec, Handler>::send(MessageHandleType &&msg) {
         if (msg == nullptr)
             return;
 
@@ -303,7 +306,7 @@ namespace uranus::network {
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
                  std::is_same_v<typename Codec::Type, typename Handler::Type>
-    void ConnectionImpl<Codec, Handler>::send(Message *msg) {
+    void ConnectionImpl<Codec, Handler>::send(MessageType *msg) {
         send({msg, Message::Deleter::make()});
     }
 
