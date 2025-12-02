@@ -27,6 +27,7 @@ target_include_directories(base
 )
 target_link_libraries(base PUBLIC asio::asio)
 target_link_libraries(base PUBLIC mimalloc)
+target_link_libraries(base PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
 set_target_properties(base PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(base PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
