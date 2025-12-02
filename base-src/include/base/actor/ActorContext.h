@@ -94,6 +94,8 @@ namespace uranus::actor {
         void run() override;
         void terminate() override;
 
+        [[nodiscard]] bool isRunning() const;
+
         void pushEnvelope(Envelope &&envelope) override;
 
         void sendMessage(MessageHandle &&msg) override;
@@ -213,6 +215,12 @@ namespace uranus::actor {
 
         mailbox_.cancel();
         mailbox_.close();
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    bool ActorContextImpl<Router>::isRunning() const {
+        return actor_ != nullptr && mailbox_.is_open();
     }
 
     template<class Router>
