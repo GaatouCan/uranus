@@ -88,5 +88,11 @@ namespace uranus {
 
         Envelope(uint32_t src, MessageHandle &&msg);
         Envelope(uint32_t src, uint32_t sess, MessageHandle &&msg);
+
+        Envelope(const Envelope &) = delete;
+        Envelope &operator=(const Envelope &) = delete;
+
+        Envelope(Envelope &&rhs) noexcept;
+        Envelope &operator=(Envelope &&rhs) noexcept;
     };
 }

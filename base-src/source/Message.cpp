@@ -39,4 +39,27 @@ namespace uranus {
           session(sess),
           message(std::move(msg)) {
     }
+
+    Envelope::Envelope(Envelope &&rhs) noexcept {
+        if (this != &rhs) {
+            source = rhs.source;
+            session = rhs.session;
+
+            rhs.source = 0;
+            rhs.session = 0;
+
+            message = std::move(rhs.message);
+        }
+    }
+
+    Envelope &Envelope::operator=(Envelope &&rhs) noexcept {
+        if (this != &rhs) {
+            source = rhs.source;
+            session = rhs.session;
+            rhs.source = 0;
+            rhs.session = 0;
+            message = std::move(rhs.message);
+        }
+        return *this;
+    }
 }
