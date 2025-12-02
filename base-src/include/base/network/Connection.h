@@ -304,10 +304,16 @@ namespace uranus::network {
         if (msg == nullptr)
             return;
 
-        if (dynamic_cast<MessageType *>(msg.get())) {
-            MessageHandleType handle{ dynamic_cast<MessageType *>(msg.release()), msg.get_deleter() };
+        auto del = msg.get_deleter();
+        auto *ptr = msg.release();
+
+        if (auto *temp = dynamic_cast<MessageType *>(ptr)) {
+            MessageHandleType handle{ temp, del };
             send(std::move(handle));
+            return;
         }
+
+        del(ptr);
     }
 
     template<class Codec, class Handler>
