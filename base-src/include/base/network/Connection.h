@@ -98,7 +98,7 @@ namespace uranus::network {
         virtual void onDisconnected() {}
 
         virtual void onError(error_code ec) {}
-        virtual void onException(std::exception e) {}
+        virtual void onException(const std::exception &e) {}
 
         virtual void onReceive(HandleType &&msg) = 0;
         virtual void onWrite(Type *msg) = 0;
@@ -187,8 +187,7 @@ namespace uranus::network {
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
-    ConnectionHandler<T>::~ConnectionHandler() {
-    }
+    ConnectionHandler<T>::~ConnectionHandler() = default;
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
@@ -209,6 +208,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
     requires ConnectionConcept<Codec, Handler>
     ConnectionImpl<Codec, Handler>::~ConnectionImpl() {
+        disconnect();
     }
 
     template<class Codec, class Handler>
