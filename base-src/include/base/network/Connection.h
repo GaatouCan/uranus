@@ -47,8 +47,8 @@ namespace uranus::network {
 
         [[nodiscard]] virtual bool isConnected() const = 0;
 
-        //virtual void send(MessageHandle &&msg) = 0;
-        //virtual void send(Message *msg) = 0;
+        virtual void sendMessage(MessageHandle &&msg) = 0;
+        virtual void sendMessage(Message *msg) = 0;
     };
 
     template<typename T>
@@ -141,6 +141,9 @@ namespace uranus::network {
 
         void send(MessageHandleType &&msg);
         void send(MessageType *msg);
+
+        void sendMessage(MessageHandle &&msg) override;
+        void sendMessage(Message *msg) override;
 
     private:
         awaitable<void> readMessage();
@@ -308,6 +311,33 @@ namespace uranus::network {
                  std::is_same_v<typename Codec::Type, typename Handler::Type>
     void ConnectionImpl<Codec, Handler>::send(MessageType *msg) {
         send({msg, Message::Deleter::make()});
+    }
+
+    template<class Codec, class Handler>
+    requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
+        std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
+         std::is_same_v<typename Codec::Type, typename Handler::Type>
+    void ConnectionImpl<Codec, Handler>::sendMessage(MessageHandle &&msg) {
+        if (msg == nullptr)
+            return;
+
+        if (dynamic_cast<MessageType *>(msg.get())) {
+            MessageHandleType handle{ dynamic_cast<MessageType *>(msg.release()), msg.get_deleter() };
+            send(std::move(handle));
+        }
+    }
+
+    template<class Codec, class Handler>
+    requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
+        std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
+        std::is_same_v<typename Codec::Type, typename Handler::Type>
+    void ConnectionImpl<Codec, Handler>::sendMessage(Message *msg) {
+        if (msg == nullptr)
+            return;
+
+        if (auto *temp = dynamic_cast<MessageType *>(msg)) {
+            send(temp);
+        }
     }
 
     template<class Codec, class Handler>
