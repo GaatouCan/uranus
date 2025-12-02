@@ -77,12 +77,20 @@ namespace uranus::actor {
         void setActor(ActorHandle &&handle);
         [[nodiscard]] Actor *getActor() const;
 
+        void run();
+        void terminate();
+
+        void pushEnvelope(Envelope &&envelope);
+
         void sendMessage(MessageHandle &&msg) override;
         void sendMessage(Message *msg) override;
 
     private:
+        awaitable<void> processMessage();
+
+    private:
         asio::io_context &ctx_;
-        ConcurrentChannel<MessageHandleType> mailbox_;
+        ConcurrentChannel<Envelope> mailbox_;
 
         Router router_;
 
@@ -153,6 +161,43 @@ namespace uranus::actor {
 
     template<class Router>
     requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    void ActorContextImpl<Router>::run() {
+        if (actor_ == nullptr) {
+            // TODO
+            return;
+        }
+
+        // FIXME: actor::start()
+
+        co_spawn(ctx_, [self = this->shared_from_this()]() -> awaitable<void> {
+            co_await self->processMessage();
+        }, detached);
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    void ActorContextImpl<Router>::terminate() {
+        if (!mailbox_.is_open())
+            return;
+
+        mailbox_.cancel();
+        mailbox_.close();
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    void ActorContextImpl<Router>::pushEnvelope(Envelope &&envelope) {
+        if (!mailbox_.is_open())
+            return;
+
+        if (actor_ == nullptr)
+            return;
+
+        mailbox_.try_send_via_dispatch(error_code{}, std::move(envelope));
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
     void ActorContextImpl<Router>::sendMessage(MessageHandle &&msg) {
         router_.sendMessage(std::move(msg));
     }
@@ -161,5 +206,30 @@ namespace uranus::actor {
     requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
     void ActorContextImpl<Router>::sendMessage(Message *msg) {
         sendMessage(MessageHandleType{msg, Message::Deleter::make()});
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    awaitable<void> ActorContextImpl<Router>::processMessage() {
+        try {
+            while (mailbox_.is_open()) {
+                auto [ec, envelope] = co_await mailbox_.async_receive();
+
+                if (ec == asio::error::operation_aborted ||
+                    ec == asio::experimental::error::channel_closed) {
+                    // TODO
+                    break;
+                }
+
+                if (ec) {
+                    // TODO
+                    continue;
+                }
+
+                actor_->onMessage(std::move(envelope));
+            }
+        } catch (const std::exception &e) {
+
+        }
     }
 }
