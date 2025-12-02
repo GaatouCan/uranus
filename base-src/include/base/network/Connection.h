@@ -97,8 +97,8 @@ namespace uranus::network {
 
         [[nodiscard]] Connection &getConnection() const;
 
-        virtual void onConnected() {}
-        virtual void onDisconnected() {}
+        virtual void onConnect() {}
+        virtual void onDisconnect() {}
 
         virtual void onError(error_code ec) {}
         virtual void onException(const std::exception &e) {}
@@ -253,7 +253,7 @@ namespace uranus::network {
             }
 #endif
 
-            self->handler_.onConnected();
+            self->handler_.onConnect();
 
             co_await (
                 self->readMessage() &&
@@ -277,7 +277,7 @@ namespace uranus::network {
         output_.cancel();
         output_.close();
 
-        handler_.onDisconnected();
+        handler_.onDisconnect();
     }
 
     template<class Codec, class Handler>
