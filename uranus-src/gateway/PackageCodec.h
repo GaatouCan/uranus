@@ -7,7 +7,7 @@
 namespace uranus {
 
     using network::MessageCodec;
-    using network::ConnectionBase;
+    using network::Connection;
     using asio::awaitable;
     using std::tuple;
     using std::make_tuple;
@@ -15,7 +15,7 @@ namespace uranus {
 
     class PackageCodec final : public MessageCodec<Package> {
     public:
-        explicit PackageCodec(ConnectionBase &conn);
+        explicit PackageCodec(Connection &conn);
         ~PackageCodec() override;
 
         awaitable<error_code> encode(HandleType &&msg) override;

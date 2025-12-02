@@ -2,7 +2,7 @@
 
 #include "gateway/PackageCodec.h"
 
-using uranus::network::Connection;
+using uranus::network::ConnectionImpl;
 using uranus::PackageCodec;
 
 int main() {
@@ -12,7 +12,7 @@ int main() {
     asio::ssl::context sslctx(asio::ssl::context::tls_server);
     uranus::network::TcpSocket socket(ctx, sslctx);
 
-    auto conn = new Connection<PackageCodec>(std::move(socket));
+    auto conn = new ConnectionImpl<PackageCodec>(std::move(socket));
     delete conn;
 
     return 0;

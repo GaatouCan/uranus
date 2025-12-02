@@ -2,7 +2,7 @@
 
 namespace uranus {
 
-    PackageCodec::PackageCodec(ConnectionBase &conn)
+    PackageCodec::PackageCodec(Connection &conn)
         : MessageCodec(conn) {
     }
 
