@@ -4,10 +4,13 @@
 #include "base/noncopy.h"
 
 #include <asio.hpp>
-#include <asio/ssl.hpp>
 #include <asio/experimental/concurrent_channel.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
 #include <tuple>
+
+#ifdef URANUS_SSL
+#include <asio/ssl.hpp>
+#endif
 
 namespace uranus::network {
 
