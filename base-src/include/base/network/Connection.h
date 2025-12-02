@@ -212,7 +212,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
     requires ConnectionConcept<Codec, Handler>
     ConnectionImpl<Codec, Handler>::~ConnectionImpl() {
-        disconnect();
+        ConnectionImpl::disconnect();
     }
 
     template<class Codec, class Handler>

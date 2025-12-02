@@ -144,7 +144,7 @@ namespace uranus::actor {
     template<class Router>
     requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
     ActorContextImpl<Router>::~ActorContextImpl() {
-
+        ActorContextImpl::terminate();
     }
 
     template<class Router>
