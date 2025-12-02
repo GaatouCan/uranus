@@ -1,9 +1,11 @@
 #include <spdlog/spdlog.h>
 
 #include "gateway/PackageCodec.h"
+#include "gateway/GameWorldHandler.h"
 
 using uranus::network::ConnectionImpl;
 using uranus::PackageCodec;
+using uranus::GameWorldHandler;
 
 int main() {
     spdlog::info("Hello World!");
@@ -12,7 +14,7 @@ int main() {
     asio::ssl::context sslctx(asio::ssl::context::tls_server);
     uranus::network::TcpSocket socket(ctx, sslctx);
 
-    auto conn = new ConnectionImpl<PackageCodec>(std::move(socket));
+    auto conn = new ConnectionImpl<PackageCodec, GameWorldHandler>(std::move(socket));
     delete conn;
 
     return 0;

@@ -40,7 +40,7 @@ namespace uranus {
 
     class BASE_API Message {
 
-    protected:
+    public:
         struct Deleter {
             using Functor = void (*)(Message *);
             Functor del;
@@ -65,7 +65,6 @@ namespace uranus {
             }
         };
 
-    public:
         template<typename T>
         requires std::is_base_of_v<Message, T>
         using Pointer = std::unique_ptr<T, Deleter>;

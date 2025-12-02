@@ -33,13 +33,22 @@ namespace uranus::network {
     using ConcurrentChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, T)>>;
 
     class Connection {
+
     public:
         Connection() = default;
         virtual ~Connection() = default;
 
+        DISABLE_COPY_MOVE(Connection)
+
         virtual TcpSocket &getSocket() = 0;
 
+        virtual void connect() = 0;
+        virtual void disconnect() = 0;
+
+        [[nodiscard]] virtual bool isConnected() const = 0;
+
         virtual void send(MessageHandle &&msg) = 0;
+        virtual void send(Message *msg) = 0;
     };
 
     template<typename T>
@@ -102,7 +111,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     class ConnectionImpl final : public Connection, public std::enable_shared_from_this<ConnectionImpl<Codec, Handler> > {
 
     public:
@@ -118,21 +127,20 @@ namespace uranus::network {
         Codec &getCodec();
         Handler &getHandler();
 
-        [[nodiscard]] bool isConnected() const;
+        [[nodiscard]] bool isConnected() const override;
 
         auto getExecutor() {
             return socket_.get_executor();
         }
 
-        void connect();
-        void disconnect();
+        void connect() override;
+        void disconnect() override;
 
         void send(MessageHandle &&msg) override;
-        void send(Message *msg);
+        void send(Message *msg) override;
 
     private:
         awaitable<void> readMessage();
-
         awaitable<void> writeMessage();
 
     private:
@@ -183,7 +191,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     ConnectionImpl<Codec, Handler>::ConnectionImpl(TcpSocket &&socket)
         : socket_(std::move(socket)),
           codec_(*this),
@@ -194,14 +202,14 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     ConnectionImpl<Codec, Handler>::~ConnectionImpl() {
     }
 
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     TcpSocket &ConnectionImpl<Codec, Handler>::getSocket() {
         return socket_;
     }
@@ -209,7 +217,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     Codec &ConnectionImpl<Codec, Handler>::getCodec() {
         return codec_;
     }
@@ -217,7 +225,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
     requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
              std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-             std::is_same_v<typename Codec::Type, typename Handler::type>
+             std::is_same_v<typename Codec::Type, typename Handler::Type>
     Handler &ConnectionImpl<Codec, Handler>::getHandler() {
         return handler_;
     }
@@ -225,7 +233,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     bool ConnectionImpl<Codec, Handler>::isConnected() const {
 #ifdef URANUS_SSL
         return socket_.next_layer().is_open();
@@ -237,7 +245,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     void ConnectionImpl<Codec, Handler>::connect() {
         co_spawn(getExecutor(), [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
@@ -248,7 +256,7 @@ namespace uranus::network {
             }
 #endif
 
-            self->hander_.onConnected();
+            self->handler_.onConnected();
 
             co_await (
                 self->readMessage() &&
@@ -260,7 +268,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     void ConnectionImpl<Codec, Handler>::disconnect() {
         if (!isConnected())
             return;
@@ -280,7 +288,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     void ConnectionImpl<Codec, Handler>::send(MessageHandle &&msg) {
         if (msg == nullptr)
             return;
@@ -294,7 +302,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     void ConnectionImpl<Codec, Handler>::send(Message *msg) {
         send({msg, Message::Deleter::make()});
     }
@@ -302,7 +310,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     awaitable<void> ConnectionImpl<Codec, Handler>::readMessage() {
         try {
             while (isConnected()) {
@@ -325,7 +333,7 @@ namespace uranus::network {
     template<class Codec, class Handler>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec> &&
                  std::is_base_of_v<ConnectionHandler<typename Handler::Type>, Handler> &&
-                 std::is_same_v<typename Codec::Type, typename Handler::type>
+                 std::is_same_v<typename Codec::Type, typename Handler::Type>
     awaitable<void> ConnectionImpl<Codec, Handler>::writeMessage() {
         try {
             while (isConnected() && output_.is_open()) {
