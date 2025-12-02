@@ -32,6 +32,9 @@ namespace uranus::actor {
         virtual void setActor(ActorHandle &&handle) = 0;
         [[nodiscard]] virtual Actor *getActor() const = 0;
 
+        virtual void setId(uint32_t id) = 0;
+        [[nodiscard]] virtual uint32_t getId() const = 0;
+
         virtual void run() = 0;
         virtual void terminate() = 0;
 
@@ -85,6 +88,9 @@ namespace uranus::actor {
         void setActor(ActorHandle &&handle) override;
         [[nodiscard]] Actor *getActor() const override;
 
+        void setId(uint32_t id) override;
+        [[nodiscard]] uint32_t getId() const override;
+
         void run() override;
         void terminate() override;
 
@@ -103,6 +109,8 @@ namespace uranus::actor {
         Router router_;
 
         ActorHandle actor_;
+
+        uint32_t id_;
     };
 
     template<class T>
@@ -127,7 +135,9 @@ namespace uranus::actor {
     requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
     ActorContextImpl<Router>::ActorContextImpl(asio::io_context &ctx)
         : ctx_(ctx),
-          mailbox_(ctx_, 1024) {
+          mailbox_(ctx_, 1024),
+          actor_(nullptr),
+          id_(0) {
 
     }
 
@@ -166,6 +176,18 @@ namespace uranus::actor {
     requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
     Actor *ActorContextImpl<Router>::getActor() const {
         return actor_.get();
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    void ActorContextImpl<Router>::setId(const uint32_t id) {
+        id_ = id;
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    uint32_t ActorContextImpl<Router>::getId() const {
+        return id_;
     }
 
     template<class Router>

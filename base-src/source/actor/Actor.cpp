@@ -1,4 +1,5 @@
 #include "actor/Actor.h"
+#include "actor/ActorContext.h"
 
 namespace uranus::actor {
     Actor::Actor()
@@ -10,6 +11,10 @@ namespace uranus::actor {
 
     ActorContext *Actor::getContext() const {
         return ctx_;
+    }
+
+    uint32_t Actor::getId() const {
+        return ctx_->getId();
     }
 
     void Actor::setContext(ActorContext *ctx) {
