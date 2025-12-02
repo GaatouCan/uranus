@@ -14,8 +14,7 @@ int main() {
     asio::ssl::context sslctx(asio::ssl::context::tls_server);
     uranus::network::TcpSocket socket(ctx, sslctx);
 
-    auto conn = new ConnectionImpl<PackageCodec, GameWorldHandler>(std::move(socket));
-    delete conn;
+    auto conn = std::make_shared<ConnectionImpl<PackageCodec, GameWorldHandler>>(std::move(socket));
 
     return 0;
 }
