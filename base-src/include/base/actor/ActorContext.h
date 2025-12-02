@@ -29,6 +29,14 @@ namespace uranus::actor {
 
         DISABLE_COPY_MOVE(ActorContext)
 
+        virtual void setActor(ActorHandle &&handle) = 0;
+        [[nodiscard]] virtual Actor *getActor() const = 0;
+
+        virtual void run() = 0;
+        virtual void terminate() = 0;
+
+        virtual void pushEnvelope(Envelope &&envelope) = 0;
+
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;
     };
@@ -74,13 +82,13 @@ namespace uranus::actor {
 
         Router &getRouter();
 
-        void setActor(ActorHandle &&handle);
-        [[nodiscard]] Actor *getActor() const;
+        void setActor(ActorHandle &&handle) override;
+        [[nodiscard]] Actor *getActor() const override;
 
-        void run();
-        void terminate();
+        void run() override;
+        void terminate() override;
 
-        void pushEnvelope(Envelope &&envelope);
+        void pushEnvelope(Envelope &&envelope) override;
 
         void sendMessage(MessageHandle &&msg) override;
         void sendMessage(Message *msg) override;
@@ -151,6 +159,7 @@ namespace uranus::actor {
             return;
 
         actor_ = std::move(handle);
+        actor_->setContext(this);
     }
 
     template<class Router>
