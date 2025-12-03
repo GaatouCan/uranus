@@ -57,7 +57,7 @@ namespace uranus {
         PackageRecyclerHandle handle_;
 
     public:
-        uint32_t id_;
+        int64_t id_;
         std::vector<uint8_t, detail::BufferAllocator<uint8_t>> payload_;
     };
 
