@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Actor.h"
+#include "BaseActor.h"
 
 #include <memory>
 #include <asio.hpp>
@@ -30,7 +30,7 @@ namespace uranus::actor {
         DISABLE_COPY_MOVE(ActorContext)
 
         virtual void setActor(ActorHandle &&handle) = 0;
-        [[nodiscard]] virtual Actor *getActor() const = 0;
+        [[nodiscard]] virtual BaseActor *getActor() const = 0;
 
         virtual void setId(uint32_t id) = 0;
         [[nodiscard]] virtual uint32_t getId() const = 0;
@@ -86,7 +86,7 @@ namespace uranus::actor {
         Router &getRouter();
 
         void setActor(ActorHandle &&handle) override;
-        [[nodiscard]] Actor *getActor() const override;
+        [[nodiscard]] BaseActor *getActor() const override;
 
         void setId(uint32_t id) override;
         [[nodiscard]] uint32_t getId() const override;
@@ -176,7 +176,7 @@ namespace uranus::actor {
 
     template<class Router>
     requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    Actor *ActorContextImpl<Router>::getActor() const {
+    BaseActor *ActorContextImpl<Router>::getActor() const {
         return actor_.get();
     }
 

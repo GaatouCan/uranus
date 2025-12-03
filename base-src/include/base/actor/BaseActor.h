@@ -19,15 +19,15 @@ namespace uranus::actor {
 
     class ActorContext;
 
-    class BASE_API Actor {
+    class BASE_API BaseActor {
 
         friend class ActorContext;
 
     public:
-        Actor();
-        virtual ~Actor();
+        BaseActor();
+        virtual ~BaseActor();
 
-        DISABLE_COPY_MOVE(Actor)
+        DISABLE_COPY_MOVE(BaseActor)
 
         void setContext(ActorContext *ctx);
         [[nodiscard]] ActorContext *getContext() const;
@@ -41,5 +41,5 @@ namespace uranus::actor {
         ActorContext *ctx_;
     };
 
-    using ActorHandle = std::unique_ptr<Actor, std::function<void(Actor *)>>;
+    using ActorHandle = std::unique_ptr<BaseActor, std::function<void(BaseActor *)>>;
 }
