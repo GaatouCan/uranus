@@ -21,8 +21,6 @@ namespace uranus::actor {
 
     class BASE_API BaseActor {
 
-        friend class ActorContext;
-
     public:
         BaseActor();
         virtual ~BaseActor();
