@@ -1,13 +1,17 @@
 #include "PackageCodec.h"
 
+#include <asio/read.hpp>
+#include <asio/write.hpp>
+
 #if defined(_WIN32) || defined(_WIN64)
 #include <winsock2.h>
-#else
+#elifdef __APPLE__
+
+#elif
 #include <arpa/inet.h>
-#include <endian.h>
 #endif
 
-namespace uranus {
+namespace uranus::actor {
 
     struct PackageHeader {
         int64_t id = 0;
@@ -27,10 +31,10 @@ namespace uranus {
 
         PackageHeader header;
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
         header.id = static_cast<int64_t>(htonll(pkg->id_));
         header.length = static_cast<int64_t>(htonll(pkg->payload_.size()));
-#else
+#elif defined(__APPLE__)
         header.id = static_cast<int64_t>(htobe64(pkg->id_));
         header.length = static_cast<int64_t>(htobe64(pkg->payload_.size()));
 #endif
@@ -79,7 +83,7 @@ namespace uranus {
                 co_return make_tuple(ec, nullptr);
             }
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
             header.id = static_cast<int64_t>(ntohll(header.id));
             header.length = static_cast<int64_t>(ntohll(header.length));
 #else

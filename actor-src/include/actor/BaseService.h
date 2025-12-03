@@ -1,14 +1,9 @@
 #pragma once
 
-#include "package.export.h"
+#include "BaseActor.h"
 
-#include <base/actor/BaseActor.h>
-
-namespace uranus {
-
-    using actor::BaseActor;
-
-    class PACKAGE_API BaseService : public BaseActor {
+namespace uranus::actor {
+    class ACTOR_API BaseService : public BaseActor {
 
     };
 }

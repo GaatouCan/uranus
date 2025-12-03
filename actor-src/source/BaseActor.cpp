@@ -1,5 +1,5 @@
-#include "actor/BaseActor.h"
-#include "actor/ActorContext.h"
+#include "BaseActor.h"
+#include "ActorContext.h"
 
 namespace uranus::actor {
     BaseActor::BaseActor()

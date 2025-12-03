@@ -1,11 +1,11 @@
 #pragma once
 
-#include "base/base.export.h"
-#include "base/Message.h"
-#include "base/noncopy.h"
+#include "actor.export.h"
 
+#include <base/noncopy.h>
 #include <memory>
 #include <functional>
+
 
 namespace uranus {
     class Message;
@@ -19,7 +19,7 @@ namespace uranus::actor {
 
     class ActorContext;
 
-    class BASE_API BaseActor {
+    class ACTOR_API BaseActor {
 
     public:
         BaseActor();

@@ -1,17 +1,16 @@
 #pragma once
 
-#include "package.export.h"
+#include "actor.export.h"
 
 #include <base/Message.h>
 #include <base/Recycler.h>
 #include <vector>
 
-
-namespace uranus {
+namespace uranus::actor {
 
     namespace detail {
 
-        class PACKAGE_API BufferHeap final {
+        class ACTOR_API BufferHeap final {
 
         public:
             static void *allocate(std::size_t size);
@@ -41,7 +40,7 @@ namespace uranus {
         };
     }
 
-    class PACKAGE_API Package final : public Message {
+    class ACTOR_API Package final : public Message {
 
         DECLARE_MESSAGE_POOL_GET(Package)
 

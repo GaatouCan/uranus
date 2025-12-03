@@ -1,4 +1,4 @@
-#include "../include/actor/BaseService.h"
+#include "BaseService.h"
 
-namespace uranus {
+namespace uranus::actor {
 }

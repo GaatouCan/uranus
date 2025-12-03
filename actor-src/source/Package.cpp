@@ -1,8 +1,8 @@
-#include "actor/Package.h"
+#include "Package.h"
 
 #include <mimalloc.h>
 
-namespace uranus {
+namespace uranus::actor {
     namespace detail {
         void *BufferHeap::allocate(const std::size_t size) {
             thread_local mi_heap_t *heap = mi_heap_new();

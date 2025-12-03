@@ -2,17 +2,16 @@
 
 #include "Package.h"
 
-#include <../../../base-src/include/base/Connection.h>
+#include <base/Connection.h>
 
-namespace uranus {
-    using network::MessageCodec;
-    using network::Connection;
+namespace uranus::actor {
+
     using asio::awaitable;
     using std::error_code;
     using std::tuple;
     using std::make_tuple;
 
-    class PACKAGE_API PackageCodec final : public MessageCodec<Package> {
+    class ACTOR_API PackageCodec final : public MessageCodec<Package> {
 
     public:
         explicit PackageCodec(Connection &conn);

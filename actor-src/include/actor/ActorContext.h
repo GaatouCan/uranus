@@ -1,15 +1,14 @@
 #pragma once
 
-#include "actor/BaseActor.h"
+#include "BaseActor.h"
 
-#include <memory>
-#include <asio.hpp>
-#include <asio/experimental/concurrent_channel.hpp>
+#include <base/Message.h>
+#include <base/types.h>
+#include <asio/co_spawn.hpp>
+#include <asio/detached.hpp>
 
 
 namespace uranus::actor {
-
-    using default_token = asio::as_tuple_t<asio::use_awaitable_t<>>;
 
     using asio::awaitable;
     using asio::co_spawn;
@@ -17,9 +16,6 @@ namespace uranus::actor {
 
     using std::tuple;
     using std::error_code;
-
-    template<class T>
-    using ConcurrentChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(error_code, T)>>;
 
     class ActorContext {
 
