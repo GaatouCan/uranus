@@ -68,7 +68,7 @@ namespace uranus::actor {
 
     template<class Router>
     requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    class ActorContextImpl : public ActorContext, public std::enable_shared_from_this<ActorContextImpl<Router>> {
+    class ActorContextImpl final : public ActorContext, public std::enable_shared_from_this<ActorContextImpl<Router>> {
 
     public:
         using MessageType = Router::Type;
