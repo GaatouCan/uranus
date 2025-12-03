@@ -96,3 +96,24 @@ namespace uranus {
         Envelope &operator=(Envelope &&rhs) noexcept;
     };
 }
+
+
+#define DECLARE_MESSAGE_POOL_GET(type)                      \
+private:                                                    \
+    friend class type##Pool;                                \
+    friend class Recycler<type>;                            \
+    using type##RecyclerHandle = Recycler<type>::Handle;    \
+public:                                                     \
+    static type *get();                                     \
+    static auto getHandle();                                \
+private:
+
+#define DECLARE_MESSAGE_POOL(type)                          \
+DECLARE_RECYCLER(type)                                      \
+using type##Handle = Message::Pointer<type>;                \
+inline auto type::getHandle() {                             \
+    return type##Handle{                                    \
+        type##Pool::instance().acquire(),                   \
+        Deleter::recyclerAdapter<type>()                    \
+    };                                                      \
+}

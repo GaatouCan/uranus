@@ -339,6 +339,7 @@ type *type##Pool::create(const Handle &handle) const {  \
 #define DECLARE_RECYCLER_GET(type)                          \
 private:                                                    \
     friend class type##Pool;                                \
+    friend class Recycler<type>;                            \
     using type##RecyclerHandle = Recycler<type>::Handle;    \
 public:                                                     \
     static type *get();                                     \

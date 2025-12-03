@@ -5,15 +5,17 @@
 #include <base/Message.h>
 #include <base/Recycler.h>
 
+
 namespace uranus {
     class PACKAGE_API Package final : public Message {
 
-        DECLARE_RECYCLER_GET(Package)
+        DECLARE_MESSAGE_POOL_GET(Package)
 
         explicit Package(const PackageRecyclerHandle &handle);
+        ~Package() override;
+
     public:
         Package() = delete;
-        ~Package() override;
 
         void recycle();
 
@@ -21,5 +23,5 @@ namespace uranus {
         PackageRecyclerHandle handle_;
     };
 
-    DECLARE_RECYCLER(Package)
+    DECLARE_MESSAGE_POOL(Package)
 }
