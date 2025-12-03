@@ -3,7 +3,6 @@
 #include <mimalloc.h>
 
 namespace uranus {
-
     namespace detail {
         void *BufferHeap::allocate(const std::size_t size) {
             thread_local mi_heap_t *heap = mi_heap_new();
@@ -18,7 +17,8 @@ namespace uranus {
     }
 
     Package::Package(const PackageRecyclerHandle &handle)
-        : handle_(handle) {
+        : handle_(handle),
+          id_(0) {
     }
 
     Package::~Package() {
