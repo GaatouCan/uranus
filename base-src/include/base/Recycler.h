@@ -341,7 +341,8 @@ private:                                                    \
     friend class type##Pool;                                \
     using type##RecyclerHandle = Recycler<type>::Handle;    \
 public:                                                     \
-    static type *get();
+    static type *get();                                     \
+private:
 
 
 #define IMPLEMENT_RECYCLER_GET(type)            \

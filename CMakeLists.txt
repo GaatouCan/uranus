@@ -50,4 +50,5 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 
 add_subdirectory(base-src)
+add_subdirectory(package-src)
 add_subdirectory(uranus-src)
