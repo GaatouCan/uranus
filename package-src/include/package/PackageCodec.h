@@ -18,7 +18,7 @@ namespace uranus {
         explicit PackageCodec(Connection &conn);
         ~PackageCodec() override;
 
-        awaitable<error_code> encode(PackageHandle &&msg) override;
-        awaitable<tuple<error_code, PackageHandle> > decode() override;
+        awaitable<error_code> encode(PackageHandle &&pkg) override;
+        awaitable<tuple<error_code, PackageHandle>> decode() override;
     };
 }

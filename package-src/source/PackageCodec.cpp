@@ -21,21 +21,21 @@ namespace uranus {
     PackageCodec::~PackageCodec() {
     }
 
-    awaitable<error_code> PackageCodec::encode(PackageHandle &&msg) {
-        if (msg == nullptr)
+    awaitable<error_code> PackageCodec::encode(PackageHandle &&pkg) {
+        if (pkg == nullptr)
             co_return error_code{};
 
         PackageHeader header;
 
 #if defined(_WIN32) || defined(_WIN64)
-        header.id = static_cast<int64_t>(htonll(msg->id_));
-        header.length = static_cast<int64_t>(htonll(msg->payload_.size()));
+        header.id = static_cast<int64_t>(htonll(pkg->id_));
+        header.length = static_cast<int64_t>(htonll(pkg->payload_.size()));
 #else
-        header.id = static_cast<int64_t>(htobe64(msg->id_));
-        header.length = static_cast<int64_t>(htobe64(msg->payload_.size()));
+        header.id = static_cast<int64_t>(htobe64(pkg->id_));
+        header.length = static_cast<int64_t>(htobe64(pkg->payload_.size()));
 #endif
 
-        if (msg->payload_.empty()) {
+        if (pkg->payload_.empty()) {
             const auto [ec, len] = co_await asio::async_write(getSocket(), asio::buffer(&header, sizeof(PackageHeader)));
 
             if (ec)
@@ -51,10 +51,10 @@ namespace uranus {
 
         const auto buffers = {
             asio::buffer(&header, sizeof(PackageHeader)),
-            asio::buffer(msg->payload_),
+            asio::buffer(pkg->payload_),
         };
 
-        const auto payloadLength = msg->payload_.size();
+        const auto payloadLength = pkg->payload_.size();
         const auto [ec, len] = co_await asio::async_write(getSocket(), buffers);
 
         if (ec) {
@@ -70,6 +70,42 @@ namespace uranus {
     }
 
     awaitable<tuple<error_code, PackageHandle>> PackageCodec::decode() {
+        PackageHeader header;
 
+        // Read header
+        {
+            const auto [ec, len] = co_await asio::async_read(getSocket(), asio::buffer(&header, sizeof(PackageHeader)));
+            if (ec) {
+                co_return make_tuple(ec, nullptr);
+            }
+
+#if defined(_WIN32) || defined(_WIN64)
+            header.id = static_cast<int64_t>(ntohll(header.id));
+            header.length = static_cast<int64_t>(ntohll(header.length));
+#else
+            header.id = static_cast<int64_t>(be64toh(header.id));
+            header.length = static_cast<int64_t>(be64toh(header.length));
+#endif
+        }
+
+        auto pkg = Package::getHandle();
+
+        pkg->id_ = header.id;
+
+        if (header.length > 0) {
+            pkg->payload_.resize(header.length);
+            const auto [ec, len] = co_await asio::async_read(getSocket(), asio::buffer(pkg->payload_));
+
+            if (ec) {
+                co_return make_tuple(ec, nullptr);
+            }
+
+            if (len != header.length) {
+                // TODO
+                co_return make_tuple(error_code{}, nullptr);
+            }
+        }
+
+        co_return make_tuple(error_code{}, std::move(pkg));
     }
 }
