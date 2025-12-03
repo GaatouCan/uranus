@@ -2,7 +2,7 @@
 
 #include "Package.h"
 
-#include <base/network/Connection.h>
+#include <../../../base-src/include/base/Connection.h>
 
 namespace uranus {
     using network::MessageCodec;
