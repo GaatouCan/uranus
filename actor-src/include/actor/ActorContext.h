@@ -16,6 +16,9 @@ namespace uranus::actor {
 
     using std::tuple;
     using std::error_code;
+    using std::shared_ptr;
+    using std::make_shared;
+    using std::enable_shared_from_this;
 
     class ActorContext {
 
@@ -62,54 +65,57 @@ namespace uranus::actor {
         ActorContext &ctx_;
     };
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    class ActorContextImpl final : public ActorContext, public std::enable_shared_from_this<ActorContextImpl<Router>> {
+    namespace detail {
 
-    public:
-        using MessageType = Router::Type;
-        using MessageHandleType = Router::HandleType;
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        class ActorContextImpl final : public ActorContext, public enable_shared_from_this<ActorContextImpl<Router>> {
 
-        ActorContextImpl() = delete;
+        public:
+            using MessageType = Router::Type;
+            using MessageHandleType = Router::HandleType;
 
-        explicit ActorContextImpl(asio::io_context &ctx);
-        ~ActorContextImpl() override;
+            ActorContextImpl() = delete;
 
-        DISABLE_COPY_MOVE(ActorContextImpl)
+            explicit ActorContextImpl(asio::io_context &ctx);
+            ~ActorContextImpl() override;
 
-        [[nodiscard]] asio::io_context &getIOContext() const;
+            DISABLE_COPY_MOVE(ActorContextImpl)
 
-        Router &getRouter();
+            [[nodiscard]] asio::io_context &getIOContext() const;
 
-        void setActor(ActorHandle &&handle) override;
-        [[nodiscard]] BaseActor *getActor() const override;
+            Router &getRouter();
 
-        void setId(uint32_t id) override;
-        [[nodiscard]] uint32_t getId() const override;
+            void setActor(ActorHandle &&handle) override;
+            [[nodiscard]] BaseActor *getActor() const override;
 
-        void run() override;
-        void terminate() override;
+            void setId(uint32_t id) override;
+            [[nodiscard]] uint32_t getId() const override;
 
-        [[nodiscard]] bool isRunning() const;
+            void run() override;
+            void terminate() override;
 
-        void pushEnvelope(Envelope &&envelope) override;
+            [[nodiscard]] bool isRunning() const;
 
-        void sendMessage(MessageHandle &&msg) override;
-        void sendMessage(Message *msg) override;
+            void pushEnvelope(Envelope &&envelope) override;
 
-    private:
-        awaitable<void> processMessage();
+            void sendMessage(MessageHandle &&msg) override;
+            void sendMessage(Message *msg) override;
 
-    private:
-        asio::io_context &ctx_;
-        ConcurrentChannel<Envelope> mailbox_;
+        private:
+            awaitable<void> processMessage();
 
-        Router router_;
+        private:
+            asio::io_context &ctx_;
+            ConcurrentChannel<Envelope> mailbox_;
 
-        ActorHandle actor_;
+            Router router_;
 
-        uint32_t id_;
-    };
+            ActorHandle actor_;
+
+            uint32_t id_;
+        };
+    }
 
     template<class T>
     requires std::is_base_of_v<Message, T>
@@ -129,142 +135,151 @@ namespace uranus::actor {
         return ctx_;
     }
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    ActorContextImpl<Router>::ActorContextImpl(asio::io_context &ctx)
-        : ctx_(ctx),
-          mailbox_(ctx_, 1024),
-          actor_(nullptr),
-          id_(0) {
+    namespace detail {
 
-    }
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        ActorContextImpl<Router>::ActorContextImpl(asio::io_context &ctx)
+            : ctx_(ctx),
+              mailbox_(ctx_, 1024),
+              actor_(nullptr),
+              id_(0) {
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    ActorContextImpl<Router>::~ActorContextImpl() {
-        ActorContextImpl::terminate();
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    asio::io_context &ActorContextImpl<Router>::getIOContext() const {
-        return ctx_;
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    Router &ActorContextImpl<Router>::getRouter() {
-        return router_;
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    void ActorContextImpl<Router>::setActor(ActorHandle &&handle) {
-        if (actor_ != nullptr)
-            return;
-
-        if (!mailbox_.is_open())
-            return;
-
-        actor_ = std::move(handle);
-        actor_->setContext(this);
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    BaseActor *ActorContextImpl<Router>::getActor() const {
-        return actor_.get();
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    void ActorContextImpl<Router>::setId(const uint32_t id) {
-        id_ = id;
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    uint32_t ActorContextImpl<Router>::getId() const {
-        return id_;
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    void ActorContextImpl<Router>::run() {
-        if (actor_ == nullptr) {
-            // TODO
-            return;
         }
 
-        // FIXME: actor::start()
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        ActorContextImpl<Router>::~ActorContextImpl() {
+            ActorContextImpl::terminate();
+        }
 
-        co_spawn(ctx_, [self = this->shared_from_this()]() -> awaitable<void> {
-            co_await self->processMessage();
-        }, detached);
-    }
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        asio::io_context &ActorContextImpl<Router>::getIOContext() const {
+            return ctx_;
+        }
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    void ActorContextImpl<Router>::terminate() {
-        if (!mailbox_.is_open())
-            return;
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        Router &ActorContextImpl<Router>::getRouter() {
+            return router_;
+        }
 
-        mailbox_.cancel();
-        mailbox_.close();
-    }
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        void ActorContextImpl<Router>::setActor(ActorHandle &&handle) {
+            if (actor_ != nullptr)
+                return;
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    bool ActorContextImpl<Router>::isRunning() const {
-        return actor_ != nullptr && mailbox_.is_open();
-    }
+            if (!mailbox_.is_open())
+                return;
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    void ActorContextImpl<Router>::pushEnvelope(Envelope &&envelope) {
-        if (!mailbox_.is_open())
-            return;
+            actor_ = std::move(handle);
+            actor_->setContext(this);
+        }
 
-        if (actor_ == nullptr)
-            return;
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        BaseActor *ActorContextImpl<Router>::getActor() const {
+            return actor_.get();
+        }
 
-        mailbox_.try_send_via_dispatch(error_code{}, std::move(envelope));
-    }
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        void ActorContextImpl<Router>::setId(const uint32_t id) {
+            id_ = id;
+        }
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    void ActorContextImpl<Router>::sendMessage(MessageHandle &&msg) {
-        router_.sendMessage(std::move(msg));
-    }
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        uint32_t ActorContextImpl<Router>::getId() const {
+            return id_;
+        }
 
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    void ActorContextImpl<Router>::sendMessage(Message *msg) {
-        sendMessage(MessageHandleType{msg, Message::Deleter::make()});
-    }
-
-    template<class Router>
-    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-    awaitable<void> ActorContextImpl<Router>::processMessage() {
-        try {
-            while (mailbox_.is_open()) {
-                auto [ec, envelope] = co_await mailbox_.async_receive();
-
-                if (ec == asio::error::operation_aborted ||
-                    ec == asio::experimental::error::channel_closed) {
-                    // TODO
-                    break;
-                }
-
-                if (ec) {
-                    // TODO
-                    continue;
-                }
-
-                actor_->onMessage(std::move(envelope));
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        void ActorContextImpl<Router>::run() {
+            if (actor_ == nullptr) {
+                // TODO
+                return;
             }
-        } catch (const std::exception &e) {
 
+            // FIXME: actor::start()
+
+            co_spawn(ctx_, [self = this->shared_from_this()]() -> awaitable<void> {
+                co_await self->processMessage();
+            }, detached);
         }
+
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        void ActorContextImpl<Router>::terminate() {
+            if (!mailbox_.is_open())
+                return;
+
+            mailbox_.cancel();
+            mailbox_.close();
+        }
+
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        bool ActorContextImpl<Router>::isRunning() const {
+            return actor_ != nullptr && mailbox_.is_open();
+        }
+
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        void ActorContextImpl<Router>::pushEnvelope(Envelope &&envelope) {
+            if (!mailbox_.is_open())
+                return;
+
+            if (actor_ == nullptr)
+                return;
+
+            mailbox_.try_send_via_dispatch(error_code{}, std::move(envelope));
+        }
+
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        void ActorContextImpl<Router>::sendMessage(MessageHandle &&msg) {
+            router_.sendMessage(std::move(msg));
+        }
+
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        void ActorContextImpl<Router>::sendMessage(Message *msg) {
+            sendMessage(MessageHandleType{msg, Message::Deleter::make()});
+        }
+
+        template<class Router>
+        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+        awaitable<void> ActorContextImpl<Router>::processMessage() {
+            try {
+                while (mailbox_.is_open()) {
+                    auto [ec, envelope] = co_await mailbox_.async_receive();
+
+                    if (ec == asio::error::operation_aborted ||
+                        ec == asio::experimental::error::channel_closed) {
+                        // TODO
+                        break;
+                        }
+
+                    if (ec) {
+                        // TODO
+                        continue;
+                    }
+
+                    actor_->onMessage(std::move(envelope));
+                }
+            } catch (const std::exception &e) {
+
+            }
+        }
+    }
+
+    template<class Router>
+    requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
+    shared_ptr<detail::ActorContextImpl<Router>> MakeActorContext(asio::io_context &ctx) {
+        return make_shared<detail::ActorContextImpl<Router>>(ctx);
     }
 }
