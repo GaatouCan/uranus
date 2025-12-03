@@ -42,15 +42,14 @@ namespace uranus {
         template<typename Func>
         Func getSymbol(std::string_view sv);
 
-
         [[nodiscard]] size_t refCount() const;
-
-        [[nodiscard]] bool available() const;
 
         void swap(SharedLibrary &rhs) noexcept;
         void reset();
 
+        [[nodiscard]] bool available() const;
         explicit operator bool() const;
+
         bool operator==(const SharedLibrary &rhs) const;
 
     private:
