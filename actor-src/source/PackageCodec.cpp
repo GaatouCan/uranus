@@ -34,7 +34,7 @@ namespace uranus::actor {
 #if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
         header.id = static_cast<int64_t>(htonll(pkg->id_));
         header.length = static_cast<int64_t>(htonll(pkg->payload_.size()));
-#elif defined(__APPLE__)
+#else
         header.id = static_cast<int64_t>(htobe64(pkg->id_));
         header.length = static_cast<int64_t>(htobe64(pkg->payload_.size()));
 #endif
