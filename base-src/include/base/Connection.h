@@ -25,15 +25,17 @@ namespace uranus {
     using std::make_shared;
     using std::enable_shared_from_this;
 
-    class Connection {
+    class BASE_API Connection {
 
     public:
-        Connection() = default;
-        virtual ~Connection() = default;
+        Connection() = delete;
+
+        explicit Connection(TcpSocket &&socket);
+        virtual ~Connection();
 
         DISABLE_COPY_MOVE(Connection)
 
-        virtual TcpSocket &getSocket() = 0;
+        TcpSocket &getSocket();
 
         virtual void connect() = 0;
         virtual void disconnect() = 0;
@@ -44,7 +46,13 @@ namespace uranus {
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;
 
-        virtual AttributeMap &attr() = 0;
+        AttributeMap &attr();
+
+    protected:
+        TcpSocket socket_;
+
+    private:
+        AttributeMap attr_;
     };
 
     template<typename T>
@@ -126,15 +134,12 @@ namespace uranus {
 
             DISABLE_COPY_MOVE(ConnectionImpl)
 
-            TcpSocket &getSocket() override;
-
             Codec &getCodec();
             Handler &getHandler();
 
             [[nodiscard]] bool isConnected() const override;
 
             [[nodiscard]] const std::string &getKey() const override;
-            AttributeMap &attr() override;
 
             auto getExecutor() {
                 return socket_.get_executor();
@@ -154,15 +159,12 @@ namespace uranus {
             awaitable<void> writeMessage();
 
         private:
-            TcpSocket socket_;
-
             Codec codec_;
             Handler handler_;
 
             ConcurrentChannel<MessageHandleType> output_;
 
             std::string key_;
-            AttributeMap attr_;
         };
     }
 
@@ -207,7 +209,7 @@ namespace uranus {
         template<class Codec, class Handler>
         requires ConnectionConcept<Codec, Handler>
         ConnectionImpl<Codec, Handler>::ConnectionImpl(TcpSocket &&socket)
-            : socket_(std::move(socket)),
+            : Connection(std::move(socket)),
               codec_(*this),
               handler_(*this),
               output_(socket_.get_executor(), 1024) {
@@ -223,12 +225,6 @@ namespace uranus {
         requires ConnectionConcept<Codec, Handler>
         ConnectionImpl<Codec, Handler>::~ConnectionImpl() {
             ConnectionImpl::disconnect();
-        }
-
-        template<class Codec, class Handler>
-        requires ConnectionConcept<Codec, Handler>
-        TcpSocket &ConnectionImpl<Codec, Handler>::getSocket() {
-            return socket_;
         }
 
         template<class Codec, class Handler>
@@ -261,16 +257,10 @@ namespace uranus {
 
         template<class Codec, class Handler>
         requires ConnectionConcept<Codec, Handler>
-        AttributeMap &ConnectionImpl<Codec, Handler>::attr() {
-            return attr_;
-        }
-
-        template<class Codec, class Handler>
-        requires ConnectionConcept<Codec, Handler>
         void ConnectionImpl<Codec, Handler>::connect() {
             co_spawn(getExecutor(), [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
-                if (const auto [ec] = co_await self->codec_.getSocket().async_handshake(asio::ssl::stream_base::server); ec) {
+                if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
                     self->disconnect();
                     co_return;
                 }
