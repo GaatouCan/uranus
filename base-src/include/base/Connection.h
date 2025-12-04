@@ -269,12 +269,12 @@ namespace uranus {
         requires ConnectionConcept<Codec, Handler>
         void ConnectionImpl<Codec, Handler>::connect() {
             co_spawn(getExecutor(), [self = this->shared_from_this()]() -> awaitable<void> {
-    #ifdef URANUS_SSL
+#ifdef URANUS_SSL
                 if (const auto [ec] = co_await self->codec_.getSocket().async_handshake(asio::ssl::stream_base::server); ec) {
                     self->disconnect();
                     co_return;
                 }
-    #endif
+#endif
 
                 self->handler_.onConnect();
 
