@@ -3,6 +3,7 @@
 #include "Message.h"
 #include "noncopy.h"
 #include "types.h"
+#include "AttributeMap.h"
 
 #include <tuple>
 #include <string>
@@ -42,6 +43,8 @@ namespace uranus {
 
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;
+
+        virtual AttributeMap &attr() = 0;
     };
 
     template<typename T>
@@ -131,6 +134,7 @@ namespace uranus {
             [[nodiscard]] bool isConnected() const override;
 
             [[nodiscard]] const std::string &getKey() const override;
+            AttributeMap &attr() override;
 
             auto getExecutor() {
                 return socket_.get_executor();
@@ -151,12 +155,14 @@ namespace uranus {
 
         private:
             TcpSocket socket_;
-            std::string key_;
 
             Codec codec_;
             Handler handler_;
 
             ConcurrentChannel<MessageHandleType> output_;
+
+            std::string key_;
+            AttributeMap attr_;
         };
     }
 
@@ -247,9 +253,16 @@ namespace uranus {
 #endif
         }
 
-        template<class Codec, class Handler> requires ConnectionConcept<Codec, Handler>
+        template<class Codec, class Handler>
+        requires ConnectionConcept<Codec, Handler>
         const std::string &ConnectionImpl<Codec, Handler>::getKey() const {
             return key_;
+        }
+
+        template<class Codec, class Handler>
+        requires ConnectionConcept<Codec, Handler>
+        AttributeMap &ConnectionImpl<Codec, Handler>::attr() {
+            return attr_;
         }
 
         template<class Codec, class Handler>

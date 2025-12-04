@@ -1,13 +1,18 @@
 #include "AttributeMap.h"
 
 namespace uranus {
-    AttributeMap::AttributeMap() {
-    }
+    AttributeMap::AttributeMap() = default;
+    AttributeMap::~AttributeMap() = default;
 
-    AttributeMap::~AttributeMap() {
-    }
-
-    bool AttributeMap::hasAttr(const std::string &key) const {
+    bool AttributeMap::has(const std::string &key) const {
         return attr_.contains(key);
+    }
+
+    void AttributeMap::clear() {
+        attr_.clear();
+    }
+
+    void AttributeMap::erase(const std::string &key) {
+        attr_.erase(key);
     }
 }
