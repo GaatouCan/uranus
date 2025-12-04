@@ -52,6 +52,8 @@ namespace uranus {
     private:
         std::string key_;
         AttributeMap attr_;
+
+        SteadyTimer watchdog_;
     };
 
     template<typename T>

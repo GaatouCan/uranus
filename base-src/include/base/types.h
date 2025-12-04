@@ -33,4 +33,6 @@ namespace uranus {
 
     template<class T>
     using ConcurrentChannel = default_token::as_default_on_t<asio::experimental::concurrent_channel<void(std::error_code, T)>>;
+
+    using SteadyTimer = default_token::as_default_on_t<asio::steady_timer>;
 }

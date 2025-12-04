@@ -5,7 +5,8 @@
 
 namespace uranus {
     Connection::Connection(TcpSocket &&socket)
-        : socket_(std::move(socket)) {
+        : socket_(std::move(socket)),
+          watchdog_(socket_.get_executor()) {
         const auto now = std::chrono::system_clock::now();
         const auto durationSinceEpoch = now.time_since_epoch();
         const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
