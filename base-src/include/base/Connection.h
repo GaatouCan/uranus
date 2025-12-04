@@ -47,6 +47,9 @@ namespace uranus {
         AttributeMap &attr();
 
     protected:
+        awaitable<void> watchdog();
+
+    protected:
         TcpSocket socket_;
 
     private:
@@ -54,6 +57,7 @@ namespace uranus {
         AttributeMap attr_;
 
         SteadyTimer watchdog_;
+        int second_;
     };
 
     template<typename T>

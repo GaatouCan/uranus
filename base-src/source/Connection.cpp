@@ -40,4 +40,12 @@ namespace uranus {
     AttributeMap &Connection::attr() {
         return attr_;
     }
+
+    awaitable<void> Connection::watchdog() {
+        try {
+
+        } catch (const std::exception &e) {
+
+        }
+    }
 }
