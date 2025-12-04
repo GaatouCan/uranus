@@ -7,8 +7,6 @@
 
 #include <tuple>
 #include <string>
-#include <format>
-#include <chrono>
 #include <asio/detached.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
 
@@ -41,7 +39,7 @@ namespace uranus {
         virtual void disconnect() = 0;
 
         [[nodiscard]] virtual bool isConnected() const = 0;
-        [[nodiscard]] virtual const std::string &getKey() const = 0;
+        [[nodiscard]] const std::string &getKey() const;
 
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;
@@ -52,6 +50,7 @@ namespace uranus {
         TcpSocket socket_;
 
     private:
+        std::string key_;
         AttributeMap attr_;
     };
 
@@ -139,7 +138,7 @@ namespace uranus {
 
             [[nodiscard]] bool isConnected() const override;
 
-            [[nodiscard]] const std::string &getKey() const override;
+            // [[nodiscard]] const std::string &getKey() const override;
 
             auto getExecutor() {
                 return socket_.get_executor();
@@ -163,8 +162,6 @@ namespace uranus {
             Handler handler_;
 
             ConcurrentChannel<MessageHandleType> output_;
-
-            std::string key_;
         };
     }
 
@@ -214,12 +211,7 @@ namespace uranus {
               handler_(*this),
               output_(socket_.get_executor(), 1024) {
 
-            const auto now = std::chrono::system_clock::now();
-            const auto durationSinceEpoch = now.time_since_epoch();
-            const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
-
-            key_ = std::format("{}-{}", socket_.next_layer().remote_endpoint().address().to_string(), secondsSinceEpoch.count());
-        }
+            }
 
         template<class Codec, class Handler>
         requires ConnectionConcept<Codec, Handler>
@@ -247,12 +239,6 @@ namespace uranus {
 #else
             return socket_.is_open();
 #endif
-        }
-
-        template<class Codec, class Handler>
-        requires ConnectionConcept<Codec, Handler>
-        const std::string &ConnectionImpl<Codec, Handler>::getKey() const {
-            return key_;
         }
 
         template<class Codec, class Handler>
