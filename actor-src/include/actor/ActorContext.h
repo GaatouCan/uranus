@@ -71,8 +71,16 @@ namespace uranus::actor {
         DISABLE_COPY_MOVE(ActorContextRouter)
 
         [[nodiscard]] ActorContext &getContext() const;
+        [[nodiscard]] BaseActor *getActor() const;
 
+        virtual void onInitial() {};
+        virtual void onTerminate() {};
+
+        virtual void onMessage(uint32_t src, Type *msg) {};
         virtual void sendMessage(HandleType &&msg) = 0;
+
+        virtual void onError(error_code ec) {};
+        virtual void onException(const std::exception &e) {};
 
     protected:
         ActorContext &ctx_;
@@ -127,6 +135,11 @@ namespace uranus::actor {
         return ctx_;
     }
 
+    template<class T> requires std::is_base_of_v<Message, T>
+    BaseActor *ActorContextRouter<T>::getActor() const {
+        return ctx_.getActor();
+    }
+
     namespace detail {
 
         template<class Router>
@@ -156,7 +169,7 @@ namespace uranus::actor {
                 return;
             }
 
-            // FIXME: actor::start()
+            router_.onInitial();
 
             co_spawn(ctx_, [self = this->shared_from_this()]() -> awaitable<void> {
                 co_await self->processMessage();
@@ -196,17 +209,20 @@ namespace uranus::actor {
                         ec == asio::experimental::error::channel_closed) {
                         // TODO
                         break;
-                        }
+                    }
 
                     if (ec) {
-                        // TODO
+                        router_.onError(ec);
                         continue;
                     }
 
+                    router_.onMessage(envelope.source, dynamic_cast<MessageType *>(envelope.message.get()));
                     actor_->onMessage(std::move(envelope));
                 }
-            } catch (const std::exception &e) {
 
+                router_.onTerminate();
+            } catch (const std::exception &e) {
+                router_.onException(e);
             }
         }
     }

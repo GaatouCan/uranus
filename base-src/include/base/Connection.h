@@ -38,7 +38,7 @@ namespace uranus {
         virtual void connect() = 0;
         virtual void disconnect() = 0;
 
-        [[nodiscard]] virtual bool isConnected() const = 0;
+        [[nodiscard]] bool isConnected() const;
         [[nodiscard]] const std::string &getKey() const;
 
         virtual void sendMessage(MessageHandle &&msg) = 0;
@@ -136,14 +136,6 @@ namespace uranus {
             Codec &getCodec();
             Handler &getHandler();
 
-            [[nodiscard]] bool isConnected() const override;
-
-            // [[nodiscard]] const std::string &getKey() const override;
-
-            auto getExecutor() {
-                return socket_.get_executor();
-            }
-
             void connect() override;
             void disconnect() override;
 
@@ -233,18 +225,8 @@ namespace uranus {
 
         template<class Codec, class Handler>
         requires ConnectionConcept<Codec, Handler>
-        bool ConnectionImpl<Codec, Handler>::isConnected() const {
-#ifdef URANUS_SSL
-            return socket_.next_layer().is_open();
-#else
-            return socket_.is_open();
-#endif
-        }
-
-        template<class Codec, class Handler>
-        requires ConnectionConcept<Codec, Handler>
         void ConnectionImpl<Codec, Handler>::connect() {
-            co_spawn(getExecutor(), [self = this->shared_from_this()]() -> awaitable<void> {
+            co_spawn(socket_.get_executor(), [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
                 if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
                     self->disconnect();
