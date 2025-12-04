@@ -60,7 +60,7 @@ namespace uranus {
         DISABLE_COPY_MOVE(MessageCodec)
 
         virtual awaitable<error_code> encode(HandleType &&msg) = 0;
-        virtual awaitable<tuple<error_code, HandleType> > decode() = 0;
+        virtual awaitable<tuple<error_code, HandleType>> decode() = 0;
 
         [[nodiscard]] Connection &getConnection() const;
         [[nodiscard]] TcpSocket &getSocket() const;
