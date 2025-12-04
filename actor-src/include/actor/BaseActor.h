@@ -21,16 +21,20 @@ namespace uranus::actor {
 
     class ACTOR_API BaseActor {
 
+        friend class ActorContext;
+
     public:
         BaseActor();
         virtual ~BaseActor();
 
         DISABLE_COPY_MOVE(BaseActor)
 
-        void setContext(ActorContext *ctx);
         [[nodiscard]] ActorContext *getContext() const;
 
         [[nodiscard]] uint32_t getId() const;
+
+    private:
+        void setContext(ActorContext *ctx);
 
     protected:
         virtual void onMessage(Envelope &&envelope) = 0;

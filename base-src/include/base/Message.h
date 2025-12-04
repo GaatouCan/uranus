@@ -54,6 +54,8 @@ namespace uranus {
         uint32_t session;
         MessageHandle message;
 
+        Envelope();
+
         Envelope(uint32_t src, MessageHandle &&msg);
         Envelope(uint32_t src, uint32_t sess, MessageHandle &&msg);
 

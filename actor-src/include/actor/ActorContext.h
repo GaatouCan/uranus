@@ -20,27 +20,40 @@ namespace uranus::actor {
     using std::make_shared;
     using std::enable_shared_from_this;
 
-    class ActorContext {
+    class ACTOR_API ActorContext {
 
     public:
-        ActorContext() = default;
-        virtual ~ActorContext() = default;
+        ActorContext() = delete;
+
+        explicit ActorContext(asio::io_context &ctx);
+        virtual ~ActorContext();
 
         DISABLE_COPY_MOVE(ActorContext)
 
-        virtual void setActor(ActorHandle &&handle) = 0;
-        [[nodiscard]] virtual BaseActor *getActor() const = 0;
+        void setActor(ActorHandle &&handle);
+        [[nodiscard]] BaseActor *getActor() const;
 
-        virtual void setId(uint32_t id) = 0;
-        [[nodiscard]] virtual uint32_t getId() const = 0;
+        void setId(uint32_t id);
+        [[nodiscard]] uint32_t getId() const;
+
+        [[nodiscard]] asio::io_context &getIOContext() const;
+
+        [[nodiscard]] bool isRunning() const;
 
         virtual void run() = 0;
         virtual void terminate() = 0;
 
-        virtual void pushEnvelope(Envelope &&envelope) = 0;
+        void pushEnvelope(Envelope &&envelope);
 
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;
+
+    protected:
+        asio::io_context &ctx_;
+        ConcurrentChannel<Envelope> mailbox_;
+
+        ActorHandle actor_;
+        uint32_t id_;
     };
 
     template<class T>
@@ -75,29 +88,15 @@ namespace uranus::actor {
             using MessageType = Router::Type;
             using MessageHandleType = Router::HandleType;
 
-            ActorContextImpl() = delete;
-
             explicit ActorContextImpl(asio::io_context &ctx);
             ~ActorContextImpl() override;
 
             DISABLE_COPY_MOVE(ActorContextImpl)
 
-            [[nodiscard]] asio::io_context &getIOContext() const;
-
             Router &getRouter();
-
-            void setActor(ActorHandle &&handle) override;
-            [[nodiscard]] BaseActor *getActor() const override;
-
-            void setId(uint32_t id) override;
-            [[nodiscard]] uint32_t getId() const override;
 
             void run() override;
             void terminate() override;
-
-            [[nodiscard]] bool isRunning() const;
-
-            void pushEnvelope(Envelope &&envelope) override;
 
             void sendMessage(MessageHandle &&msg) override;
             void sendMessage(Message *msg) override;
@@ -106,14 +105,7 @@ namespace uranus::actor {
             awaitable<void> processMessage();
 
         private:
-            asio::io_context &ctx_;
-            ConcurrentChannel<Envelope> mailbox_;
-
             Router router_;
-
-            ActorHandle actor_;
-
-            uint32_t id_;
         };
     }
 
@@ -140,10 +132,7 @@ namespace uranus::actor {
         template<class Router>
         requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
         ActorContextImpl<Router>::ActorContextImpl(asio::io_context &ctx)
-            : ctx_(ctx),
-              mailbox_(ctx_, 1024),
-              actor_(nullptr),
-              id_(0) {
+            : ActorContext(ctx) {
 
         }
 
@@ -155,45 +144,8 @@ namespace uranus::actor {
 
         template<class Router>
         requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        asio::io_context &ActorContextImpl<Router>::getIOContext() const {
-            return ctx_;
-        }
-
-        template<class Router>
-        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
         Router &ActorContextImpl<Router>::getRouter() {
             return router_;
-        }
-
-        template<class Router>
-        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        void ActorContextImpl<Router>::setActor(ActorHandle &&handle) {
-            if (actor_ != nullptr)
-                return;
-
-            if (!mailbox_.is_open())
-                return;
-
-            actor_ = std::move(handle);
-            actor_->setContext(this);
-        }
-
-        template<class Router>
-        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        BaseActor *ActorContextImpl<Router>::getActor() const {
-            return actor_.get();
-        }
-
-        template<class Router>
-        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        void ActorContextImpl<Router>::setId(const uint32_t id) {
-            id_ = id;
-        }
-
-        template<class Router>
-        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        uint32_t ActorContextImpl<Router>::getId() const {
-            return id_;
         }
 
         template<class Router>
@@ -219,24 +171,6 @@ namespace uranus::actor {
 
             mailbox_.cancel();
             mailbox_.close();
-        }
-
-        template<class Router>
-        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        bool ActorContextImpl<Router>::isRunning() const {
-            return actor_ != nullptr && mailbox_.is_open();
-        }
-
-        template<class Router>
-        requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        void ActorContextImpl<Router>::pushEnvelope(Envelope &&envelope) {
-            if (!mailbox_.is_open())
-                return;
-
-            if (actor_ == nullptr)
-                return;
-
-            mailbox_.try_send_via_dispatch(error_code{}, std::move(envelope));
         }
 
         template<class Router>

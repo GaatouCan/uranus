@@ -16,6 +16,12 @@ namespace uranus {
         return id_;
     }
 
+    Envelope::Envelope()
+        : source(0),
+          session(0),
+          message(nullptr) {
+    }
+
     Envelope::Envelope(const uint32_t src, MessageHandle &&msg)
         : source(src),
           session(0),
