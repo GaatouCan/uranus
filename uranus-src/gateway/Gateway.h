@@ -11,10 +11,10 @@
 using uranus::ServerModule;
 using uranus::ServerBootstrap;
 using uranus::actor::PackageCodec;
-using ConnectionPointer = std::shared_ptr<uranus::detail::ConnectionImpl<PackageCodec, GatewayHandler>>;
 using uranus::MultiIOContextPool;
 using uranus::TcpAcceptor;
 using uranus::TcpSocket;
+using uranus::Connection;
 using asio::awaitable;
 using asio::co_spawn;
 using asio::detached;
@@ -42,5 +42,5 @@ private:
 
     MultiIOContextPool pool_;
 
-    std::unordered_map<std::string, ConnectionPointer> connMap_;
+    std::unordered_map<std::string, std::shared_ptr<Connection>> connMap_;
 };
