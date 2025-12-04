@@ -206,7 +206,7 @@ namespace uranus {
               handler_(*this),
               output_(socket_.get_executor(), 1024) {
 
-            const auto now = std::chrono::steady_clock::now();
+            const auto now = std::chrono::system_clock::now();
             const auto durationSinceEpoch = now.time_since_epoch();
             const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
 
