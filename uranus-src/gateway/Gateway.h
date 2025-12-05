@@ -28,7 +28,7 @@ class Gateway final : public ServerModule {
 public:
     using ConnectionPointer = std::shared_ptr<uranus::detail::ConnectionImpl<PackageCodec, GatewayHandler>>;
 
-    explicit Gateway(ServerBootstrap &server);
+    explicit Gateway(GameWorld &world);
     ~Gateway() override;
 
     [[nodiscard]] GameWorld &getWorld() const;

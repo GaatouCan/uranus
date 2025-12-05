@@ -4,8 +4,8 @@
 #include <spdlog/spdlog.h>
 #include <asio/signal_set.hpp>
 
-Gateway::Gateway(ServerBootstrap &server)
-    : ServerModule(server),
+Gateway::Gateway(GameWorld &world)
+    : ServerModule(world),
       sslContext_(asio::ssl::context::tlsv13_server),
       acceptor_(ctx_) {
 }

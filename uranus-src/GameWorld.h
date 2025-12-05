@@ -2,6 +2,8 @@
 
 #include <base/ServerBootstrap.h>
 #include <base/ServerModule.h>
+
+#include <vector>
 #include <unordered_map>
 #include <typeindex>
 
@@ -27,6 +29,7 @@ public:
 
 private:
     std::unordered_map<std::type_index, std::unique_ptr<ServerModule>> modules_;
+    std::vector<ServerModule *> ordered_;
 };
 
 template<class T, class ... Args>
@@ -40,6 +43,8 @@ T *GameWorld::createModule(Args &&...args) {
     auto *ptr = module.get();
 
     modules_.insert_or_assign(typeid(T), std::move(module));
+    ordered_.emplace_back(ptr);
+
     return ptr;
 }
 
