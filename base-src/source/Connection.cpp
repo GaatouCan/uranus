@@ -6,7 +6,8 @@
 namespace uranus {
     Connection::Connection(TcpSocket &&socket)
         : socket_(std::move(socket)),
-          watchdog_(socket_.get_executor()) {
+          watchdog_(socket_.get_executor()),
+          expiration_(std::chrono::seconds(30)) {
         const auto now = std::chrono::system_clock::now();
         const auto durationSinceEpoch = now.time_since_epoch();
         const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
@@ -39,13 +40,5 @@ namespace uranus {
 
     AttributeMap &Connection::attr() {
         return attr_;
-    }
-
-    awaitable<void> Connection::watchdog() {
-        try {
-
-        } catch (const std::exception &e) {
-
-        }
     }
 }
