@@ -17,28 +17,33 @@ namespace uranus {
     }
 
     Envelope::Envelope()
-        : source(0),
+        : type(0),
+          source(0),
           session(0),
           message(nullptr) {
     }
 
-    Envelope::Envelope(const uint32_t src, MessageHandle &&msg)
-        : source(src),
+    Envelope::Envelope(const int32_t ty, const uint32_t src, MessageHandle &&msg)
+        : type(ty),
+          source(src),
           session(0),
           message(std::move(msg)) {
     }
 
-    Envelope::Envelope(const uint32_t src, const uint32_t sess, MessageHandle &&msg)
-        : source(src),
+    Envelope::Envelope(const int32_t ty, const uint32_t src, const uint32_t sess, MessageHandle &&msg)
+        : type(ty),
+          source(src),
           session(sess),
           message(std::move(msg)) {
     }
 
     Envelope::Envelope(Envelope &&rhs) noexcept {
         if (this != &rhs) {
+            type = rhs.type;
             source = rhs.source;
             session = rhs.session;
 
+            rhs.type = 0;
             rhs.source = 0;
             rhs.session = 0;
 
@@ -48,10 +53,14 @@ namespace uranus {
 
     Envelope &Envelope::operator=(Envelope &&rhs) noexcept {
         if (this != &rhs) {
+            type = rhs.type;
             source = rhs.source;
             session = rhs.session;
+
+            rhs.type = 0;
             rhs.source = 0;
             rhs.session = 0;
+
             message = std::move(rhs.message);
         }
         return *this;

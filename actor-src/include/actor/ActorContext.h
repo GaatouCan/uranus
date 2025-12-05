@@ -45,8 +45,8 @@ namespace uranus::actor {
 
         void pushEnvelope(Envelope &&envelope);
 
-        virtual void sendMessage(MessageHandle &&msg) = 0;
-        virtual void sendMessage(Message *msg) = 0;
+        virtual void sendMessage(int32_t ty, uint32_t target, MessageHandle &&msg) = 0;
+        virtual void sendMessage(int32_t ty, uint32_t target, Message *msg) = 0;
 
     protected:
         asio::io_context &ctx_;
@@ -76,8 +76,8 @@ namespace uranus::actor {
         virtual void onInitial() {};
         virtual void onTerminate() {};
 
-        virtual void onMessage(uint32_t src, Type *msg) {};
-        virtual void sendMessage(HandleType &&msg) = 0;
+        virtual void onMessage(int32_t type, uint32_t src, Type *msg) {}
+        virtual void sendMessage(int32_t ty, uint32_t target, HandleType &&msg) = 0;
 
         virtual void onError(error_code ec) {};
         virtual void onException(const std::exception &e) {};
@@ -106,8 +106,8 @@ namespace uranus::actor {
             void run() override;
             void terminate() override;
 
-            void sendMessage(MessageHandle &&msg) override;
-            void sendMessage(Message *msg) override;
+            void sendMessage(int32_t ty, uint32_t target, MessageHandle &&msg) override;
+            void sendMessage(int32_t ty, uint32_t target, Message *msg) override;
 
         private:
             awaitable<void> processMessage();
@@ -188,14 +188,26 @@ namespace uranus::actor {
 
         template<class Router>
         requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        void ActorContextImpl<Router>::sendMessage(MessageHandle &&msg) {
-            router_.sendMessage(std::move(msg));
+        void ActorContextImpl<Router>::sendMessage(int32_t ty, uint32_t target, MessageHandle &&msg) {
+            if (msg == nullptr)
+                return;
+
+            auto del = msg.get_deleter();
+            auto *ptr = msg.get();
+
+            if (auto *temp = dynamic_cast<MessageType *>(ptr)) {
+                MessageHandleType handle{ temp, del };
+                router_.sendMessage(std::move(handle));
+                return;
+            }
+
+            del(ptr);
         }
 
         template<class Router>
         requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
-        void ActorContextImpl<Router>::sendMessage(Message *msg) {
-            sendMessage(MessageHandleType{msg, Message::Deleter::make()});
+        void ActorContextImpl<Router>::sendMessage(int32_t ty, uint32_t target, Message *msg) {
+            sendMessage(ty, target, MessageHandle{ msg, Message::Deleter::make() });
         }
 
         template<class Router>

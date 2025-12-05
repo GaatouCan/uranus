@@ -50,14 +50,16 @@ namespace uranus {
     using MessageHandle = Message::Pointer<Message>;
 
     struct BASE_API Envelope final {
+        int32_t type;
         uint32_t source;
+
         uint32_t session;
         MessageHandle message;
 
         Envelope();
 
-        Envelope(uint32_t src, MessageHandle &&msg);
-        Envelope(uint32_t src, uint32_t sess, MessageHandle &&msg);
+        Envelope(int32_t ty, uint32_t src, MessageHandle &&msg);
+        Envelope(int32_t ty, uint32_t src, uint32_t sess, MessageHandle &&msg);
 
         Envelope(const Envelope &) = delete;
         Envelope &operator=(const Envelope &) = delete;
