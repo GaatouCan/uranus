@@ -41,20 +41,23 @@ namespace uranus {
         [[nodiscard]] bool isConnected() const;
         [[nodiscard]] const std::string &getKey() const;
 
+        void setExpirationSecond(int sec);
+
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;
 
         AttributeMap &attr();
+
     protected:
         TcpSocket socket_;
-
-    private:
-        std::string key_;
-        AttributeMap attr_;
 
         SteadyTimer watchdog_;
         SteadyDuration expiration_;
         SteadyTimePoint received_;
+
+    private:
+        std::string key_;
+        AttributeMap attr_;
     };
 
     template<typename T>
@@ -105,6 +108,7 @@ namespace uranus {
 
         virtual void onError(error_code ec) {}
         virtual void onException(const std::exception &e) {}
+        virtual void onTimeout() {}
 
         virtual void onReceive(HandleType &&msg) = 0;
         virtual void onWrite(Type *msg) = 0;
@@ -151,6 +155,7 @@ namespace uranus {
         private:
             awaitable<void> readMessage();
             awaitable<void> writeMessage();
+            awaitable<void> watchdog();
 
         private:
             Codec codec_;
@@ -229,6 +234,9 @@ namespace uranus {
         template<class Codec, class Handler>
         requires ConnectionConcept<Codec, Handler>
         void ConnectionImpl<Codec, Handler>::connect() {
+
+            received_ = std::chrono::steady_clock::now();
+
             co_spawn(socket_.get_executor(), [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
                 if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
@@ -241,7 +249,8 @@ namespace uranus {
 
                 co_await (
                     self->readMessage() &&
-                    self->writeMessage()
+                    self->writeMessage() &&
+                    self->watchdog()
                 );
             }, detached);
         }
@@ -324,6 +333,7 @@ namespace uranus {
                         break;
                     }
 
+                    received_ = std::chrono::steady_clock::now();
                     handler_.onReceive(std::move(msg));
                 }
             } catch (const std::exception &e) {
@@ -367,6 +377,38 @@ namespace uranus {
             } catch (const std::exception &e) {
                 handler_.onException(e);
                 disconnect();
+            }
+        }
+
+        template<class Codec, class Handler>
+        requires ConnectionConcept<Codec, Handler>
+        awaitable<void> ConnectionImpl<Codec, Handler>::watchdog() {
+            if (expiration_ <= SteadyDuration::zero())
+                co_return;
+
+            try {
+                do {
+                    watchdog_.expires_at(received_ + expiration_);
+
+                    if (auto [ec] = co_await watchdog_.async_wait(); ec) {
+                        if (ec == asio::error::operation_aborted) {
+                            // TODO
+                        }
+                        else {
+                            handler_.onError(ec);
+                        }
+
+                        co_return;
+                    }
+
+                    handler_.onTimeout();
+
+                    if (isConnected()) {
+                        disconnect();
+                    }
+                } while (received_ + expiration_ > std::chrono::steady_clock::now());
+            } catch (const std::exception &e) {
+                handler_.onException(e);
             }
         }
     }

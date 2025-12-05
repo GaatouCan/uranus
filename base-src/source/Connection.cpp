@@ -38,6 +38,10 @@ namespace uranus {
         return key_;
     }
 
+    void Connection::setExpirationSecond(const int sec) {
+        expiration_ = std::chrono::seconds(sec);
+    }
+
     AttributeMap &Connection::attr() {
         return attr_;
     }
