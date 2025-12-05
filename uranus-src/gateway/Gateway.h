@@ -23,6 +23,8 @@ class GameWorld;
 
 class Gateway final : public ServerModule {
 
+    friend class GatewayHandler;
+
 public:
     using ConnectionPointer = std::shared_ptr<uranus::detail::ConnectionImpl<PackageCodec, GatewayHandler>>;
 
@@ -35,6 +37,9 @@ public:
     void stop() override;
 
     [[nodiscard]] ConnectionPointer findConnection(const std::string &key) const;
+
+private:
+    void removeConnection(const std::string &key);
 
 private:
     awaitable<void> waitForClient(uint16_t port);

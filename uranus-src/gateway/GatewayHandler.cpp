@@ -1,6 +1,6 @@
 #include "GatewayHandler.h"
-
 #include "Gateway.h"
+
 
 GatewayHandler::GatewayHandler(Connection &conn)
     : ConnectionHandler(conn),
@@ -29,6 +29,9 @@ void GatewayHandler::onConnect() {
 }
 
 void GatewayHandler::onDisconnect() {
+    if (!conn_.attr().has("REPEATED")) {
+        getGateway()->removeConnection(conn_.getKey());
+    }
 }
 
 void GatewayHandler::onError(std::error_code ec) {

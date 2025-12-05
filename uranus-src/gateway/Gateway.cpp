@@ -57,6 +57,14 @@ Gateway::ConnectionPointer Gateway::findConnection(const std::string &key) const
     return it == connMap_.end() ? nullptr : it->second;
 }
 
+void Gateway::removeConnection(const std::string &key) {
+    if (ctx_.stopped())
+        return;
+
+    std::unique_lock lock(mutex_);
+    connMap_.erase(key);
+}
+
 awaitable<void> Gateway::waitForClient(uint16_t port) {
     try {
         acceptor_.open(asio::ip::tcp::v4());
@@ -100,6 +108,7 @@ awaitable<void> Gateway::waitForClient(uint16_t port) {
 
             if (repeated) {
                 SPDLOG_WARN("Connection key repeated! from {}", conn->remoteAddress().to_string());
+                conn->attr().set("REPEATED", true);
                 conn->disconnect();
                 continue;
             }
