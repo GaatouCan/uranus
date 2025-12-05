@@ -41,6 +41,8 @@ namespace uranus {
         [[nodiscard]] bool isConnected() const;
         [[nodiscard]] const std::string &getKey() const;
 
+        [[nodiscard]] asio::ip::address remoteAddress() const;
+
         void setExpirationSecond(int sec);
 
         virtual void sendMessage(MessageHandle &&msg) = 0;

@@ -38,6 +38,10 @@ namespace uranus {
         return key_;
     }
 
+    asio::ip::address Connection::remoteAddress() const {
+        return socket_.next_layer().remote_endpoint().address();
+    }
+
     void Connection::setExpirationSecond(const int sec) {
         expiration_ = std::chrono::seconds(sec);
     }

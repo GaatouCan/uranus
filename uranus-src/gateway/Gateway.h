@@ -24,6 +24,8 @@ class GameWorld;
 class Gateway final : public ServerModule {
 
 public:
+    using ConnectionPointer = std::shared_ptr<uranus::detail::ConnectionImpl<PackageCodec, GatewayHandler>>;
+
     explicit Gateway(ServerBootstrap &server);
     ~Gateway() override;
 
@@ -31,6 +33,8 @@ public:
 
     void start() override;
     void stop() override;
+
+    [[nodiscard]] ConnectionPointer findConnection(const std::string &key) const;
 
 private:
     awaitable<void> waitForClient(uint16_t port);
@@ -43,5 +47,5 @@ private:
     MultiIOContextPool pool_;
 
     mutable std::shared_mutex mutex_;
-    std::unordered_map<std::string, std::shared_ptr<Connection>> connMap_;
+    std::unordered_map<std::string, ConnectionPointer> connMap_;
 };
