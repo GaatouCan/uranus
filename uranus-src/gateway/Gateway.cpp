@@ -48,7 +48,7 @@ void Gateway::stop() {
     pool_.stop();
 }
 
-Gateway::ConnectionPointer Gateway::findConnection(const std::string &key) const {
+Gateway::ConnectionPointer Gateway::find(const std::string &key) const {
     if (ctx_.stopped())
         return nullptr;
 

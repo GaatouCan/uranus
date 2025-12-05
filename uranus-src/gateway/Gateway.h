@@ -40,7 +40,7 @@ public:
     void start() override;
     void stop() override;
 
-    [[nodiscard]] ConnectionPointer findConnection(const std::string &key) const;
+    [[nodiscard]] ConnectionPointer find(const std::string &key) const;
 
 private:
     void removeConnection(const std::string &key);

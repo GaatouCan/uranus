@@ -42,6 +42,10 @@ namespace uranus::actor {
         return actor_ != nullptr && mailbox_.is_open();
     }
 
+    AttributeMap &ActorContext::attr() {
+        return attr_;
+    }
+
     void ActorContext::pushEnvelope(Envelope &&envelope) {
         if (!mailbox_.is_open())
             return;

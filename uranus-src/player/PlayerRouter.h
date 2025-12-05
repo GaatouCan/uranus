@@ -8,12 +8,17 @@ using uranus::actor::PackageHandle;
 using uranus::actor::ActorContext;
 using uranus::actor::ActorContextRouter;
 
+class GameWorld;
+
 
 class PlayerRouter final : public ActorContextRouter<Package> {
 
 public:
     explicit PlayerRouter(ActorContext &ctx);
     ~PlayerRouter() override;
+
+    void setGameWorld(GameWorld *world);
+    [[nodiscard]] GameWorld *getWorld() const;
 
     void onInitial() override;
     void onTerminate() override;
@@ -23,4 +28,7 @@ public:
 
     void onError(std::error_code ec) override;
     void onException(const std::exception &e) override;
+
+private:
+    GameWorld *world_;
 };

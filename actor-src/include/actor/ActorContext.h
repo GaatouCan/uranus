@@ -4,6 +4,7 @@
 
 #include <base/Message.h>
 #include <base/types.h>
+#include <base/AttributeMap.h>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 
@@ -40,6 +41,8 @@ namespace uranus::actor {
 
         [[nodiscard]] bool isRunning() const;
 
+        AttributeMap &attr();
+
         virtual void run() = 0;
         virtual void terminate() = 0;
 
@@ -53,6 +56,8 @@ namespace uranus::actor {
         ConcurrentChannel<Envelope> mailbox_;
 
         ActorHandle actor_;
+        AttributeMap attr_;
+
         uint32_t id_;
     };
 
