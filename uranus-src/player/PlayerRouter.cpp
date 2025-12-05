@@ -2,6 +2,8 @@
 #include "../GameWorld.h"
 #include "../gateway/Gateway.h"
 
+using uranus::Envelope;
+
 PlayerRouter::PlayerRouter(ActorContext &ctx)
     : ActorContextRouter(ctx),
       world_(nullptr) {
@@ -38,6 +40,14 @@ void PlayerRouter::sendMessage(const int32_t ty, uint32_t target, PackageHandle 
                 conn->sendMessage(std::move(pkg));
             }
         }
+    }
+
+    if ((ty & Package::kToService) != 0) {
+        Envelope env(ty, getContext().getId(), std::move(pkg));
+
+        env.type |= Package::kFromPlayer;
+
+        // TODO: Send to target service
     }
 }
 
