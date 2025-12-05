@@ -28,6 +28,8 @@ public:
 
     [[nodiscard]] GameWorld &getWorld() const;
 
+    void createPlayer(uint32_t pid, const std::string &key);
+
     void start() override;
     void stop() override;
 

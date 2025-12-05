@@ -150,7 +150,8 @@ namespace uranus::actor {
         template<class Router>
         requires std::is_base_of_v<ActorContextRouter<typename Router::Type>, Router>
         ActorContextImpl<Router>::ActorContextImpl(asio::io_context &ctx)
-            : ActorContext(ctx) {
+            : ActorContext(ctx),
+              router_(*this) {
 
         }
 
@@ -202,7 +203,7 @@ namespace uranus::actor {
 
             if (auto *temp = dynamic_cast<MessageType *>(ptr)) {
                 MessageHandleType handle{ temp, del };
-                router_.sendMessage(std::move(handle));
+                router_.sendMessage(ty, target, std::move(handle));
                 return;
             }
 
@@ -233,7 +234,7 @@ namespace uranus::actor {
                         continue;
                     }
 
-                    router_.onMessage(envelope.source, dynamic_cast<MessageType *>(envelope.message.get()));
+                    router_.onMessage(envelope.type, envelope.source, dynamic_cast<MessageType *>(envelope.message.get()));
                     actor_->onMessage(std::move(envelope));
                 }
 

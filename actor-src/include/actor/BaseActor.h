@@ -33,11 +33,10 @@ namespace uranus::actor {
 
         [[nodiscard]] uint32_t getId() const;
 
+        virtual void onMessage(Envelope &&envelope) = 0;
+
     private:
         void setContext(ActorContext *ctx);
-
-    protected:
-        virtual void onMessage(Envelope &&envelope) = 0;
 
     private:
         ActorContext *ctx_;

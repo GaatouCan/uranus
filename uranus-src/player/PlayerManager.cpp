@@ -12,6 +12,15 @@ GameWorld &PlayerManager::getWorld() const {
     return dynamic_cast<GameWorld &>(getServer());
 }
 
+void PlayerManager::createPlayer(uint32_t pid, const std::string &key) {
+    // TODO: Create player instance
+
+    auto ctx = uranus::actor::MakeActorContext<PlayerRouter>(getWorld().getWorkerIOContext());
+    ctx->getRouter().setGameWorld(&getWorld());
+
+    // TODO: Set up player to context
+}
+
 void PlayerManager::start() {
 }
 
