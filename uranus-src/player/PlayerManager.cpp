@@ -17,6 +17,7 @@ void PlayerManager::createPlayer(uint32_t pid, const std::string &key) {
 
     auto ctx = uranus::actor::MakeActorContext<PlayerRouter>(getWorld().getWorkerIOContext());
     ctx->getRouter().setGameWorld(&getWorld());
+    ctx->attr().set("CONNECTION_KEY", key);
 
     // TODO: Set up player to context
 }
