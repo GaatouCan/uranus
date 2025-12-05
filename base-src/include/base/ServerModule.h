@@ -17,6 +17,8 @@ namespace uranus {
 
         DISABLE_COPY_MOVE(ServerModule)
 
+        virtual const char *getModuleName() = 0;
+
         [[nodiscard]] ServerBootstrap &getServer() const;
 
         virtual void start() = 0;

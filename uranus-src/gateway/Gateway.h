@@ -31,6 +31,10 @@ public:
     explicit Gateway(GameWorld &world);
     ~Gateway() override;
 
+    constexpr const char *getModuleName() override {
+        return "Gateway";
+    }
+
     [[nodiscard]] GameWorld &getWorld() const;
 
     void start() override;

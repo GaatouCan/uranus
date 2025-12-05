@@ -1,5 +1,6 @@
 #pragma once
 
+#include <base/SingleIOContextPool.h>
 #include <base/ServerBootstrap.h>
 #include <base/ServerModule.h>
 
@@ -7,6 +8,7 @@
 #include <unordered_map>
 #include <typeindex>
 
+using uranus::SingleIOContextPool;
 using uranus::ServerBootstrap;
 using uranus::ServerModule;
 
@@ -19,6 +21,9 @@ public:
     void run() override;
     void terminate() override;
 
+    asio::io_context &getIOContext();
+    asio::io_context &getWorkerIOContext();
+
     template<class T, class... Args>
     requires std::is_base_of_v<ServerModule, T>
     T *createModule(Args &&... args);
@@ -28,6 +33,11 @@ public:
     T *getModule() const;
 
 private:
+    asio::io_context ctx_;
+    asio::executor_work_guard<asio::io_context::executor_type> guard_;
+
+    SingleIOContextPool pool_;
+
     std::unordered_map<std::type_index, std::unique_ptr<ServerModule>> modules_;
     std::vector<ServerModule *> ordered_;
 };

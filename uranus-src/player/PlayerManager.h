@@ -14,6 +14,10 @@ public:
     explicit PlayerManager(GameWorld &world);
     ~PlayerManager() override;
 
+    constexpr const char *getModuleName() override {
+        return "PlayerManager";
+    }
+
     void start() override;
     void stop() override;
 };
