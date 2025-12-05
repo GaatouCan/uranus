@@ -1,8 +1,12 @@
 #pragma once
 
 #include <base/ServerBootstrap.h>
+#include <base/ServerModule.h>
+#include <unordered_map>
+#include <typeindex>
 
 using uranus::ServerBootstrap;
+using uranus::ServerModule;
 
 class GameWorld final : public ServerBootstrap {
 
@@ -12,4 +16,39 @@ public:
 
     void run() override;
     void terminate() override;
+
+    template<class T, class... Args>
+    requires std::is_base_of_v<ServerModule, T>
+    T *createModule(Args &&... args);
+
+    template<class T>
+    requires std::is_base_of_v<ServerModule, T>
+    T *getModule() const;
+
+private:
+    std::unordered_map<std::type_index, std::unique_ptr<ServerModule>> modules_;
 };
+
+template<class T, class ... Args>
+requires std::is_base_of_v<ServerModule, T>
+T *GameWorld::createModule(Args &&...args) {
+    if (const auto it = modules_.find(typeid(T)); it != modules_.end()) {
+        return dynamic_cast<T *>(it->second.get());
+    }
+
+    auto module = std::make_unique<T>(*this, std::forward<Args>(args)...);
+    auto *ptr = module.get();
+
+    modules_.insert_or_assign(typeid(T), std::move(module));
+    return ptr;
+}
+
+template<class T>
+requires std::is_base_of_v<ServerModule, T>
+T *GameWorld::getModule() const {
+    auto it = modules_.find(typeid(T));
+    if (it == modules_.end())
+        return nullptr;
+
+    return dynamic_cast<T *>(it->second.get());
+}
