@@ -42,5 +42,6 @@ private:
 
     MultiIOContextPool pool_;
 
+    mutable std::shared_mutex mutex_;
     std::unordered_map<std::string, std::shared_ptr<Connection>> connMap_;
 };

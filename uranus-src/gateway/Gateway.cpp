@@ -46,6 +46,8 @@ awaitable<void> Gateway::waitForClient(uint16_t port) {
             }
 
             auto conn = uranus::MakeConnection<PackageCodec, GatewayHandler>(TcpSocket(std::move(socket), sslContext_));
+
+            conn->getHandler().setGateway(this);
         }
     } catch (std::exception &e) {
 
