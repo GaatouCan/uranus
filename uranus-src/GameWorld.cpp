@@ -43,6 +43,9 @@ void GameWorld::terminate() {
         SPDLOG_INFO("Stopped module: {}", it->getModuleName());
     }
 
+    ordered_.clear();
+    modules_.clear();
+
     SPDLOG_INFO("Game world terminated successfully");
 }
 

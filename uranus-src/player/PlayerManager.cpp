@@ -8,6 +8,10 @@ PlayerManager::PlayerManager(GameWorld &world)
 PlayerManager::~PlayerManager() {
 }
 
+GameWorld &PlayerManager::getWorld() const {
+    return dynamic_cast<GameWorld &>(getServer());
+}
+
 void PlayerManager::start() {
 }
 
