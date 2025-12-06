@@ -5,8 +5,7 @@ PlayerFactory::PlayerFactory()
       destroyer_(nullptr) {
 }
 
-PlayerFactory::~PlayerFactory() {
-}
+PlayerFactory::~PlayerFactory() = default;
 
 void PlayerFactory::initial() {
 #if defined(_WIN32) || defined(_WIN64)
@@ -29,4 +28,26 @@ void PlayerFactory::initial() {
     if (creator_ == nullptr || destroyer_ == nullptr) {
         exit(-2);
     }
+}
+
+ActorHandle PlayerFactory::create() {
+    if (creator_ == nullptr)
+        return nullptr;
+
+    auto *plr = std::invoke(creator_);
+
+    return ActorHandle{plr, [this](uranus::actor::BaseActor *ptr) {
+        if (auto *player = dynamic_cast<BasePlayer *>(ptr)) {
+            destroy(player);
+            return;
+        }
+        delete ptr;
+    }};
+}
+
+void PlayerFactory::destroy(BasePlayer *plr) {
+    if (plr == nullptr)
+        return;
+
+    std::invoke(destroyer_, plr);
 }

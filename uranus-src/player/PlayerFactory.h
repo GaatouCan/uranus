@@ -7,6 +7,7 @@
 
 using uranus::SharedLibrary;
 using uranus::actor::BasePlayer;
+using uranus::actor::ActorHandle;
 
 class PlayerFactory final {
 
@@ -20,6 +21,9 @@ public:
     DISABLE_COPY_MOVE(PlayerFactory)
 
     void initial();
+
+    ActorHandle create();
+    void destroy(BasePlayer *plr);
 
 private:
     SharedLibrary lib_;
