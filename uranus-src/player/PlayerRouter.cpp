@@ -31,7 +31,7 @@ void PlayerRouter::onMessage(int32_t type, uint32_t src, Package *pkg) {
 
 void PlayerRouter::sendMessage(const int32_t ty, uint32_t target, PackageHandle &&pkg) {
     if ((ty & Package::kToClient) != 0) {
-        const auto op = getContext().attr().get<std::string>("CONNECTION_KEY");
+        const auto op = attr().get<std::string>("CONNECTION_KEY");
         if (!op.has_value())
             return;
 
@@ -43,7 +43,7 @@ void PlayerRouter::sendMessage(const int32_t ty, uint32_t target, PackageHandle 
     }
 
     if ((ty & Package::kToService) != 0) {
-        Envelope env(ty, getContext().getId(), std::move(pkg));
+        Envelope env(ty, getActorId(), std::move(pkg));
 
         env.type |= Package::kFromPlayer;
 

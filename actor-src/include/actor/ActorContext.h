@@ -78,14 +78,18 @@ namespace uranus::actor {
         [[nodiscard]] ActorContext &getContext() const;
         [[nodiscard]] BaseActor *getActor() const;
 
-        virtual void onInitial() {};
-        virtual void onTerminate() {};
+        virtual void onInitial() {}
+        virtual void onTerminate() {}
 
         virtual void onMessage(int32_t type, uint32_t src, Type *msg) {}
         virtual void sendMessage(int32_t ty, uint32_t target, HandleType &&msg) = 0;
 
-        virtual void onError(error_code ec) {};
-        virtual void onException(const std::exception &e) {};
+        virtual void onError(error_code ec) {}
+        virtual void onException(const std::exception &e) {}
+
+        [[nodiscard]] uint32_t getActorId() const;
+
+        AttributeMap &attr() const;
 
     protected:
         ActorContext &ctx_;
@@ -143,6 +147,17 @@ namespace uranus::actor {
     template<class T> requires std::is_base_of_v<Message, T>
     BaseActor *ActorContextRouter<T>::getActor() const {
         return ctx_.getActor();
+    }
+
+    template<class T>
+    requires std::is_base_of_v<Message, T>
+    uint32_t ActorContextRouter<T>::getActorId() const {
+        return ctx_.getId();
+    }
+
+    template<class T> requires std::is_base_of_v<Message, T>
+    AttributeMap &ActorContextRouter<T>::attr() const {
+        return ctx_.attr();
     }
 
     namespace detail {

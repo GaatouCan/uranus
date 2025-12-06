@@ -115,6 +115,14 @@ namespace uranus {
         virtual void onReceive(HandleType &&msg) = 0;
         virtual void onWrite(Type *msg) = 0;
 
+        [[nodiscard]] const std::string &getKey() const;
+        [[nodiscard]] asio::ip::address remoteAddress() const;
+
+        [[nodiscard]] AttributeMap &attr() const;
+
+        void sendMessage(MessageHandle &&msg) const;
+        void sendMessage(Message *msg) const;
+
     protected:
         Connection &conn_;
     };
@@ -199,6 +207,36 @@ namespace uranus {
     requires std::is_base_of_v<Message, T>
     Connection &ConnectionHandler<T>::getConnection() const {
         return conn_;
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    const std::string &ConnectionHandler<T>::getKey() const {
+        return conn_.getKey();
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    asio::ip::address ConnectionHandler<T>::remoteAddress() const {
+        return conn_.remoteAddress();
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    AttributeMap &ConnectionHandler<T>::attr() const {
+        return conn_.attr();
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionHandler<T>::sendMessage(MessageHandle &&msg) const {
+        conn_.sendMessage(std::move(msg));
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionHandler<T>::sendMessage(Message *msg) const {
+        conn_.sendMessage(msg);
     }
 
     namespace detail {
