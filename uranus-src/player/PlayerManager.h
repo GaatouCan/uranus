@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PlayerRouter.h"
+#include "PlayerFactory.h"
 
 #include <base/ServerModule.h>
 
@@ -34,6 +35,8 @@ public:
     void stop() override;
 
 private:
+    PlayerFactory factory_;
+
     mutable std::shared_mutex mutex_;
     std::unordered_map<uint32_t, PlayerContextPointer> players_;
 };

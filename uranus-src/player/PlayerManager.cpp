@@ -27,19 +27,25 @@ void PlayerManager::createPlayer(uint32_t pid, const std::string &key) {
         // TODO: Handle login repeated
     }
 
-    // FIXME: Create player instance by factory
+    auto plr = factory_.create();
+    if (plr == nullptr) {
+        // TODO: Handle nullptr
+        return;
+    }
 
     auto ctx = uranus::actor::MakeActorContext<PlayerRouter>(getWorld().getWorkerIOContext());
     ctx->getRouter().setGameWorld(&getWorld());
     ctx->attr().set("CONNECTION_KEY", key);
 
-    // TODO: Set up player to context
+    // Set up actor to context
+    ctx->setActor(std::move(plr));
 
     std::unique_lock lock(mutex_);
     players_.insert_or_assign(pid, ctx);
 }
 
 void PlayerManager::start() {
+    factory_.initial();
 }
 
 void PlayerManager::stop() {
