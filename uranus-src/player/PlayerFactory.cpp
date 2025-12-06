@@ -1,5 +1,7 @@
 #include "PlayerFactory.h"
 
+using uranus::actor::BaseActor;
+
 PlayerFactory::PlayerFactory()
     : creator_(nullptr),
       destroyer_(nullptr) {
@@ -36,13 +38,13 @@ ActorHandle PlayerFactory::create() {
 
     auto *plr = std::invoke(creator_);
 
-    return ActorHandle{plr, [this](uranus::actor::BaseActor *ptr) {
+    return ActorHandle{ plr, [this](BaseActor *ptr) {
         if (auto *player = dynamic_cast<BasePlayer *>(ptr)) {
             destroy(player);
             return;
         }
         delete ptr;
-    }};
+    } };
 }
 
 void PlayerFactory::destroy(BasePlayer *plr) {
