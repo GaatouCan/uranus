@@ -37,7 +37,7 @@ void PlayerRouter::sendMessage(const int32_t ty, uint32_t target, PackageHandle 
 
         if (const auto *gateway = getWorld()->getModule<Gateway>()) {
             if (const auto conn = gateway->find(op.value()); conn != nullptr) {
-                conn->sendMessage(std::move(pkg));
+                conn->send(std::move(pkg));
             }
         }
     }
