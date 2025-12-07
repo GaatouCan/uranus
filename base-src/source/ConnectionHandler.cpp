@@ -1,6 +1,6 @@
-#include "../include/network/ConnectionHandler.h"
+#include "ConnectionHandler.h"
 
-namespace uranus {
+namespace uranus::network {
     ConnectionHandler::ConnectionHandler() {
     }
 
