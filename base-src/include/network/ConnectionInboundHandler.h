@@ -13,12 +13,12 @@ namespace uranus::network {
 
         [[nodiscard]] Type type() const override;
 
-        virtual void onConnect(ConnectionPipelineContext ctx) = 0;
-        virtual void onDisconnect(ConnectionPipelineContext ctx) = 0;
+        virtual void onConnect(const ConnectionPipelineContext &ctx);
+        virtual void onDisconnect(const ConnectionPipelineContext &ctx);
 
-        virtual awaitable<void> onReceive(ConnectionPipelineContext ctx, MessageHandle &&msg) = 0;
+        virtual awaitable<void> onReceive(const ConnectionPipelineContext &ctx, MessageHandle &&msg) = 0;
 
-        virtual void onError(ConnectionPipelineContext ctx, std::error_code ec) = 0;
-        virtual void onException(ConnectionPipelineContext ctx, const std::exception &e) = 0;
+        virtual void onError(const ConnectionPipelineContext &ctx, std::error_code ec);
+        virtual void onException(const ConnectionPipelineContext &ctx, const std::exception &e);
     };
 }

@@ -13,7 +13,7 @@ namespace uranus::network {
 
         [[nodiscard]] Type type() const override;
 
-        virtual awaitable<MessageHandle> beforeSend(ConnectionPipelineContext ctx, MessageHandle &&msg) = 0;
-        virtual awaitable<void> afterSend(ConnectionPipelineContext ctx, MessageHandle &&msg) = 0;
+        virtual awaitable<MessageHandle> beforeSend(const ConnectionPipelineContext &ctx, MessageHandle &&msg);
+        virtual awaitable<void> afterSend(const ConnectionPipelineContext &ctx, MessageHandle &&msg);
     };
 }
