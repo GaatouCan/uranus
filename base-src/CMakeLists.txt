@@ -22,6 +22,7 @@ generate_export_header(base
 target_compile_definitions(base PRIVATE base_EXPORTS)
 target_compile_definitions(base PUBLIC URANUS_SSL)
 target_include_directories(base
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/network
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/base
         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 )

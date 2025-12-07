@@ -1,6 +1,6 @@
 #pragma once
 
-#include <base/Connection.h>
+#include <../../base-src/include/network/Connection.h>
 #include <actor/Package.h>
 
 using uranus::Connection;

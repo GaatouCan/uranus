@@ -3,7 +3,7 @@
 #include <chrono>
 #include <format>
 
-namespace uranus {
+namespace uranus::network {
     Connection::Connection(TcpSocket &&socket)
         : socket_(std::move(socket)),
           watchdog_(socket_.get_executor()),
