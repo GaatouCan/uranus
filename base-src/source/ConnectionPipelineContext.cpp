@@ -1,4 +1,6 @@
 #include "ConnectionPipelineContext.h"
+
+#include "Connection.h"
 #include "ConnectionPipeline.h"
 #include "ConnectionInboundHandler.h"
 #include "ConnectionOutboundHandler.h"
@@ -43,6 +45,14 @@ namespace uranus::network {
             rhs.index_ = 0;
         }
         return *this;
+    }
+
+    Connection &ConnectionPipelineContext::getConnection() const {
+        return pipeline_->getConnection();
+    }
+
+    AttributeMap &ConnectionPipelineContext::attr() const {
+        return pipeline_->getConnection().attr();
     }
 
     void ConnectionPipelineContext::fireConnect() const {

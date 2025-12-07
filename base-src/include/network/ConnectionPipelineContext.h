@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Message.h"
+#include "AttributeMap.h"
 
 #include <tuple>
 #include <asio/awaitable.hpp>
@@ -10,6 +11,7 @@ namespace uranus::network {
     using asio::awaitable;
     using std::tuple;
 
+    class Connection;
     class ConnectionPipeline;
     class ConnectionInboundHandler;
     class ConnectionOutboundHandler;
@@ -27,6 +29,9 @@ namespace uranus::network {
 
         ConnectionPipelineContext(ConnectionPipelineContext &&rhs) noexcept;
         ConnectionPipelineContext &operator=(ConnectionPipelineContext &&rhs) noexcept;
+
+        [[nodiscard]] Connection &getConnection() const;
+        [[nodiscard]] AttributeMap &attr() const;
 
         void fireConnect() const;
         void fireDisconnect() const;

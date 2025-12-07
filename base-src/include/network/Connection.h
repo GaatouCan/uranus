@@ -79,7 +79,7 @@ namespace uranus::network {
 
         DISABLE_COPY_MOVE(MessageCodec)
 
-        virtual awaitable<error_code> encode(HandleType &&msg) = 0;
+        virtual awaitable<error_code> encode(Type *msg) = 0;
         virtual awaitable<tuple<error_code, HandleType>> decode() = 0;
 
         [[nodiscard]] Connection &getConnection() const;
@@ -146,52 +146,7 @@ namespace uranus::network {
          return conn_.getSocket();
      }
 
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // ConnectionHandler<T>::ConnectionHandler(Connection &conn)
-     //     : conn_(conn) {
-     // }
-     //
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // ConnectionHandler<T>::~ConnectionHandler() = default;
-     //
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // Connection &ConnectionHandler<T>::getConnection() const {
-     //     return conn_;
-     // }
-     //
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // const std::string &ConnectionHandler<T>::getKey() const {
-     //     return conn_.getKey();
-     // }
-     //
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // asio::ip::address ConnectionHandler<T>::remoteAddress() const {
-     //     return conn_.remoteAddress();
-     // }
-     //
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // AttributeMap &ConnectionHandler<T>::attr() const {
-     //     return conn_.attr();
-     // }
-     //
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // void ConnectionHandler<T>::sendMessage(MessageHandle &&msg) const {
-     //     conn_.sendMessage(std::move(msg));
-     // }
-     //
-     // template<typename T>
-     // requires std::is_base_of_v<Message, T>
-     // void ConnectionHandler<T>::sendMessage(Message *msg) const {
-     //     conn_.sendMessage(msg);
-     // }
-//
+
     namespace detail {
 
         using namespace asio::experimental::awaitable_operators;
@@ -231,7 +186,7 @@ namespace uranus::network {
                 }
 #endif
 
-                self->handler_.onConnect();
+                self->pipeline_->onConnect();
 
                 co_await (
                     self->readMessage() &&
@@ -256,7 +211,7 @@ namespace uranus::network {
             output_.cancel();
             output_.close();
 
-            // handler_.onDisconnect();
+            pipeline_.onDisconnect();
         }
 
         template<class Codec>
@@ -314,16 +269,16 @@ namespace uranus::network {
                     auto [ec, msg] = co_await codec_.decode();
 
                     if (ec) {
-                        //handler_.onError(ec);
+                        pipeline_.onError(ec);
                         disconnect();
                         break;
                     }
 
                     received_ = std::chrono::steady_clock::now();
-                    pipeline_.onReceive(std::move(msg));
+                    co_await pipeline_.onReceive(std::move(msg));
                 }
             } catch (const std::exception &e) {
-                // handler_.onException(e);
+                pipeline_.onException(e);
                 disconnect();
             }
         }
@@ -341,7 +296,7 @@ namespace uranus::network {
                     }
 
                     if (ec) {
-                        //handler_.onError(ec);
+                        pipeline_.onError(ec);
                         disconnect();
                         break;
                     }
@@ -349,19 +304,18 @@ namespace uranus::network {
                     if (msg == nullptr)
                         continue;
 
-                    if (ec) {
-                        //handler_.onError(ec);
-                        continue;
-                    }
+                    auto output = co_await pipeline_.beforeSend(std::move(msg));
 
-                    if (const auto writeEc = co_await codec_.encode(std::move(msg))) {
-                        //handler_.onError(ec);
+                    if (const auto writeEc = co_await codec_.encode(output.get())) {
+                        pipeline_.onError(writeEc);
                         disconnect();
                         break;
                     }
+
+                    co_await pipeline_.afterSend(std::move(output));
                 }
             } catch (const std::exception &e) {
-                // handler_.onException(e);
+                pipeline_.onException(e);
                 disconnect();
             }
         }
@@ -381,7 +335,7 @@ namespace uranus::network {
                             // TODO
                         }
                         else {
-                            // handler_.onError(ec);
+                            pipeline_.onError(ec);
                         }
 
                         co_return;
@@ -394,7 +348,7 @@ namespace uranus::network {
                     }
                 } while (received_ + expiration_ > std::chrono::steady_clock::now());
             } catch (const std::exception &e) {
-                //handler_.onException(e);
+                pipeline_.onException(e);
             }
         }
     }
