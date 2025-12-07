@@ -131,7 +131,8 @@ namespace uranus::network {
         if (index_ == 0)
             return make_tuple(0, nullptr);
 
-        for (size_t idx = index_ - 1; idx > 0; --idx) {
+        // Deal with while idx == 0
+        for (size_t idx = index_; idx-- > 0;) {
             if (auto *temp = pipeline_->handlers_[idx].get(); temp->type() == ConnectionHandler::Type::kOutbound) {
                 return make_tuple(idx, dynamic_cast<ConnectionOutboundHandler *>(temp));
             }

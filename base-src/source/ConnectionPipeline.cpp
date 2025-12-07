@@ -94,7 +94,8 @@ namespace uranus::network {
         if (handlers_.empty())
             return make_tuple(0, nullptr);
 
-        for (size_t idx = handlers_.size() - 1; idx > 0; --idx) {
+        // Deal with while idx == 0
+        for (size_t idx = handlers_.size(); idx-- > 0;) {
             if (auto *temp = handlers_[idx].get(); temp->type() == ConnectionHandler::Type::kOutbound) {
                 return make_tuple(idx, dynamic_cast<ConnectionOutboundHandler *>(temp));
             }
