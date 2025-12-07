@@ -1,12 +1,9 @@
 #pragma once
 
 #include "ConnectionHandler.h"
-#include "Message.h"
-
+#include "ConnectionPipelineContext.h"
 
 namespace uranus::network {
-
-    class ConnectionPipelineContext;
 
     class BASE_API ConnectionInboundHandler : virtual public ConnectionHandler {
 
@@ -16,6 +13,12 @@ namespace uranus::network {
 
         [[nodiscard]] Type type() const override;
 
-        virtual void onReceive(ConnectionPipelineContext ctx, MessageHandle &&msg) = 0;
+        virtual void onConnect(ConnectionPipelineContext ctx) = 0;
+        virtual void onDisconnect(ConnectionPipelineContext ctx) = 0;
+
+        virtual awaitable<void> onReceive(ConnectionPipelineContext ctx, MessageHandle &&msg) = 0;
+
+        virtual void onError(ConnectionPipelineContext ctx, std::error_code ec) = 0;
+        virtual void onException(ConnectionPipelineContext ctx, const std::exception &e) = 0;
     };
 }

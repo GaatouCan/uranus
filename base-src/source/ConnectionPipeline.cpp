@@ -1,4 +1,5 @@
 #include "ConnectionPipeline.h"
+#include "ConnectionPipelineContext.h"
 #include "ConnectionInboundHandler.h"
 #include "ConnectionOutboundHandler.h"
 
@@ -14,85 +15,86 @@ namespace uranus::network {
         return conn_;
     }
 
-    void ConnectionPipeline::onReceive(MessageHandle &&msg) {
+    void ConnectionPipeline::onConnect() {
         auto [idx, handler] = getNextInboundHandler();
         if (handler == nullptr)
             return;
 
-        handler->onReceive(ConnectionPipelineContext(this, idx), std::move(msg));
+        handler->onConnect(ConnectionPipelineContext(this, idx));
+    }
+
+    void ConnectionPipeline::onDisconnect() {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            return;
+
+        handler->onDisconnect(ConnectionPipelineContext(this, idx));
+    }
+
+    awaitable<void> ConnectionPipeline::onReceive(MessageHandle &&msg) {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            co_return;
+
+        co_await handler->onReceive(ConnectionPipelineContext(this, idx), std::move(msg));
+    }
+
+    awaitable<MessageHandle> ConnectionPipeline::beforeSend(MessageHandle &&msg) {
+        auto [idx, handler] = getPreviousOutboundHandler();
+        if (handler == nullptr)
+            co_return std::move(msg);
+
+        auto output = co_await handler->beforeSend(ConnectionPipelineContext(this, idx), std::move(msg));
+        co_return std::move(output);
+    }
+
+    awaitable<void> ConnectionPipeline::afterSend(MessageHandle &&msg) {
+        auto [idx, handler] = getPreviousOutboundHandler();
+        if (handler == nullptr)
+            co_return;
+
+        co_await handler->afterSend(ConnectionPipelineContext(this, idx), std::move(msg));
+    }
+
+    void ConnectionPipeline::onError(std::error_code ec) {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            return;
+
+        handler->onError(ConnectionPipelineContext(this, idx), ec);
+    }
+
+    void ConnectionPipeline::onException(const std::exception &e) {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            return;
+
+        handler->onException(ConnectionPipelineContext(this, idx), e);
     }
 
     tuple<size_t, ConnectionInboundHandler *> ConnectionPipeline::getNextInboundHandler() const {
         if (handlers_.empty())
             return make_tuple(0, nullptr);
 
-        size_t idx = 0;
-        ConnectionInboundHandler *handler = nullptr;
-
-        for (; idx < handlers_.size(); ++idx) {
+        for (size_t idx = 0; idx < handlers_.size(); ++idx) {
             if (auto *temp = handlers_[idx].get(); temp->type() == ConnectionHandler::Type::kInbound) {
-                handler = dynamic_cast<ConnectionInboundHandler *>(temp);
-                break;
+                return make_tuple(idx, dynamic_cast<ConnectionInboundHandler *>(temp));
             }
         }
 
-        return make_tuple(idx, handler);
+        return make_tuple(0, nullptr);
     }
 
     tuple<size_t, ConnectionOutboundHandler *> ConnectionPipeline::getPreviousOutboundHandler() const {
         if (handlers_.empty())
             return make_tuple(0, nullptr);
 
-        size_t idx = handlers_.size() - 1;
-        ConnectionOutboundHandler *handler = nullptr;
-
-        for (; idx > 0; --idx) {
+        for (size_t idx = handlers_.size() - 1; idx > 0; --idx) {
             if (auto *temp = handlers_[idx].get(); temp->type() == ConnectionHandler::Type::kOutbound) {
-                handler = dynamic_cast<ConnectionOutboundHandler *>(temp);
+                return make_tuple(idx, dynamic_cast<ConnectionOutboundHandler *>(temp));
             }
         }
 
-        return make_tuple(idx, handler);
-    }
-
-    ConnectionPipelineContext::ConnectionPipelineContext(ConnectionPipeline *pipeline, const size_t idx)
-        : pipeline_(pipeline),
-          index_(idx) {
-    }
-
-    ConnectionPipelineContext::~ConnectionPipelineContext() = default;
-
-    ConnectionPipelineContext::ConnectionPipelineContext(const ConnectionPipelineContext &rhs) {
-        if (this != &rhs) {
-            pipeline_ = rhs.pipeline_;
-            index_ = rhs.index_;
-        }
-    }
-
-    ConnectionPipelineContext &ConnectionPipelineContext::operator=(const ConnectionPipelineContext &rhs) {
-        if (this != &rhs) {
-            pipeline_ = rhs.pipeline_;
-            index_ = rhs.index_;
-        }
-        return *this;
-    }
-
-    ConnectionPipelineContext::ConnectionPipelineContext(ConnectionPipelineContext &&rhs) noexcept {
-        if (this != &rhs) {
-            pipeline_ = rhs.pipeline_;
-            index_ = rhs.index_;
-            rhs.pipeline_ = nullptr;
-            rhs.index_ = 0;
-        }
-    }
-
-    ConnectionPipelineContext &ConnectionPipelineContext::operator=(ConnectionPipelineContext &&rhs) noexcept {
-        if (this != &rhs) {
-            pipeline_ = rhs.pipeline_;
-            index_ = rhs.index_;
-            rhs.pipeline_ = nullptr;
-            rhs.index_ = 0;
-        }
-        return *this;
+        return make_tuple(0, nullptr);
     }
 }

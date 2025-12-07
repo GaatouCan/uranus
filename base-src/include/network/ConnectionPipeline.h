@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <tuple>
+#include <asio/awaitable.hpp>
 
 namespace uranus::network {
 
@@ -14,12 +15,14 @@ namespace uranus::network {
     using std::unique_ptr;
     using std::make_tuple;
     using std::make_unique;
+    using asio::awaitable;
+    using std::exception;
+    using std::error_code;
 
     class Connection;
     class ConnectionHandler;
     class ConnectionInboundHandler;
     class ConnectionOutboundHandler;
-    class ConnectionPipelineContext;
 
     class BASE_API ConnectionPipeline final {
 
@@ -35,7 +38,16 @@ namespace uranus::network {
 
         [[nodiscard]] Connection &getConnection() const;
 
-        void onReceive(MessageHandle &&msg);
+        void onConnect();
+        void onDisconnect();
+
+        awaitable<void> onReceive(MessageHandle &&msg);
+
+        awaitable<MessageHandle> beforeSend(MessageHandle &&msg);
+        awaitable<void> afterSend(MessageHandle &&msg);
+
+        void onError(std::error_code ec);
+        void onException(const std::exception &e);
 
     private:
         [[nodiscard]] tuple<size_t, ConnectionInboundHandler *> getNextInboundHandler() const;
@@ -44,25 +56,5 @@ namespace uranus::network {
     private:
         Connection &conn_;
         vector<unique_ptr<ConnectionHandler>> handlers_;
-    };
-
-    class BASE_API ConnectionPipelineContext final {
-
-    public:
-        ConnectionPipelineContext() = delete;
-
-        ConnectionPipelineContext(ConnectionPipeline *pipeline, size_t idx);
-        ~ConnectionPipelineContext();
-
-        ConnectionPipelineContext(const ConnectionPipelineContext &rhs);
-        ConnectionPipelineContext &operator=(const ConnectionPipelineContext &rhs);
-
-        ConnectionPipelineContext(ConnectionPipelineContext &&rhs) noexcept;
-        ConnectionPipelineContext &operator=(ConnectionPipelineContext &&rhs) noexcept;
-
-
-    private:
-        ConnectionPipeline *pipeline_;
-        size_t index_;
     };
 }
