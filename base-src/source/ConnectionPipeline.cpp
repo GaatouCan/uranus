@@ -15,6 +15,11 @@ namespace uranus::network {
         return conn_;
     }
 
+    ConnectionPipeline &ConnectionPipeline::addLast(ConnectionHandler *handler) {
+        handlers_.emplace_back(handler);
+        return *this;
+    }
+
     void ConnectionPipeline::onConnect() {
         auto [idx, handler] = getNextInboundHandler();
         if (handler == nullptr)

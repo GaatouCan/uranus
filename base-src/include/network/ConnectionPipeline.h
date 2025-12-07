@@ -2,6 +2,7 @@
 
 #include "Message.h"
 #include "noncopy.h"
+#include "ConnectionHandler.h"
 
 #include <memory>
 #include <vector>
@@ -20,7 +21,6 @@ namespace uranus::network {
     using std::error_code;
 
     class Connection;
-    class ConnectionHandler;
     class ConnectionInboundHandler;
     class ConnectionOutboundHandler;
 
@@ -37,6 +37,12 @@ namespace uranus::network {
         DISABLE_COPY_MOVE(ConnectionPipeline)
 
         [[nodiscard]] Connection &getConnection() const;
+
+        ConnectionPipeline &addLast(ConnectionHandler *handler);
+
+        template<class T, class... Args>
+        requires std::is_base_of_v<ConnectionInboundHandler, T>
+        ConnectionPipeline &emplaceLast(Args &&... args);
 
         void onConnect();
         void onDisconnect();
@@ -57,4 +63,11 @@ namespace uranus::network {
         Connection &conn_;
         vector<unique_ptr<ConnectionHandler>> handlers_;
     };
+
+    template<class T, class ... Args>
+    requires std::is_base_of_v<ConnectionInboundHandler, T>
+    ConnectionPipeline &ConnectionPipeline::emplaceLast(Args &&...args) {
+        handlers_.emplace_back(make_unique<T>(std::forward<Args>(args)...));
+        return *this;
+    }
 }
