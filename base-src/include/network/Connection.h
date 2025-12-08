@@ -110,13 +110,27 @@ namespace uranus::network {
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
+    class ConnectionPipelineContext;
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
     class ConnectionInboundHandler : virtual public ConnectionHandler<T> {
 
     public:
+        using MessageHandleType = Message::Pointer<T>;
+
         ConnectionInboundHandler() = default;
         ~ConnectionInboundHandler() override = default;
 
         [[nodiscard]] ConnectionHandler<T>::Type type() const override;
+
+        virtual void onConnect(const ConnectionPipelineContext<T> &ctx);
+        virtual void onDisconnect(const ConnectionPipelineContext<T> &ctx);
+
+        virtual awaitable<void> onReceive(const ConnectionPipelineContext<T> &ctx, MessageHandleType &&msg) = 0;
+
+        virtual void onError(const ConnectionPipelineContext<T> &ctx, std::error_code ec);
+        virtual void onException(const ConnectionPipelineContext<T> &ctx, const std::exception &e);
     };
 
     template<typename T>
@@ -124,15 +138,17 @@ namespace uranus::network {
     class ConnectionOutboundHandler : virtual public ConnectionHandler<T> {
 
     public:
+        using MessageType = T;
+        using MessageHandleType = Message::Pointer<T>;
+
         ConnectionOutboundHandler() = default;
         ~ConnectionOutboundHandler() override = default;
 
         [[nodiscard]] ConnectionHandler<T>::Type type() const override;
-    };
 
-    template<typename T>
-    requires std::is_base_of_v<Message, T>
-    class ConnectionPipelineContext;
+        virtual awaitable<void> beforeSend(const ConnectionPipelineContext<T> &ctx, MessageType *msg);
+        virtual awaitable<void> afterSend(const ConnectionPipelineContext<T> &ctx, MessageHandleType &&msg);
+    };
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
@@ -168,6 +184,9 @@ namespace uranus::network {
     class ConnectionPipelineContext final {
 
     public:
+        using MessageType = T;
+        using MessageHandleType = Message::Pointer<T>;
+
         ConnectionPipelineContext() = delete;
 
         ConnectionPipelineContext(ConnectionPipeline<T> *pipeline, size_t idx);
@@ -182,6 +201,21 @@ namespace uranus::network {
         [[nodiscard]] Connection &getConnection() const;
         [[nodiscard]] ConnectionPipeline<T> &getPipeline() const;
         [[nodiscard]] AttributeMap &attr() const;
+
+        void fireConnect() const;
+        void fireDisconnect() const;
+
+        awaitable<void> fireReceive(MessageHandleType &&msg) const;
+
+        awaitable<void> fireBeforeSend(MessageType *msg) const;
+        awaitable<void> fireAfterSend(MessageHandleType &&msg) const;
+
+        void fireError(std::error_code ec) const;
+        void fireException(const std::exception &e) const;
+
+    private:
+        [[nodiscard]] tuple<size_t, ConnectionInboundHandler<T> *> getNextInboundHandler() const;
+        [[nodiscard]] tuple<size_t, ConnectionOutboundHandler<T> *> getPreviousOutboundHandler() const;
 
     private:
         ConnectionPipeline<T> *pipeline_;
@@ -364,8 +398,132 @@ namespace uranus::network {
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
+    void ConnectionPipelineContext<T>::fireConnect() const {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            return;
+
+        handler->onConnect(ConnectionPipelineContext(pipeline_, idx));
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionPipelineContext<T>::fireDisconnect() const {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            return;
+
+        handler->onDisconnect(ConnectionPipelineContext(pipeline_, idx));
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    awaitable<void> ConnectionPipelineContext<T>::fireReceive(MessageHandleType &&msg) const {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            co_return;
+
+        co_await handler->onReceive(ConnectionPipelineContext(pipeline_, idx), std::move(msg));
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    awaitable<void> ConnectionPipelineContext<T>::fireBeforeSend(MessageType *msg) const {
+        auto [idx, handler] = getPreviousOutboundHandler();
+        if (handler == nullptr)
+            co_return;
+
+        co_await handler->beforeSend(ConnectionPipelineContext(pipeline_, idx), msg);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    awaitable<void> ConnectionPipelineContext<T>::fireAfterSend(MessageHandleType &&msg) const {
+        auto [idx, handler] = getPreviousOutboundHandler();
+        if (handler == nullptr)
+            co_return;
+
+        co_await handler->afterSend(ConnectionPipelineContext(pipeline_, idx), std::move(msg));
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionPipelineContext<T>::fireError(std::error_code ec) const {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            return;
+
+        handler->onError(ConnectionPipelineContext(pipeline_, idx), ec);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionPipelineContext<T>::fireException(const std::exception &e) const {
+        auto [idx, handler] = getNextInboundHandler();
+        if (handler == nullptr)
+            return;
+
+        handler->onException(ConnectionPipelineContext(pipeline_, idx), e);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    tuple<size_t, ConnectionInboundHandler<T> *> ConnectionPipelineContext<T>::getNextInboundHandler() const {
+        // Current is the last one
+        if (index_ + 1 >= pipeline_->handlers_.size())
+            return make_tuple(0, nullptr);
+
+        for (size_t idx = index_ + 1; idx < pipeline_->handlers_.size(); ++idx) {
+            if (auto *temp = pipeline_->handlers_[idx].get(); temp->type() == ConnectionHandler<T>::Type::kInbound) {
+                return make_tuple(idx, dynamic_cast<ConnectionInboundHandler<T> *>(temp));
+            }
+        }
+
+        return make_tuple(0, nullptr);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    tuple<size_t, ConnectionOutboundHandler<T> *> ConnectionPipelineContext<T>::getPreviousOutboundHandler() const {
+        // Current is the head one
+        if (index_ == 0)
+            return make_tuple(0, nullptr);
+
+        // Deal with while idx == 0
+        for (size_t idx = index_; idx-- > 0;) {
+            if (auto *temp = pipeline_->handlers_[idx].get(); temp->type() == ConnectionHandler<T>::Type::kOutbound) {
+                return make_tuple(idx, dynamic_cast<ConnectionOutboundHandler<T> *>(temp));
+            }
+        }
+
+        return make_tuple(0, nullptr);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
     ConnectionHandler<T>::Type ConnectionInboundHandler<T>::type() const {
         return ConnectionHandler<T>::Type::kInbound;
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionInboundHandler<T>::onConnect(const ConnectionPipelineContext<T> &ctx) {
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionInboundHandler<T>::onDisconnect(const ConnectionPipelineContext<T> &ctx) {
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionInboundHandler<T>::onError(const ConnectionPipelineContext<T> &ctx, std::error_code ec) {
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    void ConnectionInboundHandler<T>::onException(const ConnectionPipelineContext<T> &ctx, const std::exception &e) {
+
     }
 
     template<typename T>
@@ -374,6 +532,17 @@ namespace uranus::network {
         return ConnectionHandler<T>::Type::kOutbound;
     }
 
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    awaitable<void> ConnectionOutboundHandler<T>::beforeSend(const ConnectionPipelineContext<T> &ctx, MessageType *msg) {
+        co_await ctx.fireBeforeSend(msg);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    awaitable<void> ConnectionOutboundHandler<T>::afterSend(const ConnectionPipelineContext<T> &ctx,MessageHandleType &&msg) {
+        co_await ctx.fireAfterSend(std::move(msg));
+    }
 
     namespace detail {
 
