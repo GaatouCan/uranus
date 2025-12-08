@@ -107,7 +107,9 @@ namespace uranus::network {
         [[nodiscard]] virtual Type type() const = 0;
 
         void setConnection(Connection *conn);
-        [[nodiscard]] Connection *getConnection() const;
+
+        [[nodiscard]] Connection &getConnection() const;
+        [[nodiscard]] AttributeMap &attr() const;
 
     private:
         Connection *conn_;
@@ -276,8 +278,13 @@ namespace uranus::network {
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
-    Connection *ConnectionHandler<T>::getConnection() const {
-        return conn_;
+    Connection &ConnectionHandler<T>::getConnection() const {
+        return *conn_;
+    }
+
+    template<typename T> requires std::is_base_of_v<Message, T>
+    AttributeMap &ConnectionHandler<T>::attr() const {
+        return conn_->attr();
     }
 
     namespace detail {
