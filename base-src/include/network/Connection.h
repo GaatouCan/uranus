@@ -65,7 +65,7 @@ namespace uranus::network {
     };
 
     template<typename T>
-        requires std::is_base_of_v<Message, T>
+    requires std::is_base_of_v<Message, T>
     class MessageCodec {
     public:
         using Type = T;
