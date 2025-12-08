@@ -876,7 +876,7 @@ namespace uranus::network {
         }
     }
 
-    template<class Codec, class Handler>
+    template<class Codec>
     requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
     shared_ptr<detail::ConnectionImpl<Codec>> MakeConnection(TcpSocket &&socket) {
         return make_shared<detail::ConnectionImpl<Codec>>(std::move(socket));
