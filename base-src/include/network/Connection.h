@@ -4,10 +4,10 @@
 #include "noncopy.h"
 #include "types.h"
 #include "AttributeMap.h"
-#include "ConnectionPipeline.h"
 
 #include <tuple>
 #include <string>
+#include <vector>
 #include <asio/detached.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
 
@@ -19,9 +19,13 @@ namespace uranus::network {
     using asio::detached;
 
     using std::tuple;
+    using std::vector;
     using std::error_code;
     using std::shared_ptr;
+    using std::unique_ptr;
+    using std::make_tuple;
     using std::make_shared;
+    using std::make_unique;
     using std::enable_shared_from_this;
 
     class BASE_API Connection {
@@ -50,11 +54,9 @@ namespace uranus::network {
         virtual void sendMessage(Message *msg) = 0;
 
         AttributeMap &attr();
-        ConnectionPipeline &pipeline();
 
     protected:
         TcpSocket socket_;
-        ConnectionPipeline pipeline_;
 
         std::string key_;
         AttributeMap attr_;
@@ -87,6 +89,103 @@ namespace uranus::network {
 
     protected:
         Connection &conn_;
+    };
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    class ConnectionHandler {
+
+    public:
+        enum class Type {
+            kInbound,
+            kOutbound,
+            kDeluxe
+        };
+
+        ConnectionHandler() = default;
+        virtual ~ConnectionHandler() = default;
+
+        [[nodiscard]] virtual Type type() const = 0;
+    };
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    class ConnectionInboundHandler : virtual public ConnectionHandler<T> {
+
+    public:
+        ConnectionInboundHandler() = default;
+        ~ConnectionInboundHandler() override = default;
+
+        [[nodiscard]] ConnectionHandler<T>::Type type() const override;
+    };
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    class ConnectionOutboundHandler : virtual public ConnectionHandler<T> {
+
+    public:
+        ConnectionOutboundHandler() = default;
+        ~ConnectionOutboundHandler() override = default;
+
+        [[nodiscard]] ConnectionHandler<T>::Type type() const override;
+    };
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    class ConnectionPipelineContext;
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    class ConnectionPipeline final {
+
+        friend class ConnectionPipelineContext<T>;
+
+    public:
+        using MessageType = T;
+        using MessageHandleType = Message::Pointer<MessageType>;
+        using HandlerType = ConnectionHandler<MessageType>;
+
+        ConnectionPipeline() = delete;
+
+        explicit ConnectionPipeline(Connection &conn);
+        ~ConnectionPipeline();
+
+        DISABLE_COPY_MOVE(ConnectionPipeline)
+
+        [[nodiscard]] Connection &getConnection() const;
+
+    private:
+        [[nodiscard]] tuple<size_t, ConnectionInboundHandler<T> *> getNextInboundHandler() const;
+        [[nodiscard]] tuple<size_t, ConnectionOutboundHandler<T> *> getPreviousOutboundHandler() const;
+
+    private:
+        Connection &conn_;
+        vector<unique_ptr<HandlerType>> handlers_;
+    };
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    class ConnectionPipelineContext final {
+
+    public:
+        ConnectionPipelineContext() = delete;
+
+        ConnectionPipelineContext(ConnectionPipeline<T> *pipeline, size_t idx);
+        ~ConnectionPipelineContext();
+
+        ConnectionPipelineContext(const ConnectionPipelineContext &rhs);
+        ConnectionPipelineContext &operator=(const ConnectionPipelineContext &rhs);
+
+        ConnectionPipelineContext(ConnectionPipelineContext &&rhs) noexcept;
+        ConnectionPipelineContext &operator=(ConnectionPipelineContext &&rhs) noexcept;
+
+        [[nodiscard]] Connection &getConnection() const;
+        [[nodiscard]] ConnectionPipeline<T> &getPipeline() const;
+        [[nodiscard]] AttributeMap &attr() const;
+
+    private:
+        ConnectionPipeline<T> *pipeline_;
+        size_t index_;
     };
 
     namespace detail {
@@ -128,23 +227,152 @@ namespace uranus::network {
          };
      }
 
-     template<typename T>
-     requires std::is_base_of_v<Message, T>
-     MessageCodec<T>::MessageCodec(Connection &conn)
-         : conn_(conn) {
-     }
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    MessageCodec<T>::MessageCodec(Connection &conn)
+        : conn_(conn) {
+    }
 
-     template<typename T>
-     requires std::is_base_of_v<Message, T>
-     Connection &MessageCodec<T>::getConnection() const {
-         return conn_;
-     }
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    Connection &MessageCodec<T>::getConnection() const {
+        return conn_;
+    }
 
-     template<typename T>
-     requires std::is_base_of_v<Message, T>
-     TcpSocket &MessageCodec<T>::getSocket() const {
-         return conn_.getSocket();
-     }
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    TcpSocket &MessageCodec<T>::getSocket() const {
+        return conn_.getSocket();
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipeline<T>::ConnectionPipeline(Connection &conn)
+        : conn_(conn) {
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipeline<T>::~ConnectionPipeline() = default;
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    Connection &ConnectionPipeline<T>::getConnection() const {
+        return conn_;
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    tuple<size_t, ConnectionInboundHandler<T> *> ConnectionPipeline<T>::getNextInboundHandler() const {
+        if (handlers_.empty())
+            return make_tuple(0, nullptr);
+
+        for (size_t idx = 0; idx < handlers_.size(); ++idx) {
+            if (auto *temp = handlers_[idx].get(); temp->type() == ConnectionHandler<T>::Type::kInbound) {
+                return make_tuple(idx, dynamic_cast<ConnectionInboundHandler<T> *>(temp));
+            }
+        }
+
+        return make_tuple(0, nullptr);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    tuple<size_t, ConnectionOutboundHandler<T> *> ConnectionPipeline<T>::getPreviousOutboundHandler() const {
+        if (handlers_.empty())
+            return make_tuple(0, nullptr);
+
+        // Deal with while idx == 0
+        for (size_t idx = handlers_.size(); idx-- > 0;) {
+            if (auto *temp = handlers_[idx].get(); temp->type() == ConnectionHandler<T>::Type::kOutbound) {
+                return make_tuple(idx, dynamic_cast<ConnectionOutboundHandler<T> *>(temp));
+            }
+        }
+
+        return make_tuple(0, nullptr);
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipelineContext<T>::ConnectionPipelineContext(ConnectionPipeline<T> *pipeline, const size_t idx)
+        : pipeline_(pipeline),
+          index_(idx){
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipelineContext<T>::~ConnectionPipelineContext() = default;
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipelineContext<T>::ConnectionPipelineContext(const ConnectionPipelineContext &rhs) {
+        if (this != &rhs) {
+            pipeline_ = rhs.pipeline_;
+            index_ = rhs.index_;
+        }
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipelineContext<T> &ConnectionPipelineContext<T>::operator=(const ConnectionPipelineContext &rhs) {
+        if (this != &rhs) {
+            pipeline_ = rhs.pipeline_;
+            index_ = rhs.index_;
+        }
+        return *this;
+    }
+
+    template<typename T> requires std::is_base_of_v<Message, T>
+    ConnectionPipelineContext<T>::ConnectionPipelineContext(ConnectionPipelineContext &&rhs) noexcept {
+        if (this != &rhs) {
+            pipeline_ = rhs.pipeline_;
+            index_ = rhs.index_;
+            rhs.pipeline_ = nullptr;
+            rhs.index_ = 0;
+        }
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipelineContext<T> &ConnectionPipelineContext<T>::operator=(ConnectionPipelineContext &&rhs) noexcept {
+        if (this != &rhs) {
+            pipeline_ = rhs.pipeline_;
+            index_ = rhs.index_;
+            rhs.pipeline_ = nullptr;
+            rhs.index_ = 0;
+        }
+        return *this;
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    Connection &ConnectionPipelineContext<T>::getConnection() const {
+        return pipeline_->getConnection();
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionPipeline<T> &ConnectionPipelineContext<T>::getPipeline() const {
+        return *pipeline_;
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    AttributeMap &ConnectionPipelineContext<T>::attr() const {
+        return pipeline_->getConnection().attr();
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionHandler<T>::Type ConnectionInboundHandler<T>::type() const {
+        return ConnectionHandler<T>::Type::kInbound;
+    }
+
+    template<typename T>
+    requires std::is_base_of_v<Message, T>
+    ConnectionHandler<T>::Type ConnectionOutboundHandler<T>::type() const {
+        return ConnectionHandler<T>::Type::kOutbound;
+    }
 
 
     namespace detail {
