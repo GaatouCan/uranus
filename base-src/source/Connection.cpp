@@ -6,7 +6,6 @@
 namespace uranus::network {
     Connection::Connection(TcpSocket &&socket)
         : socket_(std::move(socket)),
-          pipeline_(*this),
           watchdog_(socket_.get_executor()),
           expiration_(std::chrono::seconds(30)) {
         const auto now = std::chrono::system_clock::now();
@@ -49,9 +48,5 @@ namespace uranus::network {
 
     AttributeMap &Connection::attr() {
         return attr_;
-    }
-
-    ConnectionPipeline &Connection::pipeline() {
-        return pipeline_;
     }
 }

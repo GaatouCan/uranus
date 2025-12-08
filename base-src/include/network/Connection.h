@@ -258,6 +258,7 @@ namespace uranus::network {
         private:
             Codec codec_;
             ConcurrentChannel<MessageHandleType> output_;
+            ConnectionPipeline<MessageType> pipeline_;
          };
      }
 
@@ -553,7 +554,8 @@ namespace uranus::network {
         ConnectionImpl<Codec>::ConnectionImpl(TcpSocket &&socket)
             : Connection(std::move(socket)),
               codec_(*this),
-              output_(socket_.get_executor(), 1024) {
+              output_(socket_.get_executor(), 1024),
+              pipeline_(*this) {
 
             }
 
@@ -701,15 +703,15 @@ namespace uranus::network {
                     if (msg == nullptr)
                         continue;
 
-                    auto output = co_await pipeline_.beforeSend(std::move(msg));
+                    co_await pipeline_.beforeSend(msg.get());
 
-                    if (const auto writeEc = co_await codec_.encode(output.get())) {
+                    if (const auto writeEc = co_await codec_.encode(msg.get())) {
                         pipeline_.onError(writeEc);
                         disconnect();
                         break;
                     }
 
-                    co_await pipeline_.afterSend(std::move(output));
+                    co_await pipeline_.afterSend(std::move(msg));
                 }
             } catch (const std::exception &e) {
                 pipeline_.onException(e);
