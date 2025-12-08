@@ -25,7 +25,7 @@ namespace uranus::actor {
     PackageCodec::~PackageCodec() {
     }
 
-    awaitable<error_code> PackageCodec::encode(PackageHandle &&pkg) {
+    awaitable<error_code> PackageCodec::encode(Package *pkg) {
         if (pkg == nullptr)
             co_return error_code{};
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Message.h"
-#include "noncopy.h"
-#include "types.h"
-#include "AttributeMap.h"
+#include "base/Message.h"
+#include "base/noncopy.h"
+#include "base/types.h"
+#include "base/AttributeMap.h"
 
 #include <tuple>
 #include <string>

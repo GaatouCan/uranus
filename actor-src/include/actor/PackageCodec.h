@@ -2,10 +2,12 @@
 
 #include "Package.h"
 
-#include <../../../base-src/include/network/Connection.h>
+#include <network/Connection.h>
 
 namespace uranus::actor {
 
+    using network::MessageCodec;
+    using network::Connection;
     using asio::awaitable;
     using std::error_code;
     using std::tuple;
@@ -17,7 +19,7 @@ namespace uranus::actor {
         explicit PackageCodec(Connection &conn);
         ~PackageCodec() override;
 
-        awaitable<error_code> encode(PackageHandle &&pkg) override;
+        awaitable<error_code> encode(Package *pkg) override;
         awaitable<tuple<error_code, PackageHandle>> decode() override;
     };
 }
