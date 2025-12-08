@@ -198,6 +198,10 @@ namespace uranus::network {
             void onTimeout();
 
         private:
+            template<size_t index = 0>
+            void initHandler();
+
+        private:
             Connection &conn_;
             tuple<handlers...> handlers_;
         };
@@ -280,6 +284,7 @@ namespace uranus::network {
         template<class T, HandlerType<T> ... handlers>
         ConnectionPipeline<T, handlers...>::ConnectionPipeline(Connection &conn)
             : conn_(conn) {
+            initHandler();
         }
 
         template<class T, HandlerType<T> ... handlers>
@@ -437,6 +442,16 @@ namespace uranus::network {
                     return;
 
                 onTimeout<index + 1>();
+            }
+        }
+
+        template<class T, HandlerType<T> ... handlers>
+        template<size_t index>
+        void ConnectionPipeline<T, handlers...>::initHandler() {
+            if constexpr (index < sizeof...(handlers)) {
+                auto &handler = std::get<index>(handlers_);
+                handler.setConnection(&conn_);
+                initHandler<index + 1>();
             }
         }
     }
