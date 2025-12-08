@@ -209,7 +209,7 @@ namespace uranus::network {
         };
 
 
-        template<class Codec>
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
         class ConnectionImpl final : public Connection, public enable_shared_from_this<ConnectionImpl<Codec> > {
         public:
@@ -242,7 +242,7 @@ namespace uranus::network {
         private:
             Codec codec_;
             ConcurrentChannel<MessageHandleType> output_;
-            // ConnectionPipeline<MessageType> pipeline_;
+            ConnectionPipeline<MessageType, handlers...> pipeline_;
         };
     }
 
@@ -523,30 +523,30 @@ namespace uranus::network {
     namespace detail {
         using namespace asio::experimental::awaitable_operators;
 
-        template<class Codec>
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        ConnectionImpl<Codec>::ConnectionImpl(TcpSocket &&socket)
+        ConnectionImpl<Codec, handlers...>::ConnectionImpl(TcpSocket &&socket)
             : Connection(std::move(socket)),
               codec_(*this),
               output_(socket_.get_executor(), 1024),
               pipeline_(*this) {
         }
 
-        template<class Codec>
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
         requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        ConnectionImpl<Codec>::~ConnectionImpl() {
+        ConnectionImpl<Codec, handlers...>::~ConnectionImpl() {
             ConnectionImpl::disconnect();
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        Codec &ConnectionImpl<Codec>::getCodec() {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        Codec &ConnectionImpl<Codec, handlers...>::getCodec() {
             return codec_;
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        void ConnectionImpl<Codec>::connect() {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        void ConnectionImpl<Codec, handlers...>::connect() {
             received_ = std::chrono::steady_clock::now();
 
             co_spawn(socket_.get_executor(), [self = this->shared_from_this()]() -> awaitable<void> {
@@ -567,9 +567,9 @@ namespace uranus::network {
             }, detached);
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        void ConnectionImpl<Codec>::disconnect() {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        void ConnectionImpl<Codec, handlers...>::disconnect() {
             if (!isConnected())
                 return;
 
@@ -585,9 +585,9 @@ namespace uranus::network {
             pipeline_.onDisconnect();
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        void ConnectionImpl<Codec>::send(MessageHandleType &&msg) {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        void ConnectionImpl<Codec, handlers...>::send(MessageHandleType &&msg) {
             if (msg == nullptr)
                 return;
 
@@ -597,15 +597,15 @@ namespace uranus::network {
             output_.try_send_via_dispatch(error_code{}, std::move(msg));
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        void ConnectionImpl<Codec>::send(MessageType *msg) {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        void ConnectionImpl<Codec, handlers...>::send(MessageType *msg) {
             send({msg, Message::Deleter::make()});
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        void ConnectionImpl<Codec>::sendMessage(MessageHandle &&msg) {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        void ConnectionImpl<Codec, handlers...>::sendMessage(MessageHandle &&msg) {
             if (msg == nullptr)
                 return;
 
@@ -621,9 +621,9 @@ namespace uranus::network {
             del(ptr);
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        void ConnectionImpl<Codec>::sendMessage(Message *msg) {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        void ConnectionImpl<Codec, handlers...>::sendMessage(Message *msg) {
             if (msg == nullptr)
                 return;
 
@@ -632,9 +632,9 @@ namespace uranus::network {
             }
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        awaitable<void> ConnectionImpl<Codec>::readMessage() {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        awaitable<void> ConnectionImpl<Codec, handlers...>::readMessage() {
             try {
                 while (isConnected()) {
                     auto [ec, msg] = co_await codec_.decode();
@@ -654,9 +654,9 @@ namespace uranus::network {
             }
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        awaitable<void> ConnectionImpl<Codec>::writeMessage() {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        awaitable<void> ConnectionImpl<Codec, handlers...>::writeMessage() {
             try {
                 while (isConnected() && output_.is_open()) {
                     auto [ec, msg] = co_await output_.async_receive();
@@ -691,9 +691,9 @@ namespace uranus::network {
             }
         }
 
-        template<class Codec>
-            requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-        awaitable<void> ConnectionImpl<Codec>::watchdog() {
+        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        awaitable<void> ConnectionImpl<Codec, handlers...>::watchdog() {
             if (expiration_ <= SteadyDuration::zero())
                 co_return;
 
@@ -723,9 +723,9 @@ namespace uranus::network {
         }
     }
 
-    template<class Codec>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
-    shared_ptr<detail::ConnectionImpl<Codec> > MakeConnection(TcpSocket &&socket) {
-        return make_shared<detail::ConnectionImpl<Codec> >(std::move(socket));
+    template<class Codec, detail::HandlerType<typename Codec::Type> ...handlers>
+    requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+    shared_ptr<detail::ConnectionImpl<Codec, handlers...>> MakeConnection(TcpSocket &&socket) {
+        return make_shared<detail::ConnectionImpl<Codec, handlers...>>(std::move(socket));
     }
 }
