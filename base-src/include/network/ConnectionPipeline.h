@@ -1,0 +1,88 @@
+#pragma once
+
+#include "base/Message.h"
+#include "base/noncopy.h"
+
+#include <vector>
+#include <memory>
+#include <tuple>
+#include <functional>
+#include <asio/awaitable.hpp>
+
+namespace uranus {
+    class AttributeMap;
+}
+
+namespace uranus::network {
+
+    class Connection;
+    class ConnectionPipelineContext;
+    class ConnectionHandler;
+    class ConnectionInboundHandler;
+    class ConnectionOutboundHandler;
+
+    using std::error_code;
+    using std::exception;
+    using std::unique_ptr;
+    using std::make_unique;
+    using std::vector;
+    using std::tuple;
+    using std::make_tuple;
+    using std::function;
+    using asio::awaitable;
+
+    class BASE_API ConnectionPipeline final {
+
+        friend class ConnectionPipelineContext;
+
+        using ConnectFunctor        = function<void(ConnectionPipelineContext &)>;
+        using DisconnectFunctor     = function<void(ConnectionPipelineContext &)>;
+        using ErrorFunctor          = function<void(ConnectionPipelineContext &, error_code)>;
+        using ExceptionFunctor      = function<void(ConnectionPipelineContext &, exception &)>;
+        using TimeoutFunctor        = function<void(ConnectionPipelineContext &)>;
+
+        using ReceiveFunctor        = function<awaitable<void>(ConnectionPipelineContext &, MessageHandle &&)>;
+        using BeforeSendFunctor     = function<awaitable<void>(ConnectionPipelineContext &, Message *)>;
+        using AfterSendFunctor      = function<awaitable<void>(ConnectionPipelineContext &, MessageHandle &&)>;
+
+    public:
+        ConnectionPipeline() = delete;
+
+        explicit ConnectionPipeline(Connection &conn);
+        ~ConnectionPipeline();
+
+        DISABLE_COPY_MOVE(ConnectionPipeline)
+
+        [[nodiscard]] Connection &getConnection() const;
+        [[nodiscard]] AttributeMap &attr() const;
+
+        void onConnect();
+        void onDisconnect();
+        void onError(error_code ec);
+        void onException(exception &e);
+        void onTimeout();
+
+        awaitable<void> onReceive(MessageHandle &&msg);
+        awaitable<void> beforeSend(Message *msg);
+        awaitable<void> afterSend(MessageHandle &&msg);
+
+    private:
+        [[nodiscard]] tuple<size_t, ConnectionInboundHandler *> getNextInboundHandler() const;
+        [[nodiscard]] tuple<size_t, ConnectionOutboundHandler *> getPreviousOutboundHandler() const;
+
+    private:
+        Connection &conn_;
+        vector<unique_ptr<ConnectionHandler>> handlers_;
+
+        ConnectFunctor      onConnect_;
+        DisconnectFunctor   onDisconnect_;
+        ErrorFunctor        onError_;
+        ExceptionFunctor    onException_;
+        TimeoutFunctor      onTimeout_;
+
+        ReceiveFunctor      onReceive_;
+        BeforeSendFunctor   beforeSend_;
+        AfterSendFunctor    afterSend_;
+    };
+
+}
