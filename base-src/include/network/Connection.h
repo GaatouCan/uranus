@@ -273,9 +273,7 @@ namespace uranus::network {
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
-    ConnectionHandler<T>::ConnectionHandler() {
-
-    }
+    ConnectionHandler<T>::ConnectionHandler() = default;
 
     namespace detail {
 
