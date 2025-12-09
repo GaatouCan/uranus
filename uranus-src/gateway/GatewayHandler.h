@@ -1,17 +1,18 @@
 #pragma once
 
-#include <../../base-src/include/network/Connection.h>
+#include <network/Connection.h>
 #include <actor/Package.h>
 
-using uranus::Connection;
-using uranus::ConnectionHandler;
+using uranus::network::Connection;
+using uranus::network::ConnectionInboundHandler;
+using uranus::network::ConnectionPipelineContext;
 using uranus::actor::Package;
 using uranus::actor::PackageHandle;
 
 class Gateway;
 class GameWorld;
 
-class GatewayHandler final : public ConnectionHandler<Package> {
+class GatewayHandler final : public ConnectionInboundHandler<Package> {
 
 public:
     explicit GatewayHandler(Connection &conn);
@@ -22,14 +23,14 @@ public:
     [[nodiscard]] Gateway *getGateway() const;
     [[nodiscard]] GameWorld *getWorld() const;
 
-    void onConnect() override;
-    void onDisconnect() override;
+    void onConnect(ConnectionPipelineContext &ctx) override;
+    void onDisconnect(ConnectionPipelineContext &ctx) override;
 
-    void onError(std::error_code ec) override;
-    void onException(const std::exception &e) override;
+    asio::awaitable<void> onReceive(ConnectionPipelineContext &ctx, MessageHandleType &ref) override;
 
-    void onReceive(PackageHandle &&pkg) override;
-    void onWrite(Package *pkg) override;
+    void onError(ConnectionPipelineContext &ctx, std::error_code ec) override;
+    void onException(ConnectionPipelineContext &ctx, const std::exception &e) override;
+    void onTimeout(ConnectionPipelineContext &ctx) override;
 
 private:
     Gateway *gateway_;

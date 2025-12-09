@@ -186,6 +186,9 @@ namespace uranus::network {
 
             [[nodiscard]] Connection &getConnection() const;
 
+            template<size_t idx>
+            auto &getHandler();
+
             template<size_t index = 0>
             void onConnect();
 
@@ -241,6 +244,9 @@ namespace uranus::network {
             void sendMessage(MessageHandle &&msg) override;
             void sendMessage(Message *msg) override;
 
+            template<size_t idx>
+            auto &getHandler();
+
         private:
             awaitable<void> readMessage();
             awaitable<void> writeMessage();
@@ -288,6 +294,12 @@ namespace uranus::network {
         template<class T, HandlerType<T> ... handlers>
         Connection &ConnectionPipeline<T, handlers...>::getConnection() const {
             return conn_;
+        }
+
+        template<class T, HandlerType<T> ... handlers>
+        template<size_t idx>
+        auto &ConnectionPipeline<T, handlers...>::getHandler() {
+            return std::get<idx>(handlers_);
         }
 
         template<class T, HandlerType<T> ... handlers>
@@ -593,6 +605,13 @@ namespace uranus::network {
             if (auto *temp = dynamic_cast<MessageType *>(msg)) {
                 send(temp);
             }
+        }
+
+        template<class Codec, HandlerType<typename Codec::Type> ... handlers>
+        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<size_t idx>
+        auto &ConnectionImpl<Codec, handlers...>::getHandler() {
+            return pipeline_.template getHandler<idx>();
         }
 
         template<class Codec, HandlerType<typename Codec::Type> ...handlers>

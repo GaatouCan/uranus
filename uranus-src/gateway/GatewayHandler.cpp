@@ -25,23 +25,25 @@ GameWorld *GatewayHandler::getWorld() const {
     return &gateway_->getWorld();
 }
 
-void GatewayHandler::onConnect() {
+void GatewayHandler::onConnect(ConnectionPipelineContext &ctx) {
+
 }
 
-void GatewayHandler::onDisconnect() {
-    if (!conn_.attr().has("REPEATED")) {
-        getGateway()->removeConnection(conn_.getKey());
-    }
+void GatewayHandler::onDisconnect(ConnectionPipelineContext &ctx) {
+
 }
 
-void GatewayHandler::onError(std::error_code ec) {
+awaitable<void> GatewayHandler::onReceive(ConnectionPipelineContext &ctx, MessageHandleType &ref) {
 }
 
-void GatewayHandler::onException(const std::exception &e) {
+void GatewayHandler::onError(ConnectionPipelineContext &ctx, std::error_code ec) {
+
 }
 
-void GatewayHandler::onReceive(PackageHandle &&pkg) {
+void GatewayHandler::onException(ConnectionPipelineContext &ctx, const std::exception &e) {
+
 }
 
-void GatewayHandler::onWrite(Package *pkg) {
+void GatewayHandler::onTimeout(ConnectionPipelineContext &ctx) {
+
 }
