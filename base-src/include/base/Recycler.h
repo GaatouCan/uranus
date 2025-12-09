@@ -2,6 +2,7 @@
 
 #include "ConcurrentQueue.h"
 
+#include <cmath>
 #include <stack>
 #include <vector>
 #include <unordered_map>

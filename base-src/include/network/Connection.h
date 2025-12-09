@@ -1,46 +1,48 @@
 #pragma once
 
-#include "base/Message.h"
-#include "base/noncopy.h"
-#include "base/types.h"
+
 #include "base/AttributeMap.h"
+#include "MessageCodec.h"
 
-#include <tuple>
 #include <string>
-#include <vector>
+#include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
-#include <asio/experimental/awaitable_operators.hpp>
-
 
 namespace uranus::network {
 
-    using asio::awaitable;
     using asio::co_spawn;
     using asio::detached;
 
-    using std::tuple;
-    using std::vector;
-    using std::error_code;
     using std::shared_ptr;
     using std::unique_ptr;
-    using std::make_tuple;
     using std::make_shared;
     using std::make_unique;
     using std::enable_shared_from_this;
 
-    class BASE_API Connection {
+    class BASE_API Connection final : public enable_shared_from_this<Connection> {
+
     public:
         Connection() = delete;
 
         explicit Connection(TcpSocket &&socket);
-        virtual ~Connection();
+        ~Connection();
 
         DISABLE_COPY_MOVE(Connection)
 
         TcpSocket &getSocket();
 
-        virtual void connect() = 0;
-        virtual void disconnect() = 0;
+        template<class T, class ... Args>
+        requires std::is_base_of_v<MessageCodec, T>
+        void setMessageCodec(Args &&... args);
+
+        MessageCodec &codec() const;
+
+        template<class T>
+        requires std::is_base_of_v<MessageCodec, T>
+        T *getCodecT() const noexcept;
+
+        void connect();
+        void disconnect();
 
         [[nodiscard]] bool isConnected() const;
 
@@ -49,13 +51,21 @@ namespace uranus::network {
 
         void setExpirationSecond(int sec);
 
-        virtual void sendMessage(MessageHandle &&msg) = 0;
-        virtual void sendMessage(Message *msg) = 0;
+        void send(MessageHandle &&msg);
+        void send(Message *msg);
 
         AttributeMap &attr();
 
+    private:
+        awaitable<void> readMessage();
+        awaitable<void> writeMessage();
+        awaitable<void> watchdog();
+
     protected:
         TcpSocket socket_;
+
+        unique_ptr<MessageCodec> codec_;
+        ConcurrentChannel<MessageHandle> output_;
 
         std::string key_;
         AttributeMap attr_;
@@ -65,6 +75,7 @@ namespace uranus::network {
         SteadyTimePoint received_;
     };
 
+    /*
     template<typename T>
     requires std::is_base_of_v<Message, T>
     class MessageCodec {
@@ -715,5 +726,24 @@ namespace uranus::network {
     requires detail::kConnectionConcept<Codec, handlers...>
     shared_ptr<detail::ConnectionImpl<Codec, handlers...>> MakeConnection(TcpSocket &&socket) {
         return make_shared<detail::ConnectionImpl<Codec, handlers...>>(std::move(socket));
+    }*/
+
+    template<class T, class ... Args>
+    requires std::is_base_of_v<MessageCodec, T>
+    void Connection::setMessageCodec(Args &&...args) {
+        if (codec_ != nullptr)
+            return;
+
+        codec_ = make_unique<T>(*this, std::forward<Args>(args)...);
     }
+
+    template<class T>
+    requires std::is_base_of_v<MessageCodec, T>
+    T *Connection::getCodecT() const noexcept {
+        if (!codec_)
+            return nullptr;
+
+        return dynamic_cast<T *>(codec_.get());
+    }
+
 }
