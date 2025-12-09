@@ -561,6 +561,8 @@ namespace uranus::network {
             output_.cancel();
             output_.close();
 
+            watchdog_.cancel();
+
             pipeline_.onDisconnect();
         }
 
