@@ -114,16 +114,8 @@ namespace uranus::network {
         using MessageType = T;
         using MessageHandleType = Message::Pointer<T>;
 
-        enum class Type {
-            kInbound,
-            kOutbound,
-            kDeluxe
-        };
-
         ConnectionHandler();
         virtual ~ConnectionHandler() = default;
-
-        [[nodiscard]] virtual Type type() const = 0;
     };
 
 
@@ -137,8 +129,6 @@ namespace uranus::network {
 
         ConnectionInboundHandler() = default;
         ~ConnectionInboundHandler() override = default;
-
-        [[nodiscard]] ConnectionHandler<T>::Type type() const override;
 
         virtual void onConnect(ConnectionPipelineContext &ctx);
         virtual void onDisconnect(ConnectionPipelineContext &ctx);
@@ -160,8 +150,6 @@ namespace uranus::network {
 
         ConnectionOutboundHandler() = default;
         ~ConnectionOutboundHandler() override = default;
-
-        [[nodiscard]] ConnectionHandler<T>::Type type() const override;
 
         virtual awaitable<void> beforeSend(ConnectionPipelineContext &ctx, MessageType *msg);
         virtual awaitable<void> afterSend(ConnectionPipelineContext &ctx, MessageHandleType &ref);
@@ -321,7 +309,7 @@ namespace uranus::network {
         template<size_t index>
         void ConnectionPipeline<Msg, handlers...>::onConnect() {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
+                if constexpr (auto &handler = std::get<index>(handlers_); std::is_base_of_v<ConnectionInboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onConnect(ctx);
 
@@ -338,7 +326,7 @@ namespace uranus::network {
         template<size_t index>
         void ConnectionPipeline<Msg, handlers...>::onDisconnect() {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
+                if constexpr (auto &handler = std::get<index>(handlers_); std::is_base_of_v<ConnectionInboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onDisconnect(ctx);
 
@@ -355,7 +343,7 @@ namespace uranus::network {
         template<size_t index>
         awaitable<void> ConnectionPipeline<Msg, handlers...>::onReceive(MessageHandleType &msg) {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
+                if constexpr (auto &handler = std::get<index>(handlers_); std::is_base_of_v<ConnectionInboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     co_await handler.onReceive(ctx, msg);
 
@@ -373,17 +361,17 @@ namespace uranus::network {
         requires PipelineConcept<Msg, handlers...>
         template<size_t index>
         awaitable<void> ConnectionPipeline<Msg, handlers...>::beforeSend(MessageType *msg) {
-            // if constexpr (index > 0) {
-            //     if (auto &handler = std::get<index - 1>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kOutbound) {
-            //         ConnectionPipelineContext ctx(conn_);
-            //         handler.beforeSend(ctx, msg);
-            //
-            //         if (ctx.fired())
-            //             co_return;
-            //     }
-            //
-            //     co_await beforeSend<index - 1>(msg);
-            // }
+            if constexpr (index > 0) {
+                if (auto &handler = std::get<index - 1>(handlers_); std::is_base_of_v<ConnectionOutboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
+                    ConnectionPipelineContext ctx(conn_);
+                    handler.beforeSend(ctx, msg);
+
+                    if (ctx.fired())
+                        co_return;
+                }
+
+                co_await beforeSend<index - 1>(msg);
+            }
 
             co_return;
         }
@@ -392,17 +380,17 @@ namespace uranus::network {
         requires PipelineConcept<Msg, handlers...>
         template<size_t index>
         awaitable<void> ConnectionPipeline<Msg, handlers...>::afterSend(MessageHandleType &msg) {
-            // if constexpr (index > 0) {
-            //     if (auto &handler = std::get<index - 1>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kOutbound) {
-            //         ConnectionPipelineContext ctx(conn_);
-            //         handler.afterSend(ctx, msg);
-            //
-            //         if (ctx.fired())
-            //             co_return;
-            //     }
-            //
-            //     co_await afterSend<index - 1>(msg);
-            // }
+            if constexpr (index > 0) {
+                if (auto &handler = std::get<index - 1>(handlers_); std::is_base_of_v<ConnectionOutboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
+                    ConnectionPipelineContext ctx(conn_);
+                    handler.afterSend(ctx, msg);
+
+                    if (ctx.fired())
+                        co_return;
+                }
+
+                co_await afterSend<index - 1>(msg);
+            }
 
             co_return;
         }
@@ -412,7 +400,7 @@ namespace uranus::network {
         template<size_t index>
         void ConnectionPipeline<Msg, handlers...>::onError(std::error_code ec) {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
+                if constexpr (auto &handler = std::get<index>(handlers_); std::is_base_of_v<ConnectionInboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onError(ctx, ec);
 
@@ -429,7 +417,7 @@ namespace uranus::network {
         template<size_t index>
         void ConnectionPipeline<Msg, handlers...>::onException(const std::exception &e) {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
+                if constexpr (auto &handler = std::get<index>(handlers_); std::is_base_of_v<ConnectionInboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onException(ctx, e);
 
@@ -446,7 +434,7 @@ namespace uranus::network {
         template<size_t index>
         void ConnectionPipeline<Msg, handlers...>::onTimeout() {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
+                if constexpr (auto &handler = std::get<index>(handlers_); std::is_base_of_v<ConnectionInboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onTimeout(ctx);
 
@@ -459,11 +447,7 @@ namespace uranus::network {
         }
     }
 
-    template<typename T>
-    requires std::is_base_of_v<Message, T>
-    ConnectionHandler<T>::Type ConnectionInboundHandler<T>::type() const {
-        return ConnectionHandler<T>::Type::kInbound;
-    }
+
 
     template<typename T>
     requires std::is_base_of_v<Message, T>
@@ -493,13 +477,6 @@ namespace uranus::network {
     requires std::is_base_of_v<Message, T>
     void ConnectionInboundHandler<T>::onException(ConnectionPipelineContext &ctx, const std::exception &e) {
         ctx.fire();
-    }
-
-
-    template<typename T>
-    requires std::is_base_of_v<Message, T>
-    ConnectionHandler<T>::Type ConnectionOutboundHandler<T>::type() const {
-        return ConnectionHandler<T>::Type::kOutbound;
     }
 
     template<typename T>
