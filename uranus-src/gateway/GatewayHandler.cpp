@@ -35,6 +35,7 @@ void GatewayHandler::onDisconnect(ConnectionPipelineContext &ctx) {
 }
 
 awaitable<void> GatewayHandler::onReceive(ConnectionPipelineContext &ctx, PackageHandle &ref) {
+    co_return;
 }
 
 void GatewayHandler::onError(ConnectionPipelineContext &ctx, std::error_code ec) {

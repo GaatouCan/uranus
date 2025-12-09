@@ -231,7 +231,7 @@ namespace uranus::network {
 
         template<class Codec, class ...handlers>
         requires ConnectionConcept<Codec, handlers...>
-        class ConnectionImpl final : public Connection, public enable_shared_from_this<ConnectionImpl<Codec> > {
+        class ConnectionImpl final : public Connection, public enable_shared_from_this<ConnectionImpl<Codec, handlers...>> {
         public:
             using MessageType = Codec::Type;
             using MessageHandleType = Codec::HandleType;
@@ -546,20 +546,20 @@ namespace uranus::network {
         void ConnectionImpl<Codec, handlers...>::connect() {
             received_ = std::chrono::steady_clock::now();
 
-            co_spawn(socket_.get_executor(), [self = this->shared_from_this()]() -> awaitable<void> {
+            co_spawn(socket_.get_executor(), [self = this->shared_from_this(), this]() -> awaitable<void> {
 #ifdef URANUS_SSL
-                if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
-                    self->disconnect();
+                if (const auto [ec] = co_await socket_.async_handshake(asio::ssl::stream_base::server); ec) {
+                    disconnect();
                     co_return;
                 }
 #endif
 
-                self->pipeline_->onConnect();
+                pipeline_.onConnect();
 
                 co_await (
-                    self->readMessage() &&
-                    self->writeMessage() &&
-                    self->watchdog()
+                    readMessage() &&
+                    writeMessage() &&
+                    watchdog()
                 );
             }, detached);
         }
@@ -650,7 +650,7 @@ namespace uranus::network {
                     }
 
                     received_ = std::chrono::steady_clock::now();
-                    co_await pipeline_.onReceive(std::move(msg));
+                    co_await pipeline_.onReceive(msg);
                 }
             } catch (const std::exception &e) {
                 pipeline_.onException(e);
@@ -687,7 +687,7 @@ namespace uranus::network {
                         break;
                     }
 
-                    co_await pipeline_.afterSend(std::move(msg));
+                    co_await pipeline_.afterSend(msg);
                 }
             } catch (const std::exception &e) {
                 pipeline_.onException(e);
@@ -727,8 +727,8 @@ namespace uranus::network {
         }
     }
 
-    template<class Codec, detail::HandlerType<typename Codec::Type> ...handlers>
-    requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+    template<class Codec, class ...handlers>
+    requires detail::ConnectionConcept<Codec, handlers...>
     shared_ptr<detail::ConnectionImpl<Codec, handlers...>> MakeConnection(TcpSocket &&socket) {
         return make_shared<detail::ConnectionImpl<Codec, handlers...>>(std::move(socket));
     }

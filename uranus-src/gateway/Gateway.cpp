@@ -84,13 +84,14 @@ awaitable<void> Gateway::waitForClient(uint16_t port) {
                 continue;
             }
 
-            auto conn = uranus::MakeConnection<PackageCodec, GatewayHandler>(TcpSocket(std::move(socket), sslContext_));
+            // auto conn = uranus::network::MakeConnection<PackageCodec, GatewayHandler>(TcpSocket(std::move(socket), sslContext_));
+            auto conn = std::make_shared<uranus::network::detail::ConnectionImpl<PackageCodec, GatewayHandler>>(TcpSocket(std::move(socket), sslContext_));
             SPDLOG_INFO("New connection from: {}", conn->remoteAddress().to_string());
 
             // Initial connection
             {
                 conn->setExpirationSecond(30);
-                conn->getHandler().setGateway(this);
+                conn->getHandler<0>().setGateway(this);
             }
 
             bool repeated = false;

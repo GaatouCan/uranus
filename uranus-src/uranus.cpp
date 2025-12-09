@@ -2,7 +2,6 @@
 
 #include "GameWorld.h"
 #include "gateway/Gateway.h"
-#include "player/PlayerManager.h"
 
 int main() {
     spdlog::info("Hello World!");
@@ -10,7 +9,7 @@ int main() {
     auto *world = new GameWorld();
 
     // Create GameWorld Modules
-    world->createModule<PlayerManager>();
+    // world->createModule<PlayerManager>();
     world->createModule<Gateway>();
 
     // Run the GameWorld
