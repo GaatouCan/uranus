@@ -362,7 +362,7 @@ namespace uranus::network {
         template<size_t index>
         awaitable<void> ConnectionPipeline<Msg, handlers...>::beforeSend(MessageType *msg) {
             if constexpr (index > 0) {
-                if (auto &handler = std::get<index - 1>(handlers_); std::is_base_of_v<ConnectionOutboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
+                if constexpr (auto &handler = std::get<index - 1>(handlers_); std::is_base_of_v<ConnectionOutboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.beforeSend(ctx, msg);
 
@@ -381,7 +381,7 @@ namespace uranus::network {
         template<size_t index>
         awaitable<void> ConnectionPipeline<Msg, handlers...>::afterSend(MessageHandleType &msg) {
             if constexpr (index > 0) {
-                if (auto &handler = std::get<index - 1>(handlers_); std::is_base_of_v<ConnectionOutboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
+                if constexpr (auto &handler = std::get<index - 1>(handlers_); std::is_base_of_v<ConnectionOutboundHandler<Msg>, std::decay_t<decltype(handler)>>) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.afterSend(ctx, msg);
 
