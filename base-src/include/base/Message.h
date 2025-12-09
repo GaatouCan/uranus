@@ -13,7 +13,7 @@ namespace uranus {
             using Functor = void (*)(Message *);
             Functor del;
 
-            static Deleter make() {
+            static constexpr Deleter make() noexcept {
                 return { [](Message *p) { delete p; } };
             }
 
@@ -22,7 +22,7 @@ namespace uranus {
             {
                 { t->recycle() } -> std::convertible_to<void>;
             } && std::is_base_of_v<Message, T>
-            static Deleter recyclerAdapter () {
+            static constexpr Deleter recyclerAdapter () noexcept {
                 return { [](Message *p) {
                     dynamic_cast<T *>(p)->recycle();
                 } };
