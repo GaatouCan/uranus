@@ -69,7 +69,6 @@ namespace uranus::actor {
         PackageRecyclerHandle handle_;
 
     public:
-        int64_t id_;
         std::vector<uint8_t, detail::BufferAllocator<uint8_t>> payload_;
     };
 

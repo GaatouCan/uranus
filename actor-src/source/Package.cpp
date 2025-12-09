@@ -17,8 +17,7 @@ namespace uranus::actor {
     }
 
     Package::Package(const PackageRecyclerHandle &handle)
-        : handle_(handle),
-          id_(0) {
+        : handle_(handle) {
     }
 
     Package::~Package() {
