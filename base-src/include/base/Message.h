@@ -9,12 +9,20 @@ namespace uranus {
     class BASE_API Message {
 
     public:
-        struct Deleter {
-            using Functor = void (*)(Message *);
-            Functor del;
+        class Deleter {
+
+        public:
+            using Functor = void (*)(Message *) noexcept;
+
+            constexpr Deleter() noexcept
+                : del_(&defaultImpl) { }
+
+            explicit constexpr Deleter(const Functor del) noexcept: del_(del) {
+
+            }
 
             static constexpr Deleter make() noexcept {
-                return { [](Message *p) { delete p; } };
+                return Deleter(&defaultImpl);
             }
 
             template<typename T>
@@ -23,14 +31,25 @@ namespace uranus {
                 { t->recycle() } -> std::convertible_to<void>;
             } && std::is_base_of_v<Message, T>
             static constexpr Deleter recyclerAdapter () noexcept {
-                return { [](Message *p) {
-                    dynamic_cast<T *>(p)->recycle();
-                } };
+                return Deleter(&recycleImpl<T>);
             }
 
             constexpr void operator()(Message *p) const noexcept {
-                del(p);
+                std::invoke(del_, p);
             }
+
+        private:
+            static constexpr void defaultImpl(Message *p) noexcept {
+                delete p;
+            }
+
+            template<typename T>
+            static constexpr void recycleImpl(Message *p) noexcept {
+                dynamic_cast<T *>(p)->recycle();
+            }
+
+        private:
+            Functor del_;
         };
 
         template<typename T>
