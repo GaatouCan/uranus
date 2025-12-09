@@ -15,7 +15,7 @@ class GameWorld;
 class GatewayHandler final : public ConnectionInboundHandler<Package> {
 
 public:
-    explicit GatewayHandler(Connection &conn);
+    GatewayHandler();
     ~GatewayHandler() override;
 
     void setGateway(Gateway *gateway);
@@ -26,7 +26,7 @@ public:
     void onConnect(ConnectionPipelineContext &ctx) override;
     void onDisconnect(ConnectionPipelineContext &ctx) override;
 
-    asio::awaitable<void> onReceive(ConnectionPipelineContext &ctx, MessageHandleType &ref) override;
+    asio::awaitable<void> onReceive(ConnectionPipelineContext &ctx, PackageHandle &ref) override;
 
     void onError(ConnectionPipelineContext &ctx, std::error_code ec) override;
     void onException(ConnectionPipelineContext &ctx, const std::exception &e) override;

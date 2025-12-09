@@ -14,7 +14,7 @@ using uranus::actor::PackageCodec;
 using uranus::MultiIOContextPool;
 using uranus::TcpAcceptor;
 using uranus::TcpSocket;
-using uranus::Connection;
+using uranus::network::Connection;
 using asio::awaitable;
 using asio::co_spawn;
 using asio::detached;
@@ -26,7 +26,7 @@ class Gateway final : public ServerModule {
     friend class GatewayHandler;
 
 public:
-    using ConnectionPointer = std::shared_ptr<uranus::detail::ConnectionImpl<PackageCodec, GatewayHandler>>;
+    using ConnectionPointer = std::shared_ptr<uranus::network::detail::ConnectionImpl<PackageCodec, GatewayHandler>>;
 
     explicit Gateway(GameWorld &world);
     ~Gateway() override;

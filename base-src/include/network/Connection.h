@@ -171,11 +171,21 @@ namespace uranus::network {
         template<class Msg, class T>
         concept HandlerType = std::is_base_of_v<ConnectionHandler<Msg>, T>;
 
-        template<class T, HandlerType<T> ...handlers>
+        template<class Msg, class T>
+        concept CodecType = std::is_base_of_v<MessageCodec<Msg>, T>;
+
+        template<class Codec, class... Handlers>
+        concept ConnectionConcept = CodecType<typename Codec::Type, Codec> && (HandlerType<typename Codec::Type, Handlers> && ...);
+
+        template<class Msg, class... Handlers>
+        concept PipelineConcept = (HandlerType<Msg, Handlers> && ...);
+
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         class ConnectionPipeline final {
         public:
-            using MessageType = T;
-            using MessageHandleType = Message::Pointer<T>;
+            using MessageType = Msg;
+            using MessageHandleType = Message::Pointer<Msg>;
 
             ConnectionPipeline() = delete;
 
@@ -219,8 +229,8 @@ namespace uranus::network {
         };
 
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         class ConnectionImpl final : public Connection, public enable_shared_from_this<ConnectionImpl<Codec> > {
         public:
             using MessageType = Codec::Type;
@@ -283,30 +293,35 @@ namespace uranus::network {
 
     namespace detail {
 
-        template<class T, HandlerType<T> ... handlers>
-        ConnectionPipeline<T, handlers...>::ConnectionPipeline(Connection &conn)
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
+        ConnectionPipeline<Msg, handlers...>::ConnectionPipeline(Connection &conn)
             : conn_(conn) {
         }
 
-        template<class T, HandlerType<T> ... handlers>
-        ConnectionPipeline<T, handlers...>::~ConnectionPipeline() = default;
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
+        ConnectionPipeline<Msg, handlers...>::~ConnectionPipeline() = default;
 
-        template<class T, HandlerType<T> ... handlers>
-        Connection &ConnectionPipeline<T, handlers...>::getConnection() const {
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
+        Connection &ConnectionPipeline<Msg, handlers...>::getConnection() const {
             return conn_;
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t idx>
-        auto &ConnectionPipeline<T, handlers...>::getHandler() {
+        auto &ConnectionPipeline<Msg, handlers...>::getHandler() {
             return std::get<idx>(handlers_);
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        void ConnectionPipeline<T, handlers...>::onConnect() {
+        void ConnectionPipeline<Msg, handlers...>::onConnect() {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<T>::Type::kInbound) {
+                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onConnect(ctx);
 
@@ -318,11 +333,12 @@ namespace uranus::network {
             }
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        void ConnectionPipeline<T, handlers...>::onDisconnect() {
+        void ConnectionPipeline<Msg, handlers...>::onDisconnect() {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<T>::Type::kInbound) {
+                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onDisconnect(ctx);
 
@@ -334,11 +350,12 @@ namespace uranus::network {
             }
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        awaitable<void> ConnectionPipeline<T, handlers...>::onReceive(MessageHandleType &msg) {
+        awaitable<void> ConnectionPipeline<Msg, handlers...>::onReceive(MessageHandleType &msg) {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<T>::Type::kInbound) {
+                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
                     ConnectionPipelineContext ctx(conn_);
                     co_await handler.onReceive(ctx, msg);
 
@@ -352,11 +369,12 @@ namespace uranus::network {
             co_return;
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        awaitable<void> ConnectionPipeline<T, handlers...>::beforeSend(MessageType *msg) {
+        awaitable<void> ConnectionPipeline<Msg, handlers...>::beforeSend(MessageType *msg) {
             if constexpr (index > 0) {
-                if (auto &handler = std::get<index - 1>(handlers_); handler.type() == ConnectionHandler<T>::Type::kOutbound) {
+                if (auto &handler = std::get<index - 1>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kOutbound) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.beforeSend(ctx, msg);
 
@@ -370,11 +388,12 @@ namespace uranus::network {
             co_return;
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        awaitable<void> ConnectionPipeline<T, handlers...>::afterSend(MessageHandleType &msg) {
+        awaitable<void> ConnectionPipeline<Msg, handlers...>::afterSend(MessageHandleType &msg) {
             if constexpr (index > 0) {
-                if (auto &handler = std::get<index - 1>(handlers_); handler.type() == ConnectionHandler<T>::Type::kOutbound) {
+                if (auto &handler = std::get<index - 1>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kOutbound) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.afterSend(ctx, msg);
 
@@ -388,11 +407,12 @@ namespace uranus::network {
             co_return;
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        void ConnectionPipeline<T, handlers...>::onError(std::error_code ec) {
+        void ConnectionPipeline<Msg, handlers...>::onError(std::error_code ec) {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<T>::Type::kInbound) {
+                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onError(ctx, ec);
 
@@ -404,11 +424,12 @@ namespace uranus::network {
             }
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        void ConnectionPipeline<T, handlers...>::onException(const std::exception &e) {
+        void ConnectionPipeline<Msg, handlers...>::onException(const std::exception &e) {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<T>::Type::kInbound) {
+                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onExpection(ctx, e);
 
@@ -420,11 +441,12 @@ namespace uranus::network {
             }
         }
 
-        template<class T, HandlerType<T> ... handlers>
+        template<class Msg, class ...handlers>
+        requires PipelineConcept<Msg, handlers...>
         template<size_t index>
-        void ConnectionPipeline<T, handlers...>::onTimeout() {
+        void ConnectionPipeline<Msg, handlers...>::onTimeout() {
             if constexpr (index < sizeof...(handlers)) {
-                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<T>::Type::kInbound) {
+                if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
                     ConnectionPipelineContext ctx(conn_);
                     handler.onTimeout(ctx);
 
@@ -498,8 +520,8 @@ namespace uranus::network {
     namespace detail {
         using namespace asio::experimental::awaitable_operators;
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         ConnectionImpl<Codec, handlers...>::ConnectionImpl(TcpSocket &&socket)
             : Connection(std::move(socket)),
               codec_(*this),
@@ -507,20 +529,20 @@ namespace uranus::network {
               pipeline_(*this) {
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         ConnectionImpl<Codec, handlers...>::~ConnectionImpl() {
             ConnectionImpl::disconnect();
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         Codec &ConnectionImpl<Codec, handlers...>::getCodec() {
             return codec_;
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         void ConnectionImpl<Codec, handlers...>::connect() {
             received_ = std::chrono::steady_clock::now();
 
@@ -542,8 +564,8 @@ namespace uranus::network {
             }, detached);
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         void ConnectionImpl<Codec, handlers...>::disconnect() {
             if (!isConnected())
                 return;
@@ -560,8 +582,8 @@ namespace uranus::network {
             pipeline_.onDisconnect();
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         void ConnectionImpl<Codec, handlers...>::send(MessageHandleType &&msg) {
             if (msg == nullptr)
                 return;
@@ -572,14 +594,14 @@ namespace uranus::network {
             output_.try_send_via_dispatch(error_code{}, std::move(msg));
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         void ConnectionImpl<Codec, handlers...>::send(MessageType *msg) {
             send({msg, Message::Deleter::make()});
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         void ConnectionImpl<Codec, handlers...>::sendMessage(MessageHandle &&msg) {
             if (msg == nullptr)
                 return;
@@ -596,8 +618,8 @@ namespace uranus::network {
             del(ptr);
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         void ConnectionImpl<Codec, handlers...>::sendMessage(Message *msg) {
             if (msg == nullptr)
                 return;
@@ -607,15 +629,15 @@ namespace uranus::network {
             }
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ... handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         template<size_t idx>
         auto &ConnectionImpl<Codec, handlers...>::getHandler() {
             return pipeline_.template getHandler<idx>();
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         awaitable<void> ConnectionImpl<Codec, handlers...>::readMessage() {
             try {
                 while (isConnected()) {
@@ -636,8 +658,8 @@ namespace uranus::network {
             }
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         awaitable<void> ConnectionImpl<Codec, handlers...>::writeMessage() {
             try {
                 while (isConnected() && output_.is_open()) {
@@ -673,8 +695,8 @@ namespace uranus::network {
             }
         }
 
-        template<class Codec, HandlerType<typename Codec::Type> ...handlers>
-        requires std::is_base_of_v<MessageCodec<typename Codec::Type>, Codec>
+        template<class Codec, class ...handlers>
+        requires ConnectionConcept<Codec, handlers...>
         awaitable<void> ConnectionImpl<Codec, handlers...>::watchdog() {
             if (expiration_ <= SteadyDuration::zero())
                 co_return;

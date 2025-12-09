@@ -2,9 +2,8 @@
 #include "Gateway.h"
 
 
-GatewayHandler::GatewayHandler(Connection &conn)
-    : ConnectionHandler(conn),
-      gateway_(nullptr) {
+GatewayHandler::GatewayHandler()
+    : gateway_(nullptr) {
 }
 
 GatewayHandler::~GatewayHandler() {
@@ -30,10 +29,12 @@ void GatewayHandler::onConnect(ConnectionPipelineContext &ctx) {
 }
 
 void GatewayHandler::onDisconnect(ConnectionPipelineContext &ctx) {
-
+    if (!ctx.attr().has("REPEATED")) {
+        getGateway()->removeConnection(ctx.getConnection().getKey());
+    }
 }
 
-awaitable<void> GatewayHandler::onReceive(ConnectionPipelineContext &ctx, MessageHandleType &ref) {
+awaitable<void> GatewayHandler::onReceive(ConnectionPipelineContext &ctx, PackageHandle &ref) {
 }
 
 void GatewayHandler::onError(ConnectionPipelineContext &ctx, std::error_code ec) {
