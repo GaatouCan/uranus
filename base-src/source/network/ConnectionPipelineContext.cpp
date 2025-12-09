@@ -97,9 +97,10 @@ namespace uranus::network {
             return make_tuple(0, nullptr);
 
         // Deal with while idx == 0
-        for (size_t idx = index_; idx-- > 0;) {
-            if (auto *temp = pipeline_.handlers_[idx].get(); temp->type() == ConnectionHandler::HandlerType::kOutbound) {
-                return make_tuple(idx, dynamic_cast<ConnectionOutboundHandler *>(temp));
+        for (size_t idx = index_; idx > 0; --idx) {
+            const auto i = idx - 1;
+            if (auto *temp = pipeline_.handlers_[i].get(); temp->type() == ConnectionHandler::HandlerType::kOutbound) {
+                return make_tuple(i, dynamic_cast<ConnectionOutboundHandler *>(temp));
             }
         }
 
