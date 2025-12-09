@@ -528,20 +528,20 @@ namespace uranus::network {
         void ConnectionImpl<Codec, handlers...>::connect() {
             received_ = std::chrono::steady_clock::now();
 
-            co_spawn(socket_.get_executor(), [self = this->shared_from_this(), this]() -> awaitable<void> {
+            co_spawn(socket_.get_executor(), [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
-                if (const auto [ec] = co_await socket_.async_handshake(asio::ssl::stream_base::server); ec) {
-                    disconnect();
+                if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
+                    self->disconnect();
                     co_return;
                 }
 #endif
 
-                pipeline_.onConnect();
+                self->pipeline_.onConnect();
 
                 co_await (
-                    readMessage() &&
-                    writeMessage() &&
-                    watchdog()
+                    self->readMessage() &&
+                    self->writeMessage() &&
+                    self->watchdog()
                 );
             }, detached);
         }

@@ -84,8 +84,7 @@ awaitable<void> Gateway::waitForClient(uint16_t port) {
                 continue;
             }
 
-            // auto conn = uranus::network::MakeConnection<PackageCodec, GatewayHandler>(TcpSocket(std::move(socket), sslContext_));
-            auto conn = std::make_shared<uranus::network::detail::ConnectionImpl<PackageCodec, GatewayHandler>>(TcpSocket(std::move(socket), sslContext_));
+            auto conn = uranus::network::MakeConnection<PackageCodec, GatewayHandler>(TcpSocket(std::move(socket), sslContext_));
             SPDLOG_INFO("New connection from: {}", conn->remoteAddress().to_string());
 
             // Initial connection
