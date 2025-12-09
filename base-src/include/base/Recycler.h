@@ -314,29 +314,29 @@ namespace uranus {
 
 
 #define DECLARE_RECYCLER(type)                          \
-class type##Pool final : public Recycler<type> {        \
+class _##type##Pool final : public Recycler<type> {     \
 public:                                                 \
-    static type##Pool &instance();                      \
+    static _##type##Pool &instance();                   \
 protected:                                              \
     type *create(const Handle &handle) const override;  \
 };
 
 
-#define IMPLEMENT_RECYCLER(type)                        \
-type##Pool &type##Pool::instance() {                    \
-    static type##Pool inst;                             \
-    if (!initialized())                                 \
-        inst.initial();                                 \
-    return inst;                                        \
-    }                                                   \
-type *type##Pool::create(const Handle &handle) const {  \
-    return new type(handle);                            \
+#define IMPLEMENT_RECYCLER(type)                            \
+_##type##Pool &_##type##Pool::instance() {                  \
+    static _##type##Pool inst;                              \
+    if (!initialized())                                     \
+        inst.initial();                                     \
+    return inst;                                            \
+    }                                                       \
+type *_##type##Pool::create(const Handle &handle) const {   \
+    return new type(handle);                                \
 }
 
 
 #define DECLARE_RECYCLER_GET(type)                          \
 private:                                                    \
-    friend class type##Pool;                                \
+    friend class _##type##Pool;                             \
     friend class Recycler<type>;                            \
     using type##RecyclerHandle = Recycler<type>::Handle;    \
 public:                                                     \
@@ -346,5 +346,5 @@ private:
 
 #define IMPLEMENT_RECYCLER_GET(type)            \
 type *type::get() {                             \
-    return type##Pool::instance().acquire();    \
+    return _##type##Pool::instance().acquire(); \
 }

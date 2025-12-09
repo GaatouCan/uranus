@@ -80,7 +80,7 @@ namespace uranus {
 
 #define DECLARE_MESSAGE_POOL_GET(type)                      \
 private:                                                    \
-    friend class type##Pool;                                \
+    friend class _##type##Pool;                             \
     friend class Recycler<type>;                            \
     using type##RecyclerHandle = Recycler<type>::Handle;    \
 public:                                                     \
@@ -93,7 +93,7 @@ DECLARE_RECYCLER(type)                                      \
 using type##Handle = Message::Pointer<type>;                \
 inline auto type::getHandle() {                             \
     return type##Handle{                                    \
-        type##Pool::instance().acquire(),                   \
+        _##type##Pool::instance().acquire(),                \
         Deleter::recyclerAdapter<type>()                    \
     };                                                      \
 }
