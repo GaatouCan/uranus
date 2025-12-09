@@ -28,7 +28,7 @@ namespace uranus {
                 } };
             }
 
-            void operator()(Message *p) const noexcept {
+            constexpr void operator()(Message *p) const noexcept {
                 del(p);
             }
         };

@@ -2,12 +2,10 @@
 
 #include "ConcurrentQueue.h"
 
-#include <cmath>
 #include <stack>
 #include <vector>
 #include <unordered_map>
 #include <shared_mutex>
-#include <functional>
 
 
 namespace uranus {
@@ -39,7 +37,7 @@ namespace uranus {
         using Type = kClearType<T>;
 
         struct RecyclerDeleter {
-            void operator()(Type *p) const noexcept
+            constexpr void operator()(Type *p) const noexcept
             requires requires(Type* t) { t->recycle(); }
             {
                 if (p) {
