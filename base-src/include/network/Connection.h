@@ -431,7 +431,7 @@ namespace uranus::network {
             if constexpr (index < sizeof...(handlers)) {
                 if (auto &handler = std::get<index>(handlers_); handler.type() == ConnectionHandler<Msg>::Type::kInbound) {
                     ConnectionPipelineContext ctx(conn_);
-                    handler.onExpection(ctx, e);
+                    handler.onException(ctx, e);
 
                     if (!ctx.fired())
                         return;
