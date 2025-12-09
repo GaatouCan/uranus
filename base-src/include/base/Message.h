@@ -9,7 +9,7 @@ namespace uranus {
     class BASE_API Message {
 
     public:
-        struct  Deleter {
+        struct Deleter {
             using Functor = void (*)(Message *) noexcept;
             Functor del;
 
