@@ -2,7 +2,6 @@
 
 #include "Message.h"
 
-#include <tuple>
 #include <asio/awaitable.hpp>
 
 namespace uranus::network {
@@ -12,8 +11,6 @@ namespace uranus::network {
     class ConnectionInboundHandler;
     class ConnectionOutboundHandler;
 
-    using std::tuple;
-    using std::make_tuple;
     using asio::awaitable;
     using std::error_code;
     using std::exception;
@@ -42,14 +39,7 @@ namespace uranus::network {
         awaitable<void> fireAfterSend(MessageHandle &&msg) const;
 
     private:
-        [[nodiscard]] tuple<size_t, ConnectionInboundHandler *> getNextInboundHandler() const;
-        [[nodiscard]] tuple<size_t, ConnectionOutboundHandler *> getPreviousOutboundHandler() const;
-
-    private:
         ConnectionPipeline &pipeline_;
-
-        /// For inbound: handler index is [1, length], [0] means the invokable
-        /// For outbound: handler index is [length-1, 0], [length] means the invokable
         const size_t index_;
     };
 }

@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <memory>
-#include <tuple>
 #include <functional>
 #include <asio/awaitable.hpp>
 
@@ -26,8 +25,6 @@ namespace uranus::network {
     using std::unique_ptr;
     using std::make_unique;
     using std::vector;
-    using std::tuple;
-    using std::make_tuple;
     using std::function;
     using asio::awaitable;
 
@@ -67,10 +64,6 @@ namespace uranus::network {
         awaitable<void> onReceive(MessageHandle &&msg);
         awaitable<void> beforeSend(Message *msg);
         awaitable<void> afterSend(MessageHandle &&msg);
-
-    private:
-        [[nodiscard]] tuple<size_t, ConnectionInboundHandler *> getNextInboundHandler() const;
-        [[nodiscard]] tuple<size_t, ConnectionOutboundHandler *> getPreviousOutboundHandler() const;
 
     private:
         Connection &conn_;

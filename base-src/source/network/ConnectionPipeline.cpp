@@ -13,13 +13,15 @@ namespace uranus::network {
     }
 
     ConnectionPipeline &ConnectionPipeline::pushBack(ConnectionHandler *handler) {
-        // auto unique = unique_ptr<ConnectionHandler>(handler);
         handlers_.emplace_back(handler);
-        if (handler->type() == ConnectionHandler::HandlerType::kInbound || handler->type() == ConnectionHandler::HandlerType::kDeluxe) {
+
+        if (handler->type() == ConnectionHandler::HandlerType::kInbound ||
+            handler->type() == ConnectionHandler::HandlerType::kDeluxe) {
             inbounds_.emplace_back(dynamic_cast<ConnectionInboundHandler *>(handler));
         }
 
-        if (handler->type() == ConnectionHandler::HandlerType::kOutbound || handler->type() == ConnectionHandler::HandlerType::kDeluxe) {
+        if (handler->type() == ConnectionHandler::HandlerType::kOutbound ||
+            handler->type() == ConnectionHandler::HandlerType::kDeluxe) {
             outbounds_.insert(outbounds_.begin(), dynamic_cast<ConnectionOutboundHandler *>(handler));
         }
 
@@ -38,11 +40,9 @@ namespace uranus::network {
         if (onConnect_) {
             ConnectionPipelineContext ctx(*this, 0);
             std::invoke(onConnect_, ctx);
-        } else {
-            if (auto [idx, handler] = getNextInboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                handler->onConnect(ctx);
-            }
+        } else if (!inbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            inbounds_.front()->onConnect(ctx);
         }
     }
 
@@ -50,11 +50,9 @@ namespace uranus::network {
         if (onDisconnect_) {
             ConnectionPipelineContext ctx(*this, 0);
             std::invoke(onDisconnect_, ctx);
-        } else {
-            if (auto [idx, handler] = getNextInboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                handler->onDisconnect(ctx);
-            }
+        } else if (!inbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            inbounds_.front()->onDisconnect(ctx);
         }
     }
 
@@ -72,11 +70,9 @@ namespace uranus::network {
         if (onException_) {
             ConnectionPipelineContext ctx(*this, 0);
             std::invoke(onException_, ctx, e);
-        } else {
-            if (auto [idx, handler] = getNextInboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                handler->onException(ctx, e);
-            }
+        } else if (!inbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            inbounds_.front()->onException(ctx, e);
         }
     }
 
@@ -84,11 +80,9 @@ namespace uranus::network {
         if (onTimeout_) {
             ConnectionPipelineContext ctx(*this, 0);
             std::invoke(onTimeout_, ctx);
-        } else {
-            if (auto [idx, handler] = getNextInboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                handler->onTimeout(ctx);
-            }
+        } else if (!inbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            inbounds_.front()->onTimeout(ctx);
         }
     }
 
@@ -100,57 +94,28 @@ namespace uranus::network {
             ConnectionPipelineContext ctx(*this, 1);
             co_await inbounds_.front()->onReceive(ctx, std::move(msg));
         }
+        co_return;
     }
 
     awaitable<void> ConnectionPipeline::beforeSend(Message *msg) {
         if (beforeSend_) {
-            ConnectionPipelineContext ctx(*this, handlers_.size());
+            ConnectionPipelineContext ctx(*this, 0);
             co_await std::invoke(beforeSend_, ctx, msg);
-        } else {
-            if (auto [idx, handler] = getPreviousOutboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                co_await handler->beforeSend(ctx, msg);
-            }
+        } else if (!outbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            co_await outbounds_.front()->beforeSend(ctx, msg);
         }
+        co_return;
     }
 
     awaitable<void> ConnectionPipeline::afterSend(MessageHandle &&msg) {
         if (afterSend_) {
-            ConnectionPipelineContext ctx(*this, handlers_.size());
+            ConnectionPipelineContext ctx(*this, 0);
             co_await std::invoke(afterSend_, ctx, std::move(msg));
-        } else {
-            if (auto [idx, handler] = getPreviousOutboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                co_await handler->afterSend(ctx, std::move(msg));
-            }
+        } else if (!outbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            co_await outbounds_.front()->afterSend(ctx, std::move(msg));
         }
-    }
-
-    tuple<size_t, ConnectionInboundHandler *> ConnectionPipeline::getNextInboundHandler() const {
-        if (handlers_.empty())
-            return make_tuple(0, nullptr);
-
-        for (size_t idx = 0; idx < handlers_.size(); ++idx) {
-            if (auto *temp = handlers_[idx].get(); temp->type() == ConnectionHandler::HandlerType::kInbound) {
-                return make_tuple(idx + 1, dynamic_cast<ConnectionInboundHandler *>(temp));
-            }
-        }
-
-        return make_tuple(0, nullptr);
-    }
-
-    tuple<size_t, ConnectionOutboundHandler *> ConnectionPipeline::getPreviousOutboundHandler() const {
-        if (handlers_.empty())
-            return make_tuple(0, nullptr);
-
-        // Deal with while idx == 0
-        for (size_t idx = handlers_.size(); idx > 0; --idx) {
-            const auto i = idx - 1;
-            if (auto *temp = handlers_[i].get(); temp->type() == ConnectionHandler::HandlerType::kOutbound) {
-                return make_tuple(i, dynamic_cast<ConnectionOutboundHandler *>(temp));
-            }
-        }
-
-        return make_tuple(0, nullptr);
+        co_return;
     }
 }

@@ -22,17 +22,19 @@ namespace uranus::network {
     }
 
     void ConnectionPipelineContext::fireConnect() const {
-        if (auto [idx, handler] = getNextInboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            handler->onConnect(ctx);
-        }
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onConnect(ctx);
     }
 
     void ConnectionPipelineContext::fireDisconnect() const {
-        if (auto [idx, handler] = getNextInboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            handler->onDisconnect(ctx);
-        }
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onDisconnect(ctx);
     }
 
     void ConnectionPipelineContext::fireError(const error_code ec) const {
@@ -44,17 +46,19 @@ namespace uranus::network {
     }
 
     void ConnectionPipelineContext::fireException(exception &e) const {
-        if (auto [idx, handler] = getNextInboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            handler->onException(ctx, e);
-        }
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onException(ctx, e);
     }
 
     void ConnectionPipelineContext::fireTimeout() const {
-        if (auto [idx, handler] = getNextInboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            handler->onTimeout(ctx);
-        }
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onTimeout(ctx);
     }
 
     awaitable<void> ConnectionPipelineContext::fireReceive(MessageHandle &&msg) const {
@@ -66,46 +70,18 @@ namespace uranus::network {
     }
 
     awaitable<void> ConnectionPipelineContext::fireBeforeSend(Message *msg) const {
-        if (auto [idx, handler] = getPreviousOutboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            co_await handler->beforeSend(ctx, msg);
-        }
+        if (index_ >= pipeline_.outbounds_.size())
+            co_return;
+
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        co_await pipeline_.outbounds_[index_]->beforeSend(ctx, msg);
     }
 
     awaitable<void> ConnectionPipelineContext::fireAfterSend(MessageHandle &&msg) const {
-        if (auto [idx, handler] = getPreviousOutboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            co_await handler->afterSend(ctx, std::move(msg));
-        }
-    }
+        if (index_ >= pipeline_.outbounds_.size())
+            co_return;
 
-    tuple<size_t, ConnectionInboundHandler *> ConnectionPipelineContext::getNextInboundHandler() const {
-        // Current is the last one
-        if (index_ >= pipeline_.handlers_.size())
-            return make_tuple(0, nullptr);
-
-        for (size_t idx = index_; idx < pipeline_.handlers_.size(); ++idx) {
-            if (auto *temp = pipeline_.handlers_[idx].get(); temp->type() == ConnectionHandler::HandlerType::kInbound) {
-                return make_tuple(idx + 1, dynamic_cast<ConnectionInboundHandler *>(temp));
-            }
-        }
-
-        return make_tuple(0, nullptr);
-    }
-
-    tuple<size_t, ConnectionOutboundHandler *> ConnectionPipelineContext::getPreviousOutboundHandler() const {
-        // Current is the head one
-        if (index_ == 0)
-            return make_tuple(0, nullptr);
-
-        // Deal with while idx == 0
-        for (size_t idx = index_; idx > 0; --idx) {
-            const auto i = idx - 1;
-            if (auto *temp = pipeline_.handlers_[i].get(); temp->type() == ConnectionHandler::HandlerType::kOutbound) {
-                return make_tuple(i, dynamic_cast<ConnectionOutboundHandler *>(temp));
-            }
-        }
-
-        return make_tuple(0, nullptr);
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        co_await pipeline_.outbounds_[index_]->afterSend(ctx, std::move(msg));
     }
 }
