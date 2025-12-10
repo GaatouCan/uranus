@@ -1,17 +1,17 @@
-#include "ActorContext.h"
+#include "ActorAgent.h"
 
 
 namespace uranus::actor {
-    ActorContext::ActorContext(asio::io_context &ctx)
+    ActorAgent::ActorAgent(asio::io_context &ctx)
         : ctx_(ctx),
           mailbox_(ctx_, 1024),
           id_(0) {
     }
 
-    ActorContext::~ActorContext() {
+    ActorAgent::~ActorAgent() {
     }
 
-    void ActorContext::setActor(ActorHandle &&handle) {
+    void ActorAgent::setActor(ActorHandle &&handle) {
         if (actor_ != nullptr)
             return;
 
@@ -22,31 +22,31 @@ namespace uranus::actor {
         actor_->setContext(this);
     }
 
-    BaseActor *ActorContext::getActor() const {
+    BaseActor *ActorAgent::getActor() const {
         return actor_.get();
     }
 
-    void ActorContext::setId(uint32_t id) {
+    void ActorAgent::setId(uint32_t id) {
         id_ = id;
     }
 
-    uint32_t ActorContext::getId() const {
+    uint32_t ActorAgent::getId() const {
         return id_;
     }
 
-    asio::io_context &ActorContext::getIOContext() const {
+    asio::io_context &ActorAgent::getIOContext() const {
         return ctx_;
     }
 
-    bool ActorContext::isRunning() const {
+    bool ActorAgent::isRunning() const {
         return actor_ != nullptr && mailbox_.is_open();
     }
 
-    AttributeMap &ActorContext::attr() {
+    AttributeMap &ActorAgent::attr() {
         return attr_;
     }
 
-    void ActorContext::pushEnvelope(Envelope &&envelope) {
+    void ActorAgent::pushEnvelope(Envelope &&envelope) {
         if (!mailbox_.is_open())
             return;
 

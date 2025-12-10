@@ -15,7 +15,7 @@
 namespace uranus::actor {
 
     struct PackageHeader {
-        uint64_t id = 0;
+        int64_t id = 0;
         size_t length = 0;
     };
 
@@ -37,10 +37,10 @@ namespace uranus::actor {
         PackageHeader header;
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
-        header.id = static_cast<uint64_t>(htonll(pkg->id_));
+        header.id = static_cast<int64_t>(htonll(pkg->id_));
         header.length = static_cast<int64_t>(htonll(pkg->payload_.size()));
 #else
-        header.id = static_cast<uint64_t>(htobe64(pkg->id_));
+        header.id = static_cast<int64_t>(htobe64(pkg->id_));
         header.length = static_cast<int64_t>(htobe64(pkg->payload_.size()));
 #endif
 
@@ -89,10 +89,10 @@ namespace uranus::actor {
             }
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
-            header.id = static_cast<uint64_t>(ntohll(header.id));
+            header.id = static_cast<int64_t>(ntohll(header.id));
             header.length = static_cast<int64_t>(ntohll(header.length));
 #else
-            header.id = static_cast<uint64_t>(be64toh(header.id));
+            header.id = static_cast<int64_t>(be64toh(header.id));
             header.length = static_cast<int64_t>(be64toh(header.length));
 #endif
         }

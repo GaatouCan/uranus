@@ -9,7 +9,6 @@
 
 namespace uranus {
     class Message;
-    struct Envelope;
 }
 
 namespace uranus::actor {
@@ -17,11 +16,12 @@ namespace uranus::actor {
     using std::unique_ptr;
     using std::make_unique;
 
-    class ActorContext;
+    class ActorAgent;
+    class Envelope;
 
     class ACTOR_API BaseActor {
 
-        friend class ActorContext;
+        friend class ActorAgent;
 
     public:
         BaseActor();
@@ -29,17 +29,17 @@ namespace uranus::actor {
 
         DISABLE_COPY_MOVE(BaseActor)
 
-        [[nodiscard]] ActorContext *getContext() const;
+        [[nodiscard]] ActorAgent *getContext() const;
 
         [[nodiscard]] uint32_t getId() const;
 
         virtual void onMessage(Envelope &&envelope) = 0;
 
     private:
-        void setContext(ActorContext *ctx);
+        void setContext(ActorAgent *ctx);
 
     private:
-        ActorContext *ctx_;
+        ActorAgent *ctx_;
     };
 
     using ActorHandle = std::unique_ptr<BaseActor, std::function<void(BaseActor *)>>;

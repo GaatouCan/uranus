@@ -1,5 +1,5 @@
 #include "BaseActor.h"
-#include "ActorContext.h"
+#include "ActorAgent.h"
 
 namespace uranus::actor {
     BaseActor::BaseActor()
@@ -9,7 +9,7 @@ namespace uranus::actor {
     BaseActor::~BaseActor() {
     }
 
-    ActorContext *BaseActor::getContext() const {
+    ActorAgent *BaseActor::getContext() const {
         return ctx_;
     }
 
@@ -17,7 +17,7 @@ namespace uranus::actor {
         return ctx_->getId();
     }
 
-    void BaseActor::setContext(ActorContext *ctx) {
+    void BaseActor::setContext(ActorAgent *ctx) {
         ctx_ = ctx;
     }
 }

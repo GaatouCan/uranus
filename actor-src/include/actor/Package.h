@@ -48,7 +48,6 @@ namespace uranus::actor {
         ~Package() override;
 
     public:
-
         enum PackageType {
             kFromClient     = 1,
             kFromPlayer     = 1 << 1,
@@ -60,8 +59,10 @@ namespace uranus::actor {
             kResponse       = 1 << 7,
         };
 
-
         Package() = delete;
+
+        void setId(int32_t id);
+        [[nodiscard]] int64_t getId() const;
 
         void recycle();
 
@@ -69,8 +70,28 @@ namespace uranus::actor {
         PackageRecyclerHandle handle_;
 
     public:
+        int64_t id_;
         std::vector<uint8_t, detail::BufferAllocator<uint8_t>> payload_;
     };
 
     DECLARE_MESSAGE_POOL(Package)
+
+    struct ACTOR_API Envelope final {
+        int32_t type;
+        uint32_t source;
+
+        uint32_t session;
+        MessageHandle message;
+
+        Envelope();
+
+        Envelope(int32_t ty, uint32_t src, MessageHandle &&msg);
+        Envelope(int32_t ty, uint32_t src, uint32_t sess, MessageHandle &&msg);
+
+        Envelope(const Envelope &) = delete;
+        Envelope &operator=(const Envelope &) = delete;
+
+        Envelope(Envelope &&rhs) noexcept;
+        Envelope &operator=(Envelope &&rhs) noexcept;
+    };
 }
