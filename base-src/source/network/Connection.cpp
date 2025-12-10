@@ -52,7 +52,7 @@ namespace uranus::network {
             }
 #endif
 
-            // self->pipeline_.onConnect();
+            self->pipeline_.onConnect();
 
             co_await (
                 self->readMessage() &&
@@ -76,6 +76,8 @@ namespace uranus::network {
         output_.close();
 
         watchdog_.cancel();
+
+        pipeline_.onDisconnect();
     }
 
     bool Connection::isConnected() const {
@@ -122,16 +124,16 @@ namespace uranus::network {
                 auto [ec, msg] = co_await codec_->decode();
 
                 if (ec) {
-                    // pipeline_.onError(ec);
+                    pipeline_.onError(ec);
                     disconnect();
                     break;
                 }
 
                 received_ = std::chrono::steady_clock::now();
-                // co_await pipeline_.onReceive(msg);
+                co_await pipeline_.onReceive(std::move(msg));
             }
-        } catch (const std::exception &e) {
-            // pipeline_.onException(e);
+        } catch (std::exception &e) {
+            pipeline_.onException(e);
             disconnect();
         }
     }
@@ -144,10 +146,10 @@ namespace uranus::network {
                 if (ec == asio::error::operation_aborted ||
                     ec == asio::experimental::error::channel_closed) {
                     break;
-                    }
+                }
 
                 if (ec) {
-                    // pipeline_.onError(ec);
+                    pipeline_.onError(ec);
                     disconnect();
                     break;
                 }
@@ -155,18 +157,18 @@ namespace uranus::network {
                 if (msg == nullptr)
                     continue;
 
-                // co_await pipeline_.beforeSend(msg.get());
+                co_await pipeline_.beforeSend(msg.get());
 
                 if (const auto writeEc = co_await codec_->encode(msg.get())) {
-                    // pipeline_.onError(writeEc);
+                    pipeline_.onError(writeEc);
                     disconnect();
                     break;
                 }
 
-                // co_await pipeline_.afterSend(msg);
+                co_await pipeline_.afterSend(std::move(msg));
             }
-        } catch (const std::exception &e) {
-            // pipeline_.onException(e);
+        } catch (std::exception &e) {
+            pipeline_.onException(e);
             disconnect();
         }
     }
@@ -183,21 +185,21 @@ namespace uranus::network {
                     if (ec == asio::error::operation_aborted) {
                         // TODO
                     } else {
-                        // pipeline_.onError(ec);
+                        pipeline_.onError(ec);
                     }
 
                     co_return;
                 }
 
-                // pipeline_.onTimeout();
+                pipeline_.onTimeout();
 
                 if (isConnected()) {
                     disconnect();
                 }
             } while (received_ + expiration_ > std::chrono::steady_clock::now());
 
-        } catch (const std::exception &e) {
-            // pipeline_.onException(e);
+        } catch (std::exception &e) {
+            pipeline_.onException(e);
             disconnect();
         }
     }
