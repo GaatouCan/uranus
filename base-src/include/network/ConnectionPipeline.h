@@ -53,6 +53,8 @@ namespace uranus::network {
 
         DISABLE_COPY_MOVE(ConnectionPipeline)
 
+        ConnectionPipeline &pushBack(ConnectionHandler *handler);
+
         [[nodiscard]] Connection &getConnection() const;
         [[nodiscard]] AttributeMap &attr() const;
 
@@ -73,6 +75,9 @@ namespace uranus::network {
     private:
         Connection &conn_;
         vector<unique_ptr<ConnectionHandler>> handlers_;
+
+        vector<ConnectionInboundHandler *> inbounds_;
+        vector<ConnectionOutboundHandler *> outbounds_;
 
         ConnectFunctor      onConnect_;
         DisconnectFunctor   onDisconnect_;

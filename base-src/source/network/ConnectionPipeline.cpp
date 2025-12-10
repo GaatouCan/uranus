@@ -12,6 +12,20 @@ namespace uranus::network {
     ConnectionPipeline::~ConnectionPipeline() {
     }
 
+    ConnectionPipeline &ConnectionPipeline::pushBack(ConnectionHandler *handler) {
+        // auto unique = unique_ptr<ConnectionHandler>(handler);
+        handlers_.emplace_back(handler);
+        if (handler->type() == ConnectionHandler::HandlerType::kInbound || handler->type() == ConnectionHandler::HandlerType::kDeluxe) {
+            inbounds_.emplace_back(dynamic_cast<ConnectionInboundHandler *>(handler));
+        }
+
+        if (handler->type() == ConnectionHandler::HandlerType::kOutbound || handler->type() == ConnectionHandler::HandlerType::kDeluxe) {
+            outbounds_.insert(outbounds_.begin(), dynamic_cast<ConnectionOutboundHandler *>(handler));
+        }
+
+        return *this;
+    }
+
     Connection &ConnectionPipeline::getConnection() const {
         return conn_;
     }
@@ -48,11 +62,9 @@ namespace uranus::network {
         if (onError_) {
             ConnectionPipelineContext ctx(*this, 0);
             std::invoke(onError_, ctx, ec);
-        } else {
-            if (auto [idx, handler] = getNextInboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                handler->onError(ctx, ec);
-            }
+        } else if (!inbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            inbounds_.front()->onError(ctx, ec);
         }
     }
 
@@ -84,11 +96,9 @@ namespace uranus::network {
         if (onReceive_) {
             ConnectionPipelineContext ctx(*this, 0);
             co_await std::invoke(onReceive_, ctx, std::move(msg));
-        } else {
-            if (auto [idx, handler] = getNextInboundHandler(); handler != nullptr) {
-                ConnectionPipelineContext ctx(*this, idx);
-                co_await handler->onReceive(ctx, std::move(msg));
-            }
+        } else if (!inbounds_.empty()) {
+            ConnectionPipelineContext ctx(*this, 1);
+            co_await inbounds_.front()->onReceive(ctx, std::move(msg));
         }
     }
 

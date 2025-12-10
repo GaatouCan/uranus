@@ -36,10 +36,11 @@ namespace uranus::network {
     }
 
     void ConnectionPipelineContext::fireError(const error_code ec) const {
-        if (auto [idx, handler] = getNextInboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            handler->onError(ctx, ec);
-        }
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onError(ctx, ec);
     }
 
     void ConnectionPipelineContext::fireException(exception &e) const {
@@ -57,10 +58,11 @@ namespace uranus::network {
     }
 
     awaitable<void> ConnectionPipelineContext::fireReceive(MessageHandle &&msg) const {
-        if (auto [idx, handler] = getNextInboundHandler(); handler) {
-            ConnectionPipelineContext ctx(pipeline_, idx);
-            co_await handler->onReceive(ctx, std::move(msg));
-        }
+        if (index_ >= pipeline_.inbounds_.size())
+            co_return;
+
+        ConnectionPipelineContext ctx(pipeline_, index_ + 1);
+        co_await pipeline_.inbounds_[index_]->onReceive(ctx, std::move(msg));
     }
 
     awaitable<void> ConnectionPipelineContext::fireBeforeSend(Message *msg) const {
