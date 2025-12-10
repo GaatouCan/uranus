@@ -10,6 +10,7 @@ namespace uranus::network {
     Connection::Connection(TcpSocket &&socket)
         : socket_(std::move(socket)),
           output_(socket_.get_executor(), 1024),
+          pipeline_(*this),
           watchdog_(socket_.get_executor()),
           expiration_(std::chrono::seconds(30)) {
 
@@ -34,6 +35,10 @@ namespace uranus::network {
 
     MessageCodec &Connection::codec() const {
         return *codec_;
+    }
+
+    ConnectionPipeline &Connection::getPipeline() {
+        return pipeline_;
     }
 
     void Connection::connect() {

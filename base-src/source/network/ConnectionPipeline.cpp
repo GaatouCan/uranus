@@ -12,8 +12,13 @@ namespace uranus::network {
     ConnectionPipeline::~ConnectionPipeline() {
     }
 
-    ConnectionPipeline &ConnectionPipeline::pushBack(ConnectionHandler *handler) {
-        handlers_.emplace_back(handler);
+    ConnectionPipeline &ConnectionPipeline::pushBack(ConnectionHandler *handler, const function<void(ConnectionHandler *)> &del) {
+        // Default deleter
+        if (del == nullptr) {
+            handlers_.emplace_back(handler, [](ConnectionHandler *h){ delete h; });
+        } else {
+            handlers_.emplace_back(handler, del);
+        }
 
         if (handler->type() == ConnectionHandler::HandlerType::kInbound ||
             handler->type() == ConnectionHandler::HandlerType::kDeluxe) {
@@ -34,6 +39,38 @@ namespace uranus::network {
 
     AttributeMap &ConnectionPipeline::attr() const {
         return conn_.attr();
+    }
+
+    void ConnectionPipeline::setConnectCallback(const ConnectFunctor &cb) {
+        onConnect_ = cb;
+    }
+
+    void ConnectionPipeline::setDisconnectCallback(const DisconnectFunctor &cb) {
+        onDisconnect_ = cb;
+    }
+
+    void ConnectionPipeline::setErrorCallback(const ErrorFunctor &cb) {
+        onError_ = cb;
+    }
+
+    void ConnectionPipeline::setExceptionCallback(const ExceptionFunctor &cb) {
+        onException_ = cb;
+    }
+
+    void ConnectionPipeline::setTimeoutCallback(const TimeoutFunctor &cb) {
+        onTimeout_ = cb;
+    }
+
+    void ConnectionPipeline::setReceiveCallback(const ReceiveFunctor &cb) {
+        onReceive_ = cb;
+    }
+
+    void ConnectionPipeline::setBeforeSendCallback(const BeforeSendFunctor &cb) {
+        beforeSend_ = cb;
+    }
+
+    void ConnectionPipeline::setAfterSendCallback(const AfterSendFunctor &cb) {
+        afterSend_ = cb;
     }
 
     void ConnectionPipeline::onConnect() {

@@ -32,6 +32,8 @@ namespace uranus::network {
 
         friend class ConnectionPipelineContext;
 
+        using HandlerUnique = unique_ptr<ConnectionHandler, function<void(ConnectionHandler *)>>;
+
         using ConnectFunctor        = function<void(ConnectionPipelineContext &)>;
         using DisconnectFunctor     = function<void(ConnectionPipelineContext &)>;
         using ErrorFunctor          = function<void(ConnectionPipelineContext &, error_code)>;
@@ -50,26 +52,36 @@ namespace uranus::network {
 
         DISABLE_COPY_MOVE(ConnectionPipeline)
 
-        ConnectionPipeline &pushBack(ConnectionHandler *handler);
+        ConnectionPipeline &pushBack(ConnectionHandler *handler, const function<void(ConnectionHandler *)> &del = nullptr);
 
         [[nodiscard]] Connection &getConnection() const;
         [[nodiscard]] AttributeMap &attr() const;
 
-        void onConnect();
-        void onDisconnect();
-        void onError(error_code ec);
-        void onException(exception &e);
-        void onTimeout();
+        void setConnectCallback     (const ConnectFunctor       &cb);
+        void setDisconnectCallback  (const DisconnectFunctor    &cb);
+        void setErrorCallback       (const ErrorFunctor         &cb);
+        void setExceptionCallback   (const ExceptionFunctor     &cb);
+        void setTimeoutCallback     (const TimeoutFunctor       &cb);
+        void setReceiveCallback     (const ReceiveFunctor       &cb);
+        void setBeforeSendCallback  (const BeforeSendFunctor    &cb);
+        void setAfterSendCallback   (const AfterSendFunctor     &cb);
 
-        awaitable<void> onReceive(MessageHandle &&msg);
-        awaitable<void> beforeSend(Message *msg);
-        awaitable<void> afterSend(MessageHandle &&msg);
+        void onConnect      ();
+        void onDisconnect   ();
+        void onError        (error_code ec);
+        void onException    (exception &e);
+        void onTimeout      ();
+
+        awaitable<void> onReceive   (MessageHandle  &&msg);
+
+        awaitable<void> beforeSend  (Message        *msg);
+        awaitable<void> afterSend   (MessageHandle  &&msg);
 
     private:
         Connection &conn_;
-        vector<unique_ptr<ConnectionHandler>> handlers_;
+        vector<HandlerUnique> handlers_;
 
-        vector<ConnectionInboundHandler *> inbounds_;
+        vector<ConnectionInboundHandler *>  inbounds_;
         vector<ConnectionOutboundHandler *> outbounds_;
 
         ConnectFunctor      onConnect_;
