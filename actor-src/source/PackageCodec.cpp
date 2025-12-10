@@ -1,4 +1,5 @@
 #include "PackageCodec.h"
+#include "Package.h"
 
 #include <asio/read.hpp>
 #include <asio/write.hpp>
@@ -25,7 +26,11 @@ namespace uranus::actor {
     PackageCodec::~PackageCodec() {
     }
 
-    awaitable<error_code> PackageCodec::encode(Package *pkg) {
+    awaitable<error_code> PackageCodec::encode(Message *msg) {
+        if (msg == nullptr)
+            co_return error_code{};
+
+        auto *pkg = dynamic_cast<Package *>(msg);
         if (pkg == nullptr)
             co_return error_code{};
 
@@ -73,7 +78,7 @@ namespace uranus::actor {
         co_return error_code{};
     }
 
-    awaitable<tuple<error_code, PackageHandle>> PackageCodec::decode() {
+    awaitable<tuple<error_code, MessageHandle>> PackageCodec::decode() {
         PackageHeader header;
 
         // Read header
