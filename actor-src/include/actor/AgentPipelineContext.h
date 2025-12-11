@@ -1,6 +1,7 @@
 #pragma once
 
-#include "actor.export.h"
+#include "Package.h"
+
 
 namespace uranus::actor {
 
@@ -17,6 +18,12 @@ namespace uranus::actor {
         ~AgentPipelineContext();
 
         [[nodiscard]] AgentPipeline &pipeline() const;
+
+        void fireInitial();
+        void fireTerminate();
+
+        void fireReceive(Package *pkg);
+        void fireSendPackage(PackageHandle &&pkg);
 
     private:
         AgentPipeline &pipeline_;

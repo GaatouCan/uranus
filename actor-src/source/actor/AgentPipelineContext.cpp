@@ -12,4 +12,16 @@ namespace uranus::actor {
     AgentPipeline &AgentPipelineContext::pipeline() const {
         return pipeline_;
     }
+
+    void AgentPipelineContext::fireInitial() {
+    }
+
+    void AgentPipelineContext::fireTerminate() {
+    }
+
+    void AgentPipelineContext::fireReceive(Package *pkg) {
+    }
+
+    void AgentPipelineContext::fireSendPackage(PackageHandle &&pkg) {
+    }
 }
