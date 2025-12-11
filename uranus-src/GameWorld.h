@@ -2,7 +2,7 @@
 
 #include <base/SingleIOContextPool.h>
 #include <base/ServerBootstrap.h>
-#include <base/ServerModule.h>
+#include <../actor-src/include/actor/ServerModule.h>
 
 #include <vector>
 #include <unordered_map>

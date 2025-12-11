@@ -1,30 +1,32 @@
 #pragma once
 
-#include "base.export.h"
-#include "noncopy.h"
+#include "actor.export.h"
+#include <base/noncopy.h>
 
 namespace uranus {
+    class GameWorld;
+}
 
-    class ServerBootstrap;
+namespace uranus::actor {
 
-    class BASE_API ServerModule {
+    class ACTOR_API ServerModule {
 
     public:
         ServerModule() = delete;
 
-        explicit ServerModule(ServerBootstrap &server);
+        explicit ServerModule(GameWorld &world);
         virtual ~ServerModule();
 
         DISABLE_COPY_MOVE(ServerModule)
 
         virtual const char *getModuleName() = 0;
 
-        [[nodiscard]] ServerBootstrap &getServer() const;
+        [[nodiscard]] GameWorld &getWorld() const;
 
         virtual void start() = 0;
         virtual void stop() = 0;
 
     private:
-        ServerBootstrap &server_;
+        GameWorld &world_;
     };
 }

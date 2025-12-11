@@ -2,7 +2,7 @@
 
 #include "GatewayHandler.h"
 
-#include <base/ServerModule.h>
+#include <../../actor-src/include/actor/ServerModule.h>
 #include <base/MultiIOContextPool.h>
 #include <actor/PackageCodec.h>
 #include <unordered_map>
