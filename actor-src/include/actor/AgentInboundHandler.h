@@ -1,8 +1,11 @@
 #pragma once
 
 #include "AgentHandler.h"
+#include "Package.h"
 
 namespace uranus::actor {
+
+    class AgentPipelineContext;
 
     class ACTOR_API AgentInboundHandler : virtual public AgentHandler {
 
@@ -11,5 +14,10 @@ namespace uranus::actor {
         ~AgentInboundHandler() override;
 
         [[nodiscard]] HandlerType type() const override;
+
+        virtual void onInitial(AgentPipelineContext &ctx);
+        virtual void onTerminate(AgentPipelineContext &ctx);
+
+        virtual void onReceive(AgentPipelineContext &ctx, Package *pkg);
     };
 }
