@@ -13,11 +13,18 @@ namespace uranus::actor {
     }
 
     void AgentInboundHandler::onInitial(AgentPipelineContext &ctx) {
+        ctx.fireInitial();
     }
 
     void AgentInboundHandler::onTerminate(AgentPipelineContext &ctx) {
+        ctx.fireTerminate();
     }
 
-    void AgentInboundHandler::onReceive(AgentPipelineContext &ctx, Package *pkg) {
+    void AgentInboundHandler::onReceive(
+        AgentPipelineContext &ctx,
+        const int32_t ty,
+        const uint32_t src,
+        Package *pkg) {
+        ctx.fireReceive(ty, src, pkg);
     }
 }

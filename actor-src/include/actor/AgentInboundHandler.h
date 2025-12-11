@@ -18,6 +18,6 @@ namespace uranus::actor {
         virtual void onInitial(AgentPipelineContext &ctx);
         virtual void onTerminate(AgentPipelineContext &ctx);
 
-        virtual void onReceive(AgentPipelineContext &ctx, Package *pkg);
+        virtual void onReceive(AgentPipelineContext &ctx, int32_t ty, uint32_t src, Package *pkg);
     };
 }

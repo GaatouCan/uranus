@@ -79,11 +79,11 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(error_code{}, std::move(envelope));
     }
 
-    void ActorAgent::send(int32_t ty, uint32_t target, PackageHandle &&pkg) {
+    void ActorAgent::send(const int32_t ty, const uint32_t target, PackageHandle &&pkg) {
         if (pkg == nullptr)
             return;
 
-        // pipeline_.onSendPackage(std::move(pkg));
+        pipeline_.onPost(target, Envelope(ty, id_, std::move(pkg)));
     }
 
     void ActorAgent::send(const int32_t ty, const uint32_t target, Package *pkg) {
@@ -106,7 +106,7 @@ namespace uranus::actor {
                     continue;
                 }
 
-                pipeline_.onReceive(envelope.package.get());
+                pipeline_.onReceive(envelope.type, envelope.source, envelope.package.get());
                 actor_->onMessage(std::move(envelope));
             }
 

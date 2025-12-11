@@ -15,6 +15,6 @@ namespace uranus::actor {
 
         [[nodiscard]] HandlerType type() const override;
 
-        virtual void onSendPackage(AgentPipelineContext &ctx, PackageHandle &&pkg) = 0;
+        virtual void onPost(AgentPipelineContext &ctx, uint32_t target, Envelope &&envelope) = 0;
     };
 }

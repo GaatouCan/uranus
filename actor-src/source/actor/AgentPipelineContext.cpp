@@ -32,19 +32,19 @@ namespace uranus::actor {
         pipeline_.inbounds_[index_]->onTerminate(ctx);
     }
 
-    void AgentPipelineContext::fireReceive(Package *pkg) const {
+    void AgentPipelineContext::fireReceive(const int32_t ty, const uint32_t src, Package *pkg) const {
         if (index_ >= pipeline_.inbounds_.size())
             return;
 
         AgentPipelineContext ctx(pipeline_, index_ + 1);
-        pipeline_.inbounds_[index_]->onReceive(ctx, pkg);
+        pipeline_.inbounds_[index_]->onReceive(ctx, ty, src, pkg);
     }
 
-    void AgentPipelineContext::fireSendPackage(PackageHandle &&pkg) const {
+    void AgentPipelineContext::firePost(const uint32_t target, Envelope &&envelope) const {
         if (index_ >= pipeline_.outbounds_.size())
             return;
 
         AgentPipelineContext ctx(pipeline_, index_ + 1);
-        pipeline_.outbounds_[index_]->onSendPackage(ctx, std::move(pkg));
+        pipeline_.outbounds_[index_]->onPost(ctx, target, std::move(envelope));
     }
 }

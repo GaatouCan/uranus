@@ -37,8 +37,8 @@ namespace uranus::actor {
         void onInitial();
         void onTerminate();
 
-        void onReceive(Package *pkg);
-        void onSendPackage(PackageHandle &&pkg);
+        void onReceive(int32_t ty, uint32_t src, Package *pkg);
+        void onPost(uint32_t target, Envelope &&envelope);
 
     private:
         ActorAgent &agent_;

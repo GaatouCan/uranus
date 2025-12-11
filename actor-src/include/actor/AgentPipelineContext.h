@@ -22,8 +22,8 @@ namespace uranus::actor {
         void fireInitial() const;
         void fireTerminate() const;
 
-        void fireReceive(Package *pkg) const;
-        void fireSendPackage(PackageHandle &&pkg) const;
+        void fireReceive(int32_t ty, uint32_t src, Package *pkg) const;
+        void firePost(uint32_t target, Envelope &&envelope) const;
 
     private:
         AgentPipeline &pipeline_;

@@ -48,17 +48,17 @@ namespace uranus::actor {
         }
     }
 
-    void AgentPipeline::onReceive(Package *pkg) {
+    void AgentPipeline::onReceive(int32_t ty, uint32_t src, Package *pkg) {
         if (!inbounds_.empty()) {
             AgentPipelineContext ctx(*this, 1);
-            inbounds_.front()->onReceive(ctx, pkg);
+            inbounds_.front()->onReceive(ctx, ty, src, pkg);
         }
     }
 
-    void AgentPipeline::onSendPackage(PackageHandle &&pkg) {
+    void AgentPipeline::onPost(const uint32_t target, Envelope &&envelope) {
         if (!outbounds_.empty()) {
             AgentPipelineContext ctx(*this, 1);
-            outbounds_.front()->onSendPackage(ctx, std::move(pkg));
+            outbounds_.front()->onPost(ctx, target, std::move(envelope));
         }
     }
 }
