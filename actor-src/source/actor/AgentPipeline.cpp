@@ -1,4 +1,5 @@
 #include "AgentPipeline.h"
+#include "AgentPipelineContext.h"
 #include "AgentInboundHandler.h"
 #include "AgentOutboundHandler.h"
 
@@ -31,5 +32,33 @@ namespace uranus::actor {
         }
 
         return *this;
+    }
+
+    void AgentPipeline::onInitial() {
+        if (!inbounds_.empty()) {
+            AgentPipelineContext ctx(*this, 1);
+            inbounds_.front()->onInitial(ctx);
+        }
+    }
+
+    void AgentPipeline::onTerminate() {
+        if (!inbounds_.empty()) {
+            AgentPipelineContext ctx(*this, 1);
+            inbounds_.front()->onTerminate(ctx);
+        }
+    }
+
+    void AgentPipeline::onReceive(Package *pkg) {
+        if (!inbounds_.empty()) {
+            AgentPipelineContext ctx(*this, 1);
+            inbounds_.front()->onReceive(ctx, pkg);
+        }
+    }
+
+    void AgentPipeline::onSendPackage(PackageHandle &&pkg) {
+        if (!outbounds_.empty()) {
+            AgentPipelineContext ctx(*this, 1);
+            outbounds_.front()->onSendPackage(ctx, std::move(pkg));
+        }
     }
 }

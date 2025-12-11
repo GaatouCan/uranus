@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actor.export.h"
+#include "Package.h"
 
 #include <base/noncopy.h>
 #include <vector>
@@ -33,6 +33,12 @@ namespace uranus::actor {
         [[nodiscard]] ActorAgent &getAgent() const;
 
         AgentPipeline &pushBack(AgentHandler *handler);
+
+        void onInitial();
+        void onTerminate();
+
+        void onReceive(Package *pkg);
+        void onSendPackage(PackageHandle &&pkg);
 
     private:
         ActorAgent &agent_;
