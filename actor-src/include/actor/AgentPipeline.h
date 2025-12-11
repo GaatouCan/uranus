@@ -15,6 +15,8 @@ namespace uranus::actor {
     class ActorAgent;
     class AgentPipelineContext;
     class AgentHandler;
+    class AgentInboundHandler;
+    class AgentOutboundHandler;
 
     class ACTOR_API AgentPipeline final {
 
@@ -30,10 +32,15 @@ namespace uranus::actor {
 
         [[nodiscard]] ActorAgent &getAgent() const;
 
+        AgentPipeline &pushBack(AgentHandler *handler);
+
     private:
         ActorAgent &agent_;
 
         vector<unique_ptr<AgentHandler>> handlers_;
+
+        vector<AgentInboundHandler *> inbounds_;
+        vector<AgentOutboundHandler *> outbounds_;
     };
 
 }

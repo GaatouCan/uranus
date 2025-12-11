@@ -16,7 +16,6 @@ namespace uranus::actor {
         AgentHandler();
         virtual ~AgentHandler();
 
-
         [[nodiscard]] virtual HandlerType type() const = 0;
     };
 }

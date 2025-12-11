@@ -13,6 +13,9 @@ namespace uranus::network {
     }
 
     ConnectionPipeline &ConnectionPipeline::pushBack(ConnectionHandler *handler, const function<void(ConnectionHandler *)> &del) {
+        if (handler == nullptr)
+            return *this;
+
         // Default deleter
         if (del == nullptr) {
             handlers_.emplace_back(handler, [](ConnectionHandler *h){ delete h; });
