@@ -51,4 +51,5 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 add_subdirectory(base-src)
 add_subdirectory(actor-src)
+add_subdirectory(http-src)
 add_subdirectory(uranus-src)
