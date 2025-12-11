@@ -1,4 +1,7 @@
 #include "AgentPipelineContext.h"
+#include "AgentPipeline.h"
+#include "AgentInboundHandler.h"
+#include "AgentOutboundHandler.h"
 
 namespace uranus::actor {
     AgentPipelineContext::AgentPipelineContext(AgentPipeline &pipeline, const size_t idx)
@@ -13,15 +16,35 @@ namespace uranus::actor {
         return pipeline_;
     }
 
-    void AgentPipelineContext::fireInitial() {
+    void AgentPipelineContext::fireInitial() const {
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        AgentPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onInitial(ctx);
     }
 
-    void AgentPipelineContext::fireTerminate() {
+    void AgentPipelineContext::fireTerminate() const {
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        AgentPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onTerminate(ctx);
     }
 
-    void AgentPipelineContext::fireReceive(Package *pkg) {
+    void AgentPipelineContext::fireReceive(Package *pkg) const {
+        if (index_ >= pipeline_.inbounds_.size())
+            return;
+
+        AgentPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.inbounds_[index_]->onReceive(ctx, pkg);
     }
 
-    void AgentPipelineContext::fireSendPackage(PackageHandle &&pkg) {
+    void AgentPipelineContext::fireSendPackage(PackageHandle &&pkg) const {
+        if (index_ >= pipeline_.outbounds_.size())
+            return;
+
+        AgentPipelineContext ctx(pipeline_, index_ + 1);
+        pipeline_.outbounds_[index_]->onSendPackage(ctx, std::move(pkg));
     }
 }

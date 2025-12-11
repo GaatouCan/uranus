@@ -19,11 +19,11 @@ namespace uranus::actor {
 
         [[nodiscard]] AgentPipeline &pipeline() const;
 
-        void fireInitial();
-        void fireTerminate();
+        void fireInitial() const;
+        void fireTerminate() const;
 
-        void fireReceive(Package *pkg);
-        void fireSendPackage(PackageHandle &&pkg);
+        void fireReceive(Package *pkg) const;
+        void fireSendPackage(PackageHandle &&pkg) const;
 
     private:
         AgentPipeline &pipeline_;
