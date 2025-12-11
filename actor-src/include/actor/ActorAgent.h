@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseActor.h"
-#include "Package.h"
+#include "AgentPipeline.h"
 
 #include <base/types.h>
 #include <base/AttributeMap.h>
@@ -21,13 +21,13 @@ namespace uranus::actor {
     using std::make_shared;
     using std::enable_shared_from_this;
 
-    class ACTOR_API ActorAgent {
+    class ACTOR_API ActorAgent final : public enable_shared_from_this<ActorAgent> {
 
     public:
         ActorAgent() = delete;
 
         explicit ActorAgent(asio::io_context &ctx);
-        virtual ~ActorAgent();
+        ~ActorAgent();
 
         DISABLE_COPY_MOVE(ActorAgent)
 
@@ -43,13 +43,16 @@ namespace uranus::actor {
 
         AttributeMap &attr();
 
-        virtual void run() = 0;
-        virtual void terminate() = 0;
+        void run();
+        void terminate();
 
         void pushEnvelope(Envelope &&envelope);
 
-        virtual void sendMessage(int32_t ty, uint32_t target, MessageHandle &&msg) = 0;
-        virtual void sendMessage(int32_t ty, uint32_t target, Message *msg) = 0;
+        void send(int32_t ty, uint32_t target, PackageHandle &&pkg);
+        void send(int32_t ty, uint32_t target, Package *pkg);
+
+    private:
+        awaitable<void> process();
 
     protected:
         asio::io_context &ctx_;
@@ -57,6 +60,7 @@ namespace uranus::actor {
 
         ActorHandle actor_;
         AttributeMap attr_;
+        AgentPipeline pipeline_;
 
         uint32_t id_;
     };

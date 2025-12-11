@@ -46,21 +46,21 @@ namespace uranus::actor {
         : type(0),
           source(0),
           session(0),
-          message(nullptr) {
+          package(nullptr) {
     }
 
-    Envelope::Envelope(const int32_t ty, const uint32_t src, MessageHandle &&msg)
+    Envelope::Envelope(const int32_t ty, const uint32_t src, PackageHandle &&pkg)
         : type(ty),
           source(src),
           session(0),
-          message(std::move(msg)) {
+          package(std::move(pkg)) {
     }
 
-    Envelope::Envelope(const int32_t ty, const uint32_t src, const uint32_t sess, MessageHandle &&msg)
+    Envelope::Envelope(const int32_t ty, const uint32_t src, const uint32_t sess, PackageHandle &&pkg)
         : type(ty),
           source(src),
           session(sess),
-          message(std::move(msg)) {
+          package(std::move(pkg)) {
     }
 
     Envelope::Envelope(Envelope &&rhs) noexcept {
@@ -73,7 +73,7 @@ namespace uranus::actor {
             rhs.source = 0;
             rhs.session = 0;
 
-            message = std::move(rhs.message);
+            package = std::move(rhs.package);
         }
     }
 
@@ -87,7 +87,7 @@ namespace uranus::actor {
             rhs.source = 0;
             rhs.session = 0;
 
-            message = std::move(rhs.message);
+            package = std::move(rhs.package);
         }
         return *this;
     }

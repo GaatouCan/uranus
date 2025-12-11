@@ -81,12 +81,12 @@ namespace uranus::actor {
         uint32_t source;
 
         uint32_t session;
-        MessageHandle message;
+        PackageHandle package;
 
         Envelope();
 
-        Envelope(int32_t ty, uint32_t src, MessageHandle &&msg);
-        Envelope(int32_t ty, uint32_t src, uint32_t sess, MessageHandle &&msg);
+        Envelope(int32_t ty, uint32_t src, PackageHandle &&pkg);
+        Envelope(int32_t ty, uint32_t src, uint32_t sess, PackageHandle &&pkg);
 
         Envelope(const Envelope &) = delete;
         Envelope &operator=(const Envelope &) = delete;
