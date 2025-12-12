@@ -6,6 +6,8 @@
 #include "base/noncopy.h"
 
 #include <string>
+#include <unordered_map>
+#include <shared_mutex>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 #include <tuple>
@@ -17,6 +19,10 @@ namespace uranus::network {
     using asio::awaitable;
 
     using std::tuple;
+    using std::unordered_map;
+    using std::shared_mutex;
+    using std::unique_lock;
+    using std::shared_lock;
     using std::make_tuple;
     using std::error_code;
     using std::shared_ptr;
@@ -35,7 +41,7 @@ namespace uranus::network {
 
         DISABLE_COPY_MOVE(ServerBootstrap)
 
-        virtual shared_ptr<Connection> find() = 0;
+        virtual shared_ptr<Connection> find(const std::string &key) = 0;
         virtual void remove(const std::string &key) = 0;
     };
 
@@ -144,10 +150,11 @@ namespace uranus::network {
     class ConnectionImpl : public Connection {
 
     public:
+        using CodecType = Codec;
         using MessageType = Codec::MessageType;
         using MessageHandleType = Codec::MessageHandleType;
 
-        explicit ConnectionImpl(TcpSocket &&socket);
+        ConnectionImpl(ServerBootstrap &server, TcpSocket &&socket);
         ~ConnectionImpl() override;
 
         void connect() override;
@@ -176,9 +183,33 @@ namespace uranus::network {
         ConcurrentChannel<MessageHandleType> output_;
     };
 
+    template<class T>
+    concept kConnectionType = requires { typename T::CodecType; }
+        && kCodecType<typename T::CodecType>
+        && std::derived_from<T, ConnectionImpl<typename T::CodecType>>;
+
+
+
+    template<kConnectionType T>
+    class ServerBootstrapImpl : public ServerBootstrap {
+
+    public:
+        using Pointer = shared_ptr<T>;
+
+        ServerBootstrapImpl();
+        ~ServerBootstrapImpl() override;
+
+        shared_ptr<Connection> find(const std::string &key) override;
+        void remove(const std::string &key) override;
+
+    private:
+        mutable shared_mutex mutex_;
+        unordered_map<std::string, Pointer> connMap_;
+    };
+
     template<kCodecType Codec>
-    ConnectionImpl<Codec>::ConnectionImpl(TcpSocket &&socket)
-        : Connection(std::move(socket)),
+    ConnectionImpl<Codec>::ConnectionImpl(ServerBootstrap &server, TcpSocket &&socket)
+        : Connection(server, std::move(socket)),
           output_(socket_.get_executor(), 1024) {
     }
 
@@ -303,5 +334,27 @@ namespace uranus::network {
         } catch (std::exception &e) {
 
         }
+    }
+
+    template<kConnectionType T>
+    ServerBootstrapImpl<T>::ServerBootstrapImpl() {
+    }
+
+    template<kConnectionType T>
+    ServerBootstrapImpl<T>::~ServerBootstrapImpl() {
+        connMap_.clear();
+    }
+
+    template<kConnectionType T>
+    shared_ptr<Connection> ServerBootstrapImpl<T>::find(const std::string &key) {
+        shared_lock lock(mutex_);
+        const auto it = connMap_.find(key);
+        return it != connMap_.end() ? it->second : nullptr;
+    }
+
+    template<kConnectionType T>
+    void ServerBootstrapImpl<T>::remove(const std::string &key) {
+        unique_lock lock(mutex_);
+        connMap_.erase(key);
     }
 }
