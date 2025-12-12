@@ -1,16 +1,17 @@
 #pragma once
 
-#include "base/AttributeMap.h"
-#include "base/Message.h"
 #include "base/types.h"
-#include "base/noncopy.h"
+#include "base/Message.h"
+#include "base/AttributeMap.h"
+#include "base/MultiIOContextPool.h"
 
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <shared_mutex>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
-#include <tuple>
+
 
 namespace uranus::network {
 
@@ -43,6 +44,24 @@ namespace uranus::network {
 
         virtual shared_ptr<Connection> find(const std::string &key) = 0;
         virtual void remove(const std::string &key) = 0;
+
+        virtual void run(int num, uint16_t port);
+        virtual void terminate();
+
+    protected:
+        virtual awaitable<void> waitForClient(uint16_t port) = 0;
+
+    protected:
+        asio::io_context ctx_;
+        asio::executor_work_guard<asio::io_context::executor_type> guard_;
+
+#ifdef URANUS_SSL
+        asio::ssl::context sslContext_;
+#endif
+
+        TcpAcceptor acceptor_;
+
+        MultiIOContextPool pool_;
     };
 
     class BASE_API Connection : public enable_shared_from_this<Connection> {
@@ -188,8 +207,6 @@ namespace uranus::network {
         && kCodecType<typename T::CodecType>
         && std::derived_from<T, ConnectionImpl<typename T::CodecType>>;
 
-
-
     template<kConnectionType T>
     class ServerBootstrapImpl : public ServerBootstrap {
 
@@ -201,6 +218,9 @@ namespace uranus::network {
 
         shared_ptr<Connection> find(const std::string &key) override;
         void remove(const std::string &key) override;
+
+    protected:
+        awaitable<void> waitForClient(uint16_t port) override;
 
     private:
         mutable shared_mutex mutex_;
@@ -356,5 +376,31 @@ namespace uranus::network {
     void ServerBootstrapImpl<T>::remove(const std::string &key) {
         unique_lock lock(mutex_);
         connMap_.erase(key);
+    }
+
+    template<kConnectionType T>
+    awaitable<void> ServerBootstrapImpl<T>::waitForClient(uint16_t port) {
+        try {
+            acceptor_.open(asio::ip::tcp::v4());
+            acceptor_.bind({asio::ip::tcp::v4(), port});
+            acceptor_.listen();
+
+            while (!ctx_.stopped()) {
+                auto [ec, socket] = co_await acceptor_.async_accept(pool_.getIOContext());
+                if (ec) {
+                    // TODO
+                    continue;
+                }
+
+                if (!socket.is_open()) {
+                    // TODO
+                    continue;
+                }
+
+                auto conn = make_shared<T>(*this, TcpSocket(std::move(socket), sslContext_));
+            }
+        } catch (std::exception &e) {
+
+        }
     }
 }
