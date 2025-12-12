@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/AttributeMap.h"
-#include "Message.h"
+#include "base/Message.h"
 #include "base/types.h"
 #include "base/noncopy.h"
 
@@ -10,8 +10,8 @@
 #include <asio/detached.hpp>
 #include <tuple>
 
-
 namespace uranus::network {
+
     using asio::co_spawn;
     using asio::detached;
     using asio::awaitable;
@@ -86,8 +86,8 @@ namespace uranus::network {
 
         DISABLE_COPY_MOVE(MessageCodec)
 
-        [[nodiscard]] Connection &getConnection();
-        [[nodiscard]] TcpSocket &getSocket();
+        [[nodiscard]] Connection &getConnection() const;
+        [[nodiscard]] TcpSocket &getSocket() const;
 
         virtual awaitable<tuple<error_code, MessageHandleType>> decode() = 0;
         virtual awaitable<error_code> encode(MessageType *msg) = 0;
@@ -109,13 +109,13 @@ namespace uranus::network {
 
     template<class T>
     requires std::is_base_of_v<Message, T>
-    Connection &MessageCodec<T>::getConnection() {
+    Connection &MessageCodec<T>::getConnection() const {
         return conn_;
     }
 
     template<class T>
     requires std::is_base_of_v<Message, T>
-    TcpSocket &MessageCodec<T>::getSocket() {
+    TcpSocket &MessageCodec<T>::getSocket() const {
         return conn_.getSocket();
     }
 
@@ -141,6 +141,9 @@ namespace uranus::network {
 
         void sendMessage(MessageHandle &&msg) override;
         void sendMessage(MessageHandle *msg) override;
+
+        void send(MessageHandleType &&msg);
+        void send(MessageType *msg);
 
     protected:
         awaitable<void> readMessage() override;
@@ -186,10 +189,51 @@ namespace uranus::network {
 
     template<kCodecType Codec>
     void ConnectionImpl<Codec>::sendMessage(MessageHandle &&msg) {
+        if (msg == nullptr)
+            return;
+
+        auto del = msg.get_deleter();
+        auto *ptr = msg.get();
+
+        if (auto *temp = dynamic_cast<MessageType *>(ptr)) {
+            MessageHandleType handle{ temp, del };
+            this->send(std::move(handle));
+            return;
+        }
+
+        del(ptr);
     }
 
     template<kCodecType Codec>
     void ConnectionImpl<Codec>::sendMessage(MessageHandle *msg) {
+        if (msg == nullptr)
+            return;
+
+        if (auto *temp = dynamic_cast<MessageType *>(msg)) {
+            this->send(temp);
+            return;
+        }
+
+        delete msg;
+    }
+
+    template<kCodecType Codec>
+    void ConnectionImpl<Codec>::send(MessageHandleType &&msg) {
+        if (msg == nullptr)
+            return;
+
+        if (isConnected() && output_.is_open()) {
+            output_.try_send_via_dispatch(error_code{}, std::move(msg));
+        }
+    }
+
+    template<kCodecType Codec>
+    void ConnectionImpl<Codec>::send(MessageType *msg) {
+        if (msg == nullptr)
+            return;
+
+        MessageHandleType handle{msg, Message::Deleter::make()};
+        this->send(std::move(handle));
     }
 
     template<kCodecType Codec>
@@ -238,7 +282,7 @@ namespace uranus::network {
                     disconnect();
                 }
 
-                this.afterWrite(std::move(msg));
+                this->afterWrite(std::move(msg));
             }
         } catch (std::exception &e) {
 
