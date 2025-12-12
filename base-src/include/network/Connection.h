@@ -207,11 +207,13 @@ namespace uranus::network {
         && kCodecType<typename T::CodecType>
         && std::derived_from<T, ConnectionImpl<typename T::CodecType>>;
 
+
     template<kConnectionType T>
     class ServerBootstrapImpl : public ServerBootstrap {
 
     public:
         using Pointer = shared_ptr<T>;
+        using InitialFunc = std::function<void(const Pointer &)>;
 
         ServerBootstrapImpl();
         ~ServerBootstrapImpl() override;
@@ -219,12 +221,16 @@ namespace uranus::network {
         shared_ptr<Connection> find(const std::string &key) override;
         void remove(const std::string &key) override;
 
+        void onInitial(const InitialFunc &cb);
+
     protected:
         awaitable<void> waitForClient(uint16_t port) override;
 
     private:
         mutable shared_mutex mutex_;
         unordered_map<std::string, Pointer> connMap_;
+
+        InitialFunc initializer_;
     };
 
     template<kCodecType Codec>
@@ -379,6 +385,11 @@ namespace uranus::network {
     }
 
     template<kConnectionType T>
+    void ServerBootstrapImpl<T>::onInitial(const InitialFunc &cb) {
+        initializer_ = cb;
+    }
+
+    template<kConnectionType T>
     awaitable<void> ServerBootstrapImpl<T>::waitForClient(uint16_t port) {
         try {
             acceptor_.open(asio::ip::tcp::v4());
@@ -398,6 +409,15 @@ namespace uranus::network {
                 }
 
                 auto conn = make_shared<T>(*this, TcpSocket(std::move(socket), sslContext_));
+
+                if (initializer_) {
+                    std::invoke(initializer_, conn);
+                }
+
+                {
+                    unique_lock lock(mutex_);
+                    connMap_.insert_or_assign(conn->getKey(), conn);
+                }
             }
         } catch (std::exception &e) {
 
