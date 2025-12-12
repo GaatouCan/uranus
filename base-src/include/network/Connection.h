@@ -25,16 +25,31 @@ namespace uranus::network {
     using std::make_unique;
     using std::enable_shared_from_this;
 
+    class Connection;
+
+    class BASE_API ServerBootstrap {
+
+    public:
+        ServerBootstrap();
+        virtual ~ServerBootstrap();
+
+        DISABLE_COPY_MOVE(ServerBootstrap)
+
+        virtual shared_ptr<Connection> find() = 0;
+        virtual void remove(const std::string &key) = 0;
+    };
+
     class BASE_API Connection : public enable_shared_from_this<Connection> {
 
     public:
         Connection() = delete;
 
-        explicit Connection(TcpSocket &&socket);
+        Connection(ServerBootstrap &server, TcpSocket &&socket);
         virtual ~Connection();
 
         DISABLE_COPY_MOVE(Connection)
 
+        [[nodiscard]] ServerBootstrap &getServerBootstrap() const;
         TcpSocket &getSocket();
 
         virtual void connect();
@@ -60,6 +75,7 @@ namespace uranus::network {
         awaitable<void> watchdog();
 
     protected:
+        ServerBootstrap &server_;
         TcpSocket socket_;
 
         std::string key_;
@@ -137,7 +153,7 @@ namespace uranus::network {
         void connect() override;
         void disconnect() override;
 
-        Codec &getCodec();
+        Codec &codec();
 
         void sendMessage(MessageHandle &&msg) override;
         void sendMessage(MessageHandle *msg) override;
@@ -183,7 +199,7 @@ namespace uranus::network {
     }
 
     template<kCodecType Codec>
-    Codec &ConnectionImpl<Codec>::getCodec() {
+    Codec &ConnectionImpl<Codec>::codec() {
         return codec_;
     }
 

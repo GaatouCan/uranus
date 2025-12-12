@@ -26,11 +26,7 @@ namespace uranus::actor {
     PackageCodec::~PackageCodec() {
     }
 
-    awaitable<error_code> PackageCodec::encode(Message *msg) {
-        if (msg == nullptr)
-            co_return error_code{};
-
-        auto *pkg = dynamic_cast<Package *>(msg);
+    awaitable<error_code> PackageCodec::encode(Package *pkg) {
         if (pkg == nullptr)
             co_return error_code{};
 
@@ -78,7 +74,7 @@ namespace uranus::actor {
         co_return error_code{};
     }
 
-    awaitable<tuple<error_code, MessageHandle>> PackageCodec::decode() {
+    awaitable<tuple<error_code, PackageHandle>> PackageCodec::decode() {
         PackageHeader header;
 
         // Read header

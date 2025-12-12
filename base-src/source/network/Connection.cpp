@@ -7,8 +7,15 @@
 using namespace asio::experimental::awaitable_operators;
 
 namespace uranus::network {
-    Connection::Connection(TcpSocket &&socket)
-        : socket_(std::move(socket)),
+    ServerBootstrap::ServerBootstrap() {
+    }
+
+    ServerBootstrap::~ServerBootstrap() {
+    }
+
+    Connection::Connection(ServerBootstrap &server, TcpSocket &&socket)
+        : server_(server),
+          socket_(std::move(socket)),
           watchdog_(socket_.get_executor()),
           expiration_(std::chrono::seconds(30)) {
 
@@ -25,6 +32,10 @@ namespace uranus::network {
 
     Connection::~Connection() {
         disconnect();
+    }
+
+    ServerBootstrap &Connection::getServerBootstrap() const {
+        return server_;
     }
 
     TcpSocket &Connection::getSocket() {
@@ -53,6 +64,8 @@ namespace uranus::network {
     void Connection::disconnect() {
         if (!isConnected())
             return;
+
+        server_.remove(key_);
 
 #ifdef URANUS_SSL
         socket_.next_layer().close();
