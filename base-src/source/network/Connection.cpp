@@ -9,8 +9,6 @@ using namespace asio::experimental::awaitable_operators;
 namespace uranus::network {
     Connection::Connection(TcpSocket &&socket)
         : socket_(std::move(socket)),
-          output_(socket_.get_executor(), 1024),
-          pipeline_(*this),
           watchdog_(socket_.get_executor()),
           expiration_(std::chrono::seconds(30)) {
 
@@ -33,14 +31,6 @@ namespace uranus::network {
         return socket_;
     }
 
-    MessageCodec &Connection::codec() const {
-        return *codec_;
-    }
-
-    ConnectionPipeline &Connection::getPipeline() {
-        return pipeline_;
-    }
-
     void Connection::connect() {
         received_ = std::chrono::steady_clock::now();
 
@@ -51,8 +41,6 @@ namespace uranus::network {
                 co_return;
             }
 #endif
-
-            self->pipeline_.onConnect();
 
             co_await (
                 self->readMessage() &&
@@ -72,12 +60,7 @@ namespace uranus::network {
         socket_.close();
 #endif
 
-        output_.cancel();
-        output_.close();
-
         watchdog_.cancel();
-
-        pipeline_.onDisconnect();
     }
 
     bool Connection::isConnected() const {
@@ -100,78 +83,11 @@ namespace uranus::network {
         expiration_ = std::chrono::seconds(sec);
     }
 
-    void Connection::send(MessageHandle &&msg) {
-        if (msg == nullptr)
-            return;
-
-        if (!isConnected())
-            return;
-
-        output_.try_send_via_dispatch(error_code{}, std::move(msg));
-    }
-
-    void Connection::send(Message *msg) {
-        send(MessageHandle{msg, Message::Deleter::make()});
-    }
 
     AttributeMap &Connection::attr() {
         return attr_;
     }
 
-    awaitable<void> Connection::readMessage() {
-        try {
-            while (isConnected()) {
-                auto [ec, msg] = co_await codec_->decode();
-
-                if (ec) {
-                    pipeline_.onError(ec);
-                    disconnect();
-                    break;
-                }
-
-                received_ = std::chrono::steady_clock::now();
-                co_await pipeline_.onReceive(std::move(msg));
-            }
-        } catch (std::exception &e) {
-            pipeline_.onException(e);
-            disconnect();
-        }
-    }
-
-    awaitable<void> Connection::writeMessage() {
-        try {
-            while (isConnected() && output_.is_open()) {
-                auto [ec, msg] = co_await output_.async_receive();
-
-                if (ec == asio::error::operation_aborted ||
-                    ec == asio::experimental::error::channel_closed) {
-                    break;
-                }
-
-                if (ec) {
-                    pipeline_.onError(ec);
-                    disconnect();
-                    break;
-                }
-
-                if (msg == nullptr)
-                    continue;
-
-                co_await pipeline_.beforeSend(msg.get());
-
-                if (const auto writeEc = co_await codec_->encode(msg.get())) {
-                    pipeline_.onError(writeEc);
-                    disconnect();
-                    break;
-                }
-
-                co_await pipeline_.afterSend(std::move(msg));
-            }
-        } catch (std::exception &e) {
-            pipeline_.onException(e);
-            disconnect();
-        }
-    }
 
     awaitable<void> Connection::watchdog() {
         if (expiration_ <= SteadyDuration::zero())
@@ -185,13 +101,13 @@ namespace uranus::network {
                     if (ec == asio::error::operation_aborted) {
                         // TODO
                     } else {
-                        pipeline_.onError(ec);
+                        // pipeline_.onError(ec);
                     }
 
                     co_return;
                 }
 
-                pipeline_.onTimeout();
+                // pipeline_.onTimeout();
 
                 if (isConnected()) {
                     disconnect();
@@ -199,7 +115,7 @@ namespace uranus::network {
             } while (received_ + expiration_ > std::chrono::steady_clock::now());
 
         } catch (std::exception &e) {
-            pipeline_.onException(e);
+            // pipeline_.onException(e);
             disconnect();
         }
     }
