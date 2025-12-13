@@ -63,7 +63,7 @@ namespace uranus::network {
     }
 
     Connection::~Connection() {
-        disconnect();
+
     }
 
     ServerBootstrap &Connection::getServerBootstrap() const {
@@ -152,7 +152,7 @@ namespace uranus::network {
                     co_return;
                 }
 
-                // pipeline_.onTimeout();
+                this->onTimeout();
 
                 if (isConnected()) {
                     disconnect();

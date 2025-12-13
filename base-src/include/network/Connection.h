@@ -95,6 +95,8 @@ namespace uranus::network {
         virtual awaitable<void> readMessage() = 0;
         virtual awaitable<void> writeMessage() = 0;
 
+        virtual void onTimeout() = 0;
+
     private:
         awaitable<void> watchdog();
 
@@ -193,8 +195,6 @@ namespace uranus::network {
         virtual void onReadMessage(MessageHandleType &&msg) = 0;
         virtual void beforeWrite(MessageType *msg) = 0;
         virtual void afterWrite(MessageHandleType &&msg) = 0;
-
-        virtual void onTimeout() = 0;
 
     private:
         Codec codec_;
