@@ -1,22 +1,23 @@
 #include <spdlog/spdlog.h>
 
-#include "GameWorld.h"
-#include "gateway/Gateway.h"
+#include <network/Connection.h>
+#include "Gateway/ActorConnection.h"
+
+using uranus::network::ServerBootstrapImpl;
 
 int main() {
     spdlog::info("Hello World!");
 
-    auto *world = new GameWorld();
+    auto *sb = new ServerBootstrapImpl<ActorConnection>();
 
-    // Create GameWorld Modules
-    // world->createModule<PlayerManager>();
-    world->createModule<Gateway>();
+    sb->onInitial([](const std::shared_ptr<ActorConnection> &conn) {
 
-    // Run the GameWorld
-    world->run();
-    world->terminate();
+    });
 
-    delete world;
+    sb->run(4, 8080);
+    sb->terminate();
+
+    delete sb;
 
     return 0;
 }

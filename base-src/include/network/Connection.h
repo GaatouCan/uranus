@@ -12,7 +12,6 @@
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 
-
 namespace uranus::network {
 
     using asio::co_spawn;
@@ -90,7 +89,7 @@ namespace uranus::network {
         AttributeMap &attr();
 
         virtual void sendMessage(MessageHandle &&msg) = 0;
-        virtual void sendMessage(MessageHandle *msg) = 0;
+        virtual void sendMessage(Message *msg) = 0;
 
     protected:
         virtual awaitable<void> readMessage() = 0;
@@ -182,7 +181,7 @@ namespace uranus::network {
         Codec &codec();
 
         void sendMessage(MessageHandle &&msg) override;
-        void sendMessage(MessageHandle *msg) override;
+        void sendMessage(Message *msg) override;
 
         void send(MessageHandleType &&msg);
         void send(MessageType *msg);
@@ -236,6 +235,7 @@ namespace uranus::network {
     template<kCodecType Codec>
     ConnectionImpl<Codec>::ConnectionImpl(ServerBootstrap &server, TcpSocket &&socket)
         : Connection(server, std::move(socket)),
+          codec_(dynamic_cast<Connection &>(*this)),
           output_(socket_.get_executor(), 1024) {
     }
 
@@ -278,7 +278,7 @@ namespace uranus::network {
     }
 
     template<kCodecType Codec>
-    void ConnectionImpl<Codec>::sendMessage(MessageHandle *msg) {
+    void ConnectionImpl<Codec>::sendMessage(Message *msg) {
         if (msg == nullptr)
             return;
 
@@ -350,7 +350,7 @@ namespace uranus::network {
 
                 this->beforeWrite(msg.get());
 
-                if (const auto writeEc = co_await codec_.encode(msg)) {
+                if (const auto writeEc = co_await codec_.encode(msg.get())) {
                     // TODO
                     disconnect();
                 }
@@ -414,10 +414,24 @@ namespace uranus::network {
                     std::invoke(initializer_, conn);
                 }
 
-                {
+                bool repeated = false;
+                do {
                     unique_lock lock(mutex_);
+                    const auto it = connMap_.find(conn->getKey());
+                    if (it != connMap_.end()) {
+                        repeated = true;
+                        break;
+                    }
+
                     connMap_.insert_or_assign(conn->getKey(), conn);
+                } while (false);
+
+                if (repeated) {
+                    conn->disconnect();
+                    continue;
                 }
+
+                conn->connect();
             }
         } catch (std::exception &e) {
 
