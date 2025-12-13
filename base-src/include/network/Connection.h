@@ -7,10 +7,9 @@
 
 #include <string>
 #include <tuple>
-#include <unordered_map>
-#include <shared_mutex>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
+
 
 namespace uranus::network {
 
@@ -20,9 +19,6 @@ namespace uranus::network {
 
     using std::tuple;
     using std::unordered_map;
-    using std::shared_mutex;
-    using std::unique_lock;
-    using std::shared_lock;
     using std::make_tuple;
     using std::error_code;
     using std::shared_ptr;
@@ -33,47 +29,16 @@ namespace uranus::network {
 
     class Connection;
 
-    class BASE_API ServerBootstrap {
-
-    public:
-        ServerBootstrap();
-        virtual ~ServerBootstrap();
-
-        DISABLE_COPY_MOVE(ServerBootstrap)
-
-        virtual shared_ptr<Connection> find(const std::string &key) = 0;
-        virtual void remove(const std::string &key) = 0;
-
-        virtual void run(int num, uint16_t port);
-        virtual void terminate();
-
-    protected:
-        virtual awaitable<void> waitForClient(uint16_t port) = 0;
-
-    protected:
-        asio::io_context ctx_;
-        asio::executor_work_guard<asio::io_context::executor_type> guard_;
-
-#ifdef URANUS_SSL
-        asio::ssl::context sslContext_;
-#endif
-
-        TcpAcceptor acceptor_;
-
-        MultiIOContextPool pool_;
-    };
-
     class BASE_API Connection : public enable_shared_from_this<Connection> {
 
     public:
         Connection() = delete;
 
-        Connection(ServerBootstrap &server, TcpSocket &&socket);
+        explicit Connection(TcpSocket &&socket);
         virtual ~Connection();
 
         DISABLE_COPY_MOVE(Connection)
 
-        [[nodiscard]] ServerBootstrap &getServerBootstrap() const;
         TcpSocket &getSocket();
 
         virtual void connect();
@@ -101,7 +66,6 @@ namespace uranus::network {
         awaitable<void> watchdog();
 
     protected:
-        ServerBootstrap &server_;
         TcpSocket socket_;
 
         std::string key_;
@@ -147,6 +111,7 @@ namespace uranus::network {
     template<class T>
     requires std::is_base_of_v<Message, T>
     MessageCodec<T>::~MessageCodec() {
+
     }
 
     template<class T>
@@ -174,7 +139,7 @@ namespace uranus::network {
         using MessageType = Codec::MessageType;
         using MessageHandleType = Codec::MessageHandleType;
 
-        ConnectionImpl(ServerBootstrap &server, TcpSocket &&socket);
+        explicit ConnectionImpl(TcpSocket &&socket);
         ~ConnectionImpl() override;
 
         void connect() override;
@@ -201,46 +166,17 @@ namespace uranus::network {
         ConcurrentChannel<MessageHandleType> output_;
     };
 
-    template<class T>
-    concept kConnectionType = requires { typename T::CodecType; }
-        && kCodecType<typename T::CodecType>
-        && std::derived_from<T, ConnectionImpl<typename T::CodecType>>;
-
-
-    template<kConnectionType T>
-    class ServerBootstrapImpl : public ServerBootstrap {
-
-    public:
-        using Pointer = shared_ptr<T>;
-        using InitialFunc = std::function<void(const Pointer &)>;
-
-        ServerBootstrapImpl();
-        ~ServerBootstrapImpl() override;
-
-        shared_ptr<Connection> find(const std::string &key) override;
-        void remove(const std::string &key) override;
-
-        void onInitial(const InitialFunc &cb);
-
-    protected:
-        awaitable<void> waitForClient(uint16_t port) override;
-
-    private:
-        mutable shared_mutex mutex_;
-        unordered_map<std::string, Pointer> connMap_;
-
-        InitialFunc initializer_;
-    };
 
     template<kCodecType Codec>
-    ConnectionImpl<Codec>::ConnectionImpl(ServerBootstrap &server, TcpSocket &&socket)
-        : Connection(server, std::move(socket)),
+    ConnectionImpl<Codec>::ConnectionImpl(TcpSocket &&socket)
+        : Connection(std::move(socket)),
           codec_(dynamic_cast<Connection &>(*this)),
           output_(socket_.get_executor(), 1024) {
     }
 
     template<kCodecType Codec>
     ConnectionImpl<Codec>::~ConnectionImpl() {
+
     }
 
     template<kCodecType Codec>
@@ -356,82 +292,6 @@ namespace uranus::network {
                 }
 
                 this->afterWrite(std::move(msg));
-            }
-        } catch (std::exception &e) {
-
-        }
-    }
-
-    template<kConnectionType T>
-    ServerBootstrapImpl<T>::ServerBootstrapImpl() {
-    }
-
-    template<kConnectionType T>
-    ServerBootstrapImpl<T>::~ServerBootstrapImpl() {
-        connMap_.clear();
-    }
-
-    template<kConnectionType T>
-    shared_ptr<Connection> ServerBootstrapImpl<T>::find(const std::string &key) {
-        shared_lock lock(mutex_);
-        const auto it = connMap_.find(key);
-        return it != connMap_.end() ? it->second : nullptr;
-    }
-
-    template<kConnectionType T>
-    void ServerBootstrapImpl<T>::remove(const std::string &key) {
-        unique_lock lock(mutex_);
-        connMap_.erase(key);
-    }
-
-    template<kConnectionType T>
-    void ServerBootstrapImpl<T>::onInitial(const InitialFunc &cb) {
-        initializer_ = cb;
-    }
-
-    template<kConnectionType T>
-    awaitable<void> ServerBootstrapImpl<T>::waitForClient(uint16_t port) {
-        try {
-            acceptor_.open(asio::ip::tcp::v4());
-            acceptor_.bind({asio::ip::tcp::v4(), port});
-            acceptor_.listen();
-
-            while (!ctx_.stopped()) {
-                auto [ec, socket] = co_await acceptor_.async_accept(pool_.getIOContext());
-                if (ec) {
-                    // TODO
-                    continue;
-                }
-
-                if (!socket.is_open()) {
-                    // TODO
-                    continue;
-                }
-
-                auto conn = make_shared<T>(*this, TcpSocket(std::move(socket), sslContext_));
-
-                if (initializer_) {
-                    std::invoke(initializer_, conn);
-                }
-
-                bool repeated = false;
-                do {
-                    unique_lock lock(mutex_);
-                    const auto it = connMap_.find(conn->getKey());
-                    if (it != connMap_.end()) {
-                        repeated = true;
-                        break;
-                    }
-
-                    connMap_.insert_or_assign(conn->getKey(), conn);
-                } while (false);
-
-                if (repeated) {
-                    conn->disconnect();
-                    continue;
-                }
-
-                conn->connect();
             }
         } catch (std::exception &e) {
 

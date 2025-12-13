@@ -2,52 +2,16 @@
 
 #include <chrono>
 #include <format>
-#include <asio/signal_set.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
+
 
 using namespace asio::experimental::awaitable_operators;
 
 namespace uranus::network {
-    ServerBootstrap::ServerBootstrap()
-        : guard_(asio::make_work_guard(ctx_)),
-#ifdef URANUS_SSL
-          sslContext_(asio::ssl::context::tlsv13_server),
-#endif
-          acceptor_(ctx_) {
-    }
 
-    ServerBootstrap::~ServerBootstrap() {
-    }
 
-    void ServerBootstrap::run(const int num, const uint16_t port) {
-        sslContext_.set_options(
-            asio::ssl::context::no_sslv2 |
-            asio::ssl::context::no_sslv3 |
-            asio::ssl::context::default_workarounds |
-            asio::ssl::context::single_dh_use
-        );
-
-        pool_.start(num);
-
-        co_spawn(ctx_, waitForClient(port), detached);
-
-        asio::signal_set signals(ctx_, SIGINT, SIGTERM);
-        signals.async_wait([this](auto, auto) {
-            terminate();
-        });
-
-        ctx_.run();
-    }
-
-    void ServerBootstrap::terminate() {
-        guard_.reset();
-        if (!ctx_.stopped())
-            ctx_.stop();
-    }
-
-    Connection::Connection(ServerBootstrap &server, TcpSocket &&socket)
-        : server_(server),
-          socket_(std::move(socket)),
+    Connection::Connection(TcpSocket &&socket)
+        : socket_(std::move(socket)),
           watchdog_(socket_.get_executor()),
           expiration_(std::chrono::seconds(30)) {
         const auto now = std::chrono::system_clock::now();
@@ -64,10 +28,6 @@ namespace uranus::network {
 
     Connection::~Connection() {
 
-    }
-
-    ServerBootstrap &Connection::getServerBootstrap() const {
-        return server_;
     }
 
     TcpSocket &Connection::getSocket() {
@@ -96,8 +56,6 @@ namespace uranus::network {
     void Connection::disconnect() {
         if (!isConnected())
             return;
-
-        server_.remove(key_);
 
 #ifdef URANUS_SSL
         socket_.next_layer().close();

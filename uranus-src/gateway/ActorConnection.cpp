@@ -1,7 +1,7 @@
 #include "ActorConnection.h"
 
-ActorConnection::ActorConnection(ServerBootstrap &server, TcpSocket &&socket)
-    : ConnectionImpl<PackageCodec>(server, std::move(socket)){
+ActorConnection::ActorConnection(TcpSocket &&socket)
+    : ConnectionImpl(std::move(socket)){
 }
 
 ActorConnection::~ActorConnection() {
