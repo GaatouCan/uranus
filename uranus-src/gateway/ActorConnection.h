@@ -10,12 +10,15 @@ using uranus::actor::PackageCodec;
 using uranus::actor::Package;
 using uranus::actor::PackageHandle;
 
+class Gateway;
 
 class ActorConnection final : public ConnectionImpl<PackageCodec> {
 
 public:
-    explicit ActorConnection(TcpSocket &&socket);
+    ActorConnection(TcpSocket &&socket, Gateway &gateway);
     ~ActorConnection() override;
+
+    void disconnect() override;
 
 protected:
     void onReadMessage(PackageHandle &&pkg) override;
@@ -24,4 +27,10 @@ protected:
     void afterWrite(PackageHandle &&pkg) override;
 
     void onTimeout() override;
+
+    void onErrorCode(std::error_code ec) override;
+    void onException(std::exception &e) override;
+
+private:
+    Gateway &gateway_;
 };
