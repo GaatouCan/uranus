@@ -1,6 +1,9 @@
 #include "ActorContext.h"
 #include "Actor.h"
 
+#include <asio/detached.hpp>
+
+
 namespace uranus::actor {
     ActorContext::ActorContext(asio::io_context &ctx)
         : ctx_(ctx),
@@ -9,6 +12,7 @@ namespace uranus::actor {
     }
 
     ActorContext::~ActorContext() {
+
     }
 
     void ActorContext::setId(const uint32_t id) {
@@ -27,11 +31,35 @@ namespace uranus::actor {
             return;
 
         handle_ = std::move(handle);
-        handle->setContext(this);
+        handle_->setContext(this);
     }
 
     Actor *ActorContext::getActor() const {
         return handle_.get();
+    }
+
+    void ActorContext::run() {
+        if (!handle_)
+            throw std::runtime_error("ActorContext::run - Actor is null");
+
+        // Call actor initial
+        handle_->onInitial();
+
+        co_spawn(ctx_, [self = shared_from_this()]() -> awaitable<void> {
+            co_await self->process();
+        }, asio::detached);
+    }
+
+    void ActorContext::terminate() {
+        if (!mailbox_.is_open())
+            return;
+
+        mailbox_.cancel();
+        mailbox_.close();
+    }
+
+    AttributeMap &ActorContext::attr() {
+        return attr_;
     }
 
     bool ActorContext::isRunning() const {
@@ -50,7 +78,21 @@ namespace uranus::actor {
             while (isRunning()) {
                 auto [ec, envelope] = co_await mailbox_.async_receive();
 
+                if (ec == asio::error::operation_aborted ||
+                    ec == asio::experimental::error::channel_closed) {
+                    break;
+                }
+
+                if (ec) {
+                    // TODO
+                    break;
+                }
+
+                handle_->onPackage(std::move(envelope));
             }
+
+            // Call actor terminate
+            handle_->onTerminate();
         } catch (std::exception &e) {
 
         }

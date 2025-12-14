@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actor.export.h"
+#include "Package.h"
 #include "base/noncopy.h"
 
 namespace uranus::actor {
@@ -18,6 +18,11 @@ namespace uranus::actor {
         DISABLE_COPY_MOVE(Actor)
 
         [[nodiscard]] ActorContext *getContext() const;
+
+        virtual void onInitial();
+        virtual void onTerminate();
+
+        virtual void onPackage(Envelope &&envelope) = 0;
 
     private:
         void setContext(ActorContext *ctx);

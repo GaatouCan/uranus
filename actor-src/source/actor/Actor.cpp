@@ -12,6 +12,12 @@ namespace uranus::actor {
         return ctx_;
     }
 
+    void Actor::onInitial() {
+    }
+
+    void Actor::onTerminate() {
+    }
+
     void Actor::setContext(ActorContext *ctx) {
         ctx_ = ctx;
     }
