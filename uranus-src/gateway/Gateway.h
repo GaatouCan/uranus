@@ -1,8 +1,7 @@
 #pragma once
 
 #include <actor/ServerModule.h>
-#include <base/types.h>
-#include <base/MultiIOContextPool.h>
+#include <base/network.h>
 
 #include <unordered_map>
 #include <shared_mutex>
@@ -10,56 +9,46 @@
 #include <asio/detached.hpp>
 
 
-using asio::awaitable;
-using asio::co_spawn;
-using asio::detached;
-using uranus::actor::ServerModule;
-using uranus::TcpAcceptor;
-using uranus::MultiIOContextPool;
+namespace uranus {
 
-class GameWorld;
-class ActorConnection;
+    using asio::awaitable;
+    using asio::co_spawn;
+    using asio::detached;
 
-class Gateway final : public ServerModule {
-public:
-    Gateway() = delete;
+    using actor::ServerModule;
+    using network::ServerBootstrap;
 
-    explicit Gateway(GameWorld &world);
-    ~Gateway() override;
+    class GameWorld;
+    class ActorConnection;
 
-    DISABLE_COPY_MOVE(Gateway)
+    class Gateway final : public ServerModule {
+    public:
+        Gateway() = delete;
 
-    [[nodiscard]] constexpr const char *getModuleName() override {
-        return "Gateway";
-    }
+        explicit Gateway(GameWorld &world);
+        ~Gateway() override;
 
-    void start() override;
-    void stop() override;
+        DISABLE_COPY_MOVE(Gateway)
 
-    [[nodiscard]] std::shared_ptr<ActorConnection> find(const std::string &key) const;
-    [[nodiscard]] std::shared_ptr<ActorConnection> findByPlayerID(uint32_t pid) const;
+        [[nodiscard]] constexpr const char *getModuleName() override {
+            return "Gateway";
+        }
 
-    void remove(const std::string &key);
+        void start() override;
+        void stop() override;
 
-private:
-    awaitable<void> waitForClient(uint16_t port);
+        [[nodiscard]] std::shared_ptr<ActorConnection> find(const std::string &key) const;
+        [[nodiscard]] std::shared_ptr<ActorConnection> findByPlayerID(uint32_t pid) const;
 
-private:
-    GameWorld &world_;
+        void remove(const std::string &key) const;
 
-    asio::io_context ctx_;
-    asio::executor_work_guard<asio::io_context::executor_type> guard_;
+    private:
+        GameWorld &world_;
 
-    TcpAcceptor acceptor_;
+        std::thread thread_;
+        std::unique_ptr<ServerBootstrap> bootstrap_;
 
-#ifdef URANUS_SSL
-    asio::ssl::context sslContext_;
-#endif
-
-    std::thread thread_;
-    MultiIOContextPool pool_;
-
-    mutable std::shared_mutex mutex_;
-    std::unordered_map<std::string, std::shared_ptr<ActorConnection>> connMap_;
-    std::unordered_map<uint32_t, std::string> pidToKey_;
-};
+        mutable std::shared_mutex mutex_;
+        std::unordered_map<uint32_t, std::string> pidToKey_;
+    };
+}

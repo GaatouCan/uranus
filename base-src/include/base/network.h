@@ -1,12 +1,14 @@
 #pragma once
 
-#include "base/types.h"
-#include "base/Message.h"
-#include "base/AttributeMap.h"
-#include "base/MultiIOContextPool.h"
+#include "types.h"
+#include "Message.h"
+#include "AttributeMap.h"
+#include "MultiIOContextPool.h"
 
 #include <string>
 #include <tuple>
+#include <shared_mutex>
+#include <unordered_map>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 
@@ -19,6 +21,9 @@ namespace uranus::network {
 
     using std::tuple;
     using std::unordered_map;
+    using std::shared_mutex;
+    using std::shared_lock;
+    using std::unique_lock;
     using std::make_tuple;
     using std::error_code;
     using std::shared_ptr;
@@ -27,6 +32,45 @@ namespace uranus::network {
     using std::make_unique;
     using std::enable_shared_from_this;
 
+#pragma region ServerBootStrap
+
+    class Connection;
+
+    class BASE_API ServerBootstrap {
+
+    public:
+        ServerBootstrap();
+        virtual ~ServerBootstrap();
+
+        DISABLE_COPY_MOVE(ServerBootstrap)
+
+        virtual void run();
+        virtual void terminate();
+
+#ifdef URANUS_SSL
+
+#endif
+
+        virtual shared_ptr<Connection> find(const std::string &key) = 0;
+        virtual void remove(const std::string &key) = 0;
+
+    protected:
+        virtual awaitable<void> waitForClient(uint16_t port) = 0;
+
+    protected:
+        asio::io_context ctx_;
+        asio::executor_work_guard<asio::io_context::executor_type> guard_;
+
+        TcpAcceptor acceptor_;
+
+#ifdef URANUS_SSL
+        asio::ssl::context sslContext_;
+#endif
+
+        MultiIOContextPool pool_;
+    };
+#pragma endregion
+
 
 #pragma region Base Connection
     class BASE_API Connection : public enable_shared_from_this<Connection> {
@@ -34,10 +78,12 @@ namespace uranus::network {
     public:
         Connection() = delete;
 
-        explicit Connection(TcpSocket &&socket);
+        Connection(ServerBootstrap &server, TcpSocket &&socket);
         virtual ~Connection();
 
         DISABLE_COPY_MOVE(Connection)
+
+        [[nodiscard]] ServerBootstrap &getServerBootstrap() const;
 
         TcpSocket &getSocket();
 
@@ -68,6 +114,7 @@ namespace uranus::network {
         awaitable<void> watchdog();
 
     protected:
+        ServerBootstrap &server_;
         TcpSocket socket_;
 
         std::string key_;
@@ -117,10 +164,11 @@ namespace uranus::network {
     class ConnectionImpl : public Connection {
 
     public:
+        using CodecType = Codec;
         using MessageType = Codec::MessageType;
         using MessageHandleType = Codec::MessageHandleType;
 
-        explicit ConnectionImpl(TcpSocket &&socket);
+        ConnectionImpl(ServerBootstrap &server, TcpSocket &&socket);
         ~ConnectionImpl() override;
 
         void connect() override;
@@ -148,6 +196,39 @@ namespace uranus::network {
     };
 
     template<class T>
+    concept kConnectionType = requires { typename T::CodecType; }
+        && kCodecType<typename T::CodecType>
+        && std::derived_from<T, ConnectionImpl<typename T::CodecType>>;
+
+
+    template<kConnectionType T>
+    class ServerBootstrapImpl : public ServerBootstrap {
+
+    public:
+        using Pointer = shared_ptr<T>;
+        using InitialFunc = std::function<void(const Pointer &)>;
+
+        ServerBootstrapImpl();
+        ~ServerBootstrapImpl() override;
+
+        void terminate() override;
+
+        shared_ptr<Connection> find(const std::string &key) override;
+        void remove(const std::string &key) override;
+
+        void onInitial(const InitialFunc &cb);
+
+    protected:
+        awaitable<void> waitForClient(uint16_t port) override;
+
+    private:
+        mutable shared_mutex mutex_;
+        unordered_map<std::string, Pointer> connMap_;
+
+        InitialFunc initializer_;
+    };
+
+    template<class T>
     requires std::is_base_of_v<Message, T>
     MessageCodec<T>::MessageCodec(Connection &conn)
         : conn_(conn) {
@@ -171,8 +252,8 @@ namespace uranus::network {
 
 
     template<kCodecType Codec>
-    ConnectionImpl<Codec>::ConnectionImpl(TcpSocket &&socket)
-        : Connection(std::move(socket)),
+    ConnectionImpl<Codec>::ConnectionImpl(ServerBootstrap &server, TcpSocket &&socket)
+        : Connection(server, std::move(socket)),
           codec_(dynamic_cast<Connection &>(*this)),
           output_(socket_.get_executor(), 1024) {
     }
@@ -298,6 +379,96 @@ namespace uranus::network {
             }
         } catch (std::exception &e) {
             this->onException(e);
+        }
+    }
+
+    template<kConnectionType T>
+    ServerBootstrapImpl<T>::ServerBootstrapImpl() {
+    }
+
+    template<kConnectionType T>
+    ServerBootstrapImpl<T>::~ServerBootstrapImpl() {
+    }
+
+    template<kConnectionType T>
+    void ServerBootstrapImpl<T>::terminate() {
+        ServerBootstrap::terminate();
+        connMap_.clear();
+    }
+
+    template<kConnectionType T>
+    shared_ptr<Connection> ServerBootstrapImpl<T>::find(const std::string &key) {
+        if (ctx_.stopped())
+            return nullptr;
+
+        shared_lock lock(mutex_);
+        const auto iter = connMap_.find(key);
+        return iter != connMap_.end() ? iter->second : nullptr;
+    }
+
+    template<kConnectionType T>
+    void ServerBootstrapImpl<T>::remove(const std::string &key) {
+        if (ctx_.stopped())
+            return;
+
+        unique_lock lock(mutex_);
+        connMap_.erase(key);
+    }
+
+    template<kConnectionType T>
+    void ServerBootstrapImpl<T>::onInitial(const InitialFunc &cb) {
+        initializer_ = cb;
+    }
+
+    template<kConnectionType T>
+    awaitable<void> ServerBootstrapImpl<T>::waitForClient(uint16_t port) {
+        try {
+            acceptor_.open(asio::ip::tcp::v4());
+            acceptor_.bind({asio::ip::tcp::v4(), port});
+            acceptor_.listen(port);
+
+            while (!ctx_.stopped()) {
+                auto [ec, socket] = co_await acceptor_.async_accept(pool_.getIOContext());
+
+                if (ec) {
+                    continue;
+                }
+
+                if (!socket.is_open()) {
+                    continue;
+                }
+
+#ifdef URANUS_SSL
+                const auto conn = std::make_shared<T>(*this, TcpSocket(std::move(socket), sslContext_));
+#else
+                const auto conn = std::make_shared<ActorConnection>(*this, std::move(socket));
+#endif
+
+                const auto key = conn->getKey();
+
+                bool repeated = false;
+
+                do {
+                    std::unique_lock lock(mutex_);
+
+                    if (connMap_.contains(key)) {
+                        repeated = true;
+                        break;
+                    }
+
+                    connMap_.insert_or_assign(key, conn);
+                } while (false);
+
+                if (repeated) {
+                    conn->disconnect();
+                    conn->attr().set("REPEATED", 1);
+                    continue;
+                }
+
+                conn->connect();
+            }
+        } catch (std::exception &e) {
+
         }
     }
 }

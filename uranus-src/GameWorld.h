@@ -3,19 +3,21 @@
 #include <base/SingleIOContextPool.h>
 #include <actor/ServerModule.h>
 
-using uranus::SingleIOContextPool;
 
-class GameWorld final {
+namespace uranus {
 
-public:
-    GameWorld();
-    ~GameWorld();
+    class GameWorld final {
 
-    DISABLE_COPY_MOVE(GameWorld)
+    public:
+        GameWorld();
+        ~GameWorld();
 
-private:
-    asio::io_context ctx_;
-    asio::executor_work_guard<asio::io_context::executor_type> guard_;
+        DISABLE_COPY_MOVE(GameWorld)
 
-    SingleIOContextPool pool_;
-};
+    private:
+        asio::io_context ctx_;
+        asio::executor_work_guard<asio::io_context::executor_type> guard_;
+
+        SingleIOContextPool pool_;
+    };
+}

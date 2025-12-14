@@ -2,7 +2,7 @@
 
 #include "Package.h"
 
-#include <network/Connection.h>
+#include <base/network.h>
 
 namespace uranus::actor {
 

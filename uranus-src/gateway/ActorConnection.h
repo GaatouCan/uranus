@@ -1,36 +1,33 @@
 #pragma once
 
-#include <network/Connection.h>
+#include <base/network.h>
 #include <actor/PackageCodec.h>
 
+namespace uranus {
 
-using uranus::TcpSocket;
-using uranus::network::ConnectionImpl;
-using uranus::actor::PackageCodec;
-using uranus::actor::Package;
-using uranus::actor::PackageHandle;
+    using network::ServerBootstrap;
+    using network::ConnectionImpl;
+    using actor::Package;
+    using actor::PackageHandle;
+    using actor::PackageCodec;
 
-class Gateway;
+    class Gateway;
 
-class ActorConnection final : public ConnectionImpl<PackageCodec> {
+    class ActorConnection final : public ConnectionImpl<PackageCodec> {
 
-public:
-    ActorConnection(TcpSocket &&socket, Gateway &gateway);
-    ~ActorConnection() override;
+    public:
+        ActorConnection(ServerBootstrap &Server, TcpSocket &&socket);
+        ~ActorConnection() override;
 
-    void disconnect() override;
+    protected:
+        void onReadMessage(PackageHandle &&pkg) override;
 
-protected:
-    void onReadMessage(PackageHandle &&pkg) override;
+        void beforeWrite(Package *pkg) override;
+        void afterWrite(PackageHandle &&pkg) override;
 
-    void beforeWrite(Package *pkg) override;
-    void afterWrite(PackageHandle &&pkg) override;
+        void onTimeout() override;
 
-    void onTimeout() override;
-
-    void onErrorCode(std::error_code ec) override;
-    void onException(std::exception &e) override;
-
-private:
-    Gateway &gateway_;
-};
+        void onErrorCode(std::error_code ec) override;
+        void onException(std::exception &e) override;
+    };
+}

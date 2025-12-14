@@ -3,38 +3,33 @@
 
 #include <spdlog/spdlog.h>
 
-ActorConnection::ActorConnection(TcpSocket &&socket, Gateway &gateway)
-    : ConnectionImpl(std::move(socket)),
-      gateway_(gateway) {
-}
+namespace uranus {
 
-ActorConnection::~ActorConnection() {
-}
-
-void ActorConnection::disconnect() {
-    ConnectionImpl::disconnect();
-
-    if (!attr().has("REPEATED")) {
-        gateway_.remove(key_);
+    ActorConnection::ActorConnection(ServerBootstrap &server, TcpSocket &&socket)
+        : ConnectionImpl(server, std::move(socket)) {
     }
-}
 
-void ActorConnection::onReadMessage(PackageHandle &&pkg) {
-}
+    ActorConnection::~ActorConnection() {
+    }
 
-void ActorConnection::beforeWrite(Package *pkg) {
-}
 
-void ActorConnection::afterWrite(PackageHandle &&pkg) {
-}
+    void ActorConnection::onReadMessage(PackageHandle &&pkg) {
+    }
 
-void ActorConnection::onTimeout() {
-}
+    void ActorConnection::beforeWrite(Package *pkg) {
+    }
 
-void ActorConnection::onErrorCode(std::error_code ec) {
-    SPDLOG_ERROR(ec.message());
-}
+    void ActorConnection::afterWrite(PackageHandle &&pkg) {
+    }
 
-void ActorConnection::onException(std::exception &e) {
-    SPDLOG_ERROR(e.what());
+    void ActorConnection::onTimeout() {
+    }
+
+    void ActorConnection::onErrorCode(std::error_code ec) {
+        SPDLOG_ERROR(ec.message());
+    }
+
+    void ActorConnection::onException(std::exception &e) {
+        SPDLOG_ERROR(e.what());
+    }
 }

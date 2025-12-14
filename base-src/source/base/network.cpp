@@ -1,33 +1,81 @@
-#include "Connection.h"
+#include "network.h"
 
 #include <chrono>
 #include <format>
+#include <asio/signal_set.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
 
 
 using namespace asio::experimental::awaitable_operators;
 
 namespace uranus::network {
+    ServerBootstrap::ServerBootstrap()
+        : guard_(asio::make_work_guard(ctx_)),
+          acceptor_(ctx_)
+#ifdef URANUS_SSL
+          , sslContext_(asio::ssl::context::tlsv13_server)
+#endif
+    {
+    }
 
+    ServerBootstrap::~ServerBootstrap() {
+    }
 
-    Connection::Connection(TcpSocket &&socket)
-        : socket_(std::move(socket)),
+    void ServerBootstrap::run() {
+#ifdef URANUS_SSL
+        sslContext_.set_options(
+            asio::ssl::context::no_sslv2 |
+            asio::ssl::context::no_sslv3 |
+            asio::ssl::context::default_workarounds |
+            asio::ssl::context::single_dh_use
+        );
+
+        sslContext_.use_certificate_chain_file("server.crt");
+        sslContext_.use_private_key_file("server.pem", asio::ssl::context::pem);
+#endif
+
+        pool_.start(4);
+
+        co_spawn(ctx_, waitForClient(8080), detached);
+
+        asio::signal_set signals(ctx_, SIGINT, SIGTERM);
+        signals.async_wait([this](auto, auto) {
+            this->terminate();
+        });
+
+        ctx_.run();
+    }
+
+    void ServerBootstrap::terminate() {
+        if (ctx_.stopped())
+            return;
+
+        guard_.reset();
+        ctx_.stop();
+    }
+
+    Connection::Connection(ServerBootstrap &server, TcpSocket &&socket)
+        : server_(server),
+          socket_(std::move(socket)),
           watchdog_(socket_.get_executor()),
           expiration_(std::chrono::seconds(30)) {
+
         const auto now = std::chrono::system_clock::now();
         const auto durationSinceEpoch = now.time_since_epoch();
         const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
 
 #ifdef URANUS_SSL
-        key_ = std::format("{}-{}", socket_.next_layer().remote_endpoint().address().to_string(),
-                           secondsSinceEpoch.count());
+        key_ = std::format("{}-{}", socket_.next_layer().remote_endpoint().address().to_string(), secondsSinceEpoch.count());
 #else
         key_ = std::format("{}-{}", socket_.remote_endpoint().address().to_string(), secondsSinceEpoch.count());
 #endif
     }
 
     Connection::~Connection() {
+    }
 
+    ServerBootstrap &Connection::getServerBootstrap() const {
+        return server_;
     }
 
     TcpSocket &Connection::getSocket() {
@@ -57,12 +105,15 @@ namespace uranus::network {
         if (!isConnected())
             return;
 
+        if (!attr().has("REPEATED")) {
+            server_.remove(key_);
+        }
+
 #ifdef URANUS_SSL
         socket_.next_layer().close();
 #else
         socket_.close();
 #endif
-
         watchdog_.cancel();
     }
 
@@ -104,7 +155,7 @@ namespace uranus::network {
                     if (ec == asio::error::operation_aborted) {
                         // TODO
                     } else {
-                        // pipeline_.onError(ec);
+                        this->onErrorCode(ec);
                     }
 
                     co_return;
@@ -117,7 +168,7 @@ namespace uranus::network {
                 }
             } while (received_ + expiration_ > std::chrono::steady_clock::now());
         } catch (std::exception &e) {
-            // pipeline_.onException(e);
+            onException(e);
             disconnect();
         }
     }
