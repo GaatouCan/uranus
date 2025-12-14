@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actor.export.h"
+#include "Package.h"
 
 #include <base/noncopy.h>
 #include <base/types.h>
@@ -31,10 +31,17 @@ namespace uranus::actor {
         [[nodiscard]] uint32_t getId() const;
 
         void setUpActor(ActorHandle &&handle);
+        [[nodiscard]] Actor *getActor() const;
+
+        [[nodiscard]] bool isRunning() const;
+
+        void pushEnvelope(Envelope &&envelope);
 
     private:
         asio::io_context &ctx_;
         ActorHandle handle_;
+
+        ConcurrentChannel<Envelope> mailbox_;
 
         uint32_t id_;
     };

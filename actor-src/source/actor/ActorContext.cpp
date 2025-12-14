@@ -28,4 +28,19 @@ namespace uranus::actor {
         handle_ = std::move(handle);
         handle->setContext(this);
     }
+
+    Actor *ActorContext::getActor() const {
+        return handle_.get();
+    }
+
+    bool ActorContext::isRunning() const {
+        return mailbox_.is_open();
+    }
+
+    void ActorContext::pushEnvelope(Envelope &&envelope) {
+        if (!isRunning())
+            return;
+
+        mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
+    }
 }
