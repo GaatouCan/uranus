@@ -27,8 +27,8 @@ namespace uranus::network {
     using std::make_unique;
     using std::enable_shared_from_this;
 
-    class Connection;
 
+#pragma region Base Connection
     class BASE_API Connection : public enable_shared_from_this<Connection> {
 
     public:
@@ -61,6 +61,8 @@ namespace uranus::network {
         virtual awaitable<void> writeMessage() = 0;
 
         virtual void onTimeout() = 0;
+        virtual void onErrorCode(error_code ec) = 0;
+        virtual void onException(std::exception &e) = 0;
 
     private:
         awaitable<void> watchdog();
@@ -76,7 +78,9 @@ namespace uranus::network {
         SteadyDuration expiration_;
         SteadyTimePoint received_;
     };
+#pragma endregion
 
+#pragma region MessageCodec
     template<class T>
     requires std::is_base_of_v<Message, T>
     class MessageCodec {
@@ -101,30 +105,8 @@ namespace uranus::network {
     private:
         Connection &conn_;
     };
+#pragma endregion
 
-    template<class T>
-    requires std::is_base_of_v<Message, T>
-    MessageCodec<T>::MessageCodec(Connection &conn)
-        : conn_(conn) {
-    }
-
-    template<class T>
-    requires std::is_base_of_v<Message, T>
-    MessageCodec<T>::~MessageCodec() {
-
-    }
-
-    template<class T>
-    requires std::is_base_of_v<Message, T>
-    Connection &MessageCodec<T>::getConnection() const {
-        return conn_;
-    }
-
-    template<class T>
-    requires std::is_base_of_v<Message, T>
-    TcpSocket &MessageCodec<T>::getSocket() const {
-        return conn_.getSocket();
-    }
 
     template<class Codec>
     concept kCodecType = requires { typename Codec::MessageType; }
@@ -135,7 +117,6 @@ namespace uranus::network {
     class ConnectionImpl : public Connection {
 
     public:
-        using CodecType = Codec;
         using MessageType = Codec::MessageType;
         using MessageHandleType = Codec::MessageHandleType;
 
@@ -165,6 +146,28 @@ namespace uranus::network {
         Codec codec_;
         ConcurrentChannel<MessageHandleType> output_;
     };
+
+    template<class T>
+    requires std::is_base_of_v<Message, T>
+    MessageCodec<T>::MessageCodec(Connection &conn)
+        : conn_(conn) {
+    }
+
+    template<class T>
+    requires std::is_base_of_v<Message, T>
+    MessageCodec<T>::~MessageCodec() = default;
+
+    template<class T>
+    requires std::is_base_of_v<Message, T>
+    Connection &MessageCodec<T>::getConnection() const {
+        return conn_;
+    }
+
+    template<class T>
+    requires std::is_base_of_v<Message, T>
+    TcpSocket &MessageCodec<T>::getSocket() const {
+        return conn_.getSocket();
+    }
 
 
     template<kCodecType Codec>
@@ -252,7 +255,7 @@ namespace uranus::network {
                 auto [ec, msg] = co_await codec_.decode();
 
                 if (ec) {
-                    // TODO
+                    this->onErrorCode(ec);
                     disconnect();
                     break;
                 }
@@ -260,7 +263,7 @@ namespace uranus::network {
                 this->onReadMessage(std::move(msg));
             }
         } catch (std::exception &e) {
-
+            this->onException(e);
         }
     }
 
@@ -276,7 +279,7 @@ namespace uranus::network {
                 }
 
                 if (ec) {
-                    // TODO
+                    this->onErrorCode(ec);
                     disconnect();
                     break;
                 }
@@ -287,14 +290,14 @@ namespace uranus::network {
                 this->beforeWrite(msg.get());
 
                 if (const auto writeEc = co_await codec_.encode(msg.get())) {
-                    // TODO
+                    this->onErrorCode(writeEc);
                     disconnect();
                 }
 
                 this->afterWrite(std::move(msg));
             }
         } catch (std::exception &e) {
-
+            this->onException(e);
         }
     }
 }
