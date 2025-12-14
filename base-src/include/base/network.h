@@ -44,11 +44,12 @@ namespace uranus::network {
 
         DISABLE_COPY_MOVE(ServerBootstrap)
 
-        virtual void run();
+        virtual void run(int num, uint16_t port);
         virtual void terminate();
 
 #ifdef URANUS_SSL
-
+        void useCertificateChainFile(const std::string &filename);
+        void usePrivateKeyFile(const std::string &filename);
 #endif
 
         virtual shared_ptr<Connection> find(const std::string &key) = 0;

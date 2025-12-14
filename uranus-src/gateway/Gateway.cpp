@@ -16,8 +16,15 @@ namespace uranus {
 
     void Gateway::start() {
         bootstrap_ = std::make_unique<network::ServerBootstrapImpl<ActorConnection>>();
+
+#ifdef URANUS_SSL
+        bootstrap_->useCertificateChainFile("server.crt");
+        bootstrap_->usePrivateKeyFile("server.pem");
+#endif
+
         thread_ = std::thread([this] {
-            bootstrap_->run();
+            SPDLOG_INFO("Listening on port: {}", 8080);
+            bootstrap_->run(4, 8080);
         });
     }
 

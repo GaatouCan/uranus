@@ -21,7 +21,7 @@ namespace uranus::network {
     ServerBootstrap::~ServerBootstrap() {
     }
 
-    void ServerBootstrap::run() {
+    void ServerBootstrap::run(int num, uint16_t port) {
 #ifdef URANUS_SSL
         sslContext_.set_options(
             asio::ssl::context::no_sslv2 |
@@ -29,14 +29,11 @@ namespace uranus::network {
             asio::ssl::context::default_workarounds |
             asio::ssl::context::single_dh_use
         );
-
-        sslContext_.use_certificate_chain_file("server.crt");
-        sslContext_.use_private_key_file("server.pem", asio::ssl::context::pem);
 #endif
 
-        pool_.start(4);
+        pool_.start(num);
 
-        co_spawn(ctx_, waitForClient(8080), detached);
+        co_spawn(ctx_, waitForClient(port), detached);
 
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
@@ -53,6 +50,16 @@ namespace uranus::network {
         guard_.reset();
         ctx_.stop();
     }
+
+#ifdef URANUS_SSL
+    void ServerBootstrap::useCertificateChainFile(const std::string &filename) {
+        sslContext_.use_certificate_chain_file(filename);
+    }
+
+    void ServerBootstrap::usePrivateKeyFile(const std::string &filename) {
+        sslContext_.use_private_key_file(filename, asio::ssl::context::pem);
+    }
+#endif
 
     Connection::Connection(ServerBootstrap &server, TcpSocket &&socket)
         : server_(server),
