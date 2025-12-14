@@ -7,15 +7,15 @@ namespace uranus::actor {
 
     class ActorContext;
 
-    class ACTOR_API Actor {
+    class ACTOR_API BaseActor {
 
         friend class ActorContext;
 
     public:
-        Actor();
-        virtual ~Actor();
+        BaseActor();
+        virtual ~BaseActor();
 
-        DISABLE_COPY_MOVE(Actor)
+        DISABLE_COPY_MOVE(BaseActor)
 
         [[nodiscard]] ActorContext *getContext() const;
 

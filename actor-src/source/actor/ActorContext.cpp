@@ -1,5 +1,5 @@
 #include "ActorContext.h"
-#include "Actor.h"
+#include "BaseActor.h"
 
 #include <asio/detached.hpp>
 
@@ -34,7 +34,7 @@ namespace uranus::actor {
         handle_->setContext(this);
     }
 
-    Actor *ActorContext::getActor() const {
+    BaseActor *ActorContext::getActor() const {
         return handle_.get();
     }
 

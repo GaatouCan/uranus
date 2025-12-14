@@ -11,15 +11,15 @@
 
 namespace uranus::actor {
 
-    class Actor;
+    class BaseActor;
 
     using std::unique_ptr;
     using std::function;
     using asio::awaitable;
     using asio::co_spawn;
 
-    using ActorDeleter = function<void(Actor *)>;
-    using ActorHandle = unique_ptr<Actor, ActorDeleter>;
+    using ActorDeleter = function<void(BaseActor *)>;
+    using ActorHandle = unique_ptr<BaseActor, ActorDeleter>;
 
     class ACTOR_API ActorContext : public std::enable_shared_from_this<ActorContext> {
 
@@ -35,7 +35,7 @@ namespace uranus::actor {
         [[nodiscard]] uint32_t getId() const;
 
         void setUpActor(ActorHandle &&handle);
-        [[nodiscard]] Actor *getActor() const;
+        [[nodiscard]] BaseActor *getActor() const;
 
         virtual void run();
         virtual void terminate();
