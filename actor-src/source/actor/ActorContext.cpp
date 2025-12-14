@@ -4,6 +4,7 @@
 namespace uranus::actor {
     ActorContext::ActorContext(asio::io_context &ctx)
         : ctx_(ctx),
+          mailbox_(ctx_, 1024),
           id_(0) {
     }
 
@@ -42,5 +43,16 @@ namespace uranus::actor {
             return;
 
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
+    }
+
+    awaitable<void> ActorContext::process() {
+        try {
+            while (isRunning()) {
+                auto [ec, envelope] = co_await mailbox_.async_receive();
+
+            }
+        } catch (std::exception &e) {
+
+        }
     }
 }

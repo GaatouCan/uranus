@@ -6,6 +6,7 @@
 #include <base/types.h>
 #include <memory>
 #include <functional>
+#include <asio/co_spawn.hpp>
 
 namespace uranus::actor {
 
@@ -13,6 +14,8 @@ namespace uranus::actor {
 
     using std::unique_ptr;
     using std::function;
+    using asio::awaitable;
+    using asio::co_spawn;
 
     using ActorDeleter = function<void(Actor *)>;
     using ActorHandle = unique_ptr<Actor, ActorDeleter>;
@@ -36,6 +39,9 @@ namespace uranus::actor {
         [[nodiscard]] bool isRunning() const;
 
         void pushEnvelope(Envelope &&envelope);
+
+    private:
+        awaitable<void> process();
 
     private:
         asio::io_context &ctx_;
