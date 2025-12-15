@@ -162,13 +162,16 @@ namespace uranus::network {
                     if (ec == asio::error::operation_aborted) {
                         // TODO
                     } else {
-                        this->onErrorCode(ec);
+                        onErrorCode(ec);
                     }
 
+                    if (isConnected()) {
+                        disconnect();
+                    }
                     co_return;
                 }
 
-                this->onTimeout();
+                onTimeout();
 
                 if (isConnected()) {
                     disconnect();
