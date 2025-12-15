@@ -88,7 +88,19 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        unique_lock lock(mutex_);
-        players_.erase(pid);
+        shared_ptr<PlayerContext> ctx;
+
+        {
+            unique_lock lock(mutex_);
+
+            if (const auto it = players_.find(pid); it != players_.end()) {
+                ctx = it->second;
+                players_.erase(it);
+            }
+        }
+
+        if (ctx) {
+            ctx->terminate();
+        }
     }
 } // uranus
