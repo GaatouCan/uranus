@@ -112,16 +112,16 @@ namespace uranus::network {
         if (!isConnected())
             return;
 
-        if (!attr().has("REPEATED")) {
-            server_.remove(key_);
-        }
-
 #ifdef URANUS_SSL
         socket_.next_layer().close();
 #else
         socket_.close();
 #endif
         watchdog_.cancel();
+
+        if (!attr().has("REPEATED")) {
+            server_.remove(key_);
+        }
     }
 
     bool Connection::isConnected() const {

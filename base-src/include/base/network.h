@@ -207,7 +207,9 @@ namespace uranus::network {
 
     public:
         using Pointer = shared_ptr<T>;
-        using InitialFunc = std::function<void(const Pointer &)>;
+
+        using InitialCallback = std::function<void(const Pointer &)>;
+        using RemoveCallback = std::function<void(const std::string &)>;
 
         ServerBootstrapImpl();
         ~ServerBootstrapImpl() override;
@@ -217,7 +219,8 @@ namespace uranus::network {
         shared_ptr<Connection> find(const std::string &key) override;
         void remove(const std::string &key) override;
 
-        void onInitial(const InitialFunc &cb);
+        void onInitial(const InitialCallback &cb);
+        void onRemove(const RemoveCallback &cb);
 
     protected:
         awaitable<void> waitForClient(uint16_t port) override;
@@ -226,7 +229,8 @@ namespace uranus::network {
         mutable shared_mutex mutex_;
         unordered_map<std::string, Pointer> connMap_;
 
-        InitialFunc initializer_;
+        InitialCallback onInitial_;
+        RemoveCallback onRemove_;
     };
 
     template<class T>
@@ -412,13 +416,24 @@ namespace uranus::network {
         if (ctx_.stopped())
             return;
 
-        unique_lock lock(mutex_);
-        connMap_.erase(key);
+        {
+            unique_lock lock(mutex_);
+            connMap_.erase(key);
+        }
+
+        if (onRemove_) {
+            std::invoke(onRemove_, key);
+        }
     }
 
     template<kConnectionType T>
-    void ServerBootstrapImpl<T>::onInitial(const InitialFunc &cb) {
-        initializer_ = cb;
+    void ServerBootstrapImpl<T>::onInitial(const InitialCallback &cb) {
+        onInitial_ = cb;
+    }
+
+    template<kConnectionType T>
+    void ServerBootstrapImpl<T>::onRemove(const RemoveCallback &cb) {
+        onRemove_ = cb;
     }
 
     template<kConnectionType T>
@@ -464,6 +479,10 @@ namespace uranus::network {
                     conn->disconnect();
                     conn->attr().set("REPEATED", 1);
                     continue;
+                }
+
+                if (onInitial_) {
+                    std::invoke(onInitial_, conn);
                 }
 
                 conn->connect();
