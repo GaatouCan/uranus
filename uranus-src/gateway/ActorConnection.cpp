@@ -18,7 +18,6 @@ namespace uranus {
     void ActorConnection::onDisconnect() {
     }
 
-
     void ActorConnection::onReadMessage(PackageHandle &&pkg) {
     }
 
