@@ -2,9 +2,12 @@
 
 #include <base/noncopy.h>
 #include <base/SharedLibrary.h>
-#include <actor/BasePlayer.h>
 
 namespace uranus {
+
+    namespace actor {
+        class BasePlayer;
+    }
 
     using actor::BasePlayer;
 

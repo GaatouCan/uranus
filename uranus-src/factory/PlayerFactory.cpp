@@ -30,12 +30,14 @@ namespace uranus {
         }
 
 #if defined(_WIN32) || defined(_WIN64)
-
+        const std::string filename = std::string(kPlayerDirectory) + "/player.dll";
+        lib_ = SharedLibrary(std::string_view(filename));
 #elif defined(__APPLE__)
         const std::string filename = std::string(kPlayerDirectory) + "/libplayer.dylib";
         lib_ = SharedLibrary(std::string_view(filename));
 #elif defined(__linux__)
-
+        const std::string filename = std::string(kPlayerDirectory) + "/libplayer.so";
+        lib_ = SharedLibrary(std::string_view(filename));
 #endif
 
         if (!lib_.available()) {
