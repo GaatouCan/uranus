@@ -210,6 +210,7 @@ namespace uranus::network {
 
         using InitialCallback = std::function<void(const Pointer &)>;
         using RemoveCallback = std::function<void(const std::string &)>;
+        using ExceptionCallback = std::function<void(std::exception &e)>;
 
         ServerBootstrapImpl();
         ~ServerBootstrapImpl() override;
@@ -222,6 +223,8 @@ namespace uranus::network {
         void onInitial(const InitialCallback &cb);
         void onRemove(const RemoveCallback &cb);
 
+        void onException(const ExceptionCallback &cb);
+
     protected:
         awaitable<void> waitForClient(uint16_t port) override;
 
@@ -231,6 +234,7 @@ namespace uranus::network {
 
         InitialCallback onInitial_;
         RemoveCallback onRemove_;
+        ExceptionCallback onException_;
     };
 
     template<class T>
@@ -264,9 +268,7 @@ namespace uranus::network {
     }
 
     template<kCodecType Codec>
-    ConnectionImpl<Codec>::~ConnectionImpl() {
-
-    }
+    ConnectionImpl<Codec>::~ConnectionImpl() = default;
 
     template<kCodecType Codec>
     void ConnectionImpl<Codec>::connect() {
@@ -388,11 +390,11 @@ namespace uranus::network {
     }
 
     template<kConnectionType T>
-    ServerBootstrapImpl<T>::ServerBootstrapImpl() {
-    }
+    ServerBootstrapImpl<T>::ServerBootstrapImpl() = default;
 
     template<kConnectionType T>
     ServerBootstrapImpl<T>::~ServerBootstrapImpl() {
+        ServerBootstrapImpl::terminate();
     }
 
     template<kConnectionType T>
@@ -434,6 +436,11 @@ namespace uranus::network {
     template<kConnectionType T>
     void ServerBootstrapImpl<T>::onRemove(const RemoveCallback &cb) {
         onRemove_ = cb;
+    }
+
+    template<kConnectionType T>
+    void ServerBootstrapImpl<T>::onException(const ExceptionCallback &cb) {
+        onException_ = cb;
     }
 
     template<kConnectionType T>
@@ -488,7 +495,9 @@ namespace uranus::network {
                 conn->connect();
             }
         } catch (std::exception &e) {
-
+            if (onException_) {
+                std::invoke(onException_, e);
+            }
         }
     }
 }
