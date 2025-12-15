@@ -20,6 +20,9 @@ namespace uranus {
         ~ActorConnection() override;
 
     protected:
+        void onConnect() override;
+        void onDisconnect() override;
+
         void onReadMessage(PackageHandle &&pkg) override;
 
         void beforeWrite(Package *pkg) override;

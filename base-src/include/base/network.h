@@ -107,6 +107,9 @@ namespace uranus::network {
         virtual awaitable<void> readMessage() = 0;
         virtual awaitable<void> writeMessage() = 0;
 
+        virtual void onConnect() = 0;
+        virtual void onDisconnect() = 0;
+
         virtual void onTimeout() = 0;
         virtual void onErrorCode(error_code ec) = 0;
         virtual void onException(std::exception &e) = 0;
@@ -121,7 +124,6 @@ namespace uranus::network {
         std::string key_;
         AttributeMap attr_;
 
-    private:
         SteadyTimer watchdog_;
         SteadyDuration expiration_;
         SteadyTimePoint received_;
@@ -277,9 +279,25 @@ namespace uranus::network {
 
     template<kCodecType Codec>
     void ConnectionImpl<Codec>::disconnect() {
-        Connection::disconnect();
+        if (!isConnected())
+            return;
+
+#ifdef URANUS_SSL
+        socket_.next_layer().close();
+#else
+        socket_.close();
+#endif
+        watchdog_.cancel();
+
         output_.cancel();
         output_.close();
+
+        // Call the virtual method
+        onDisconnect();
+
+        if (!attr().has("REPEATED")) {
+            server_.remove(key_);
+        }
     }
 
     template<kCodecType Codec>

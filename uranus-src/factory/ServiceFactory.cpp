@@ -10,6 +10,11 @@ namespace uranus {
     static constexpr auto kCoreServiceDirectory = "core";
     static constexpr auto kExtendServiceDirectory = "extend";
 
+#if defined(__APPLE__) || defined(__linux__)
+    static constexpr auto kLibraryPrefix = "lib";
+#endif
+
+
     ServiceFactory::ServiceFactory() {
     }
 
@@ -45,11 +50,11 @@ namespace uranus {
 #if defined(_WIN32) || defined(_WIN64)
             if (entry.is_regular_file() && entry.path().extension() == ".dll") {
                 const auto filename = entry.path().stem().string();
-#elif
-            if (entry.is_regular_file() && entry.path().extension() == ".so") {
+#elif defined(__APPLE__)
+            if (entry.is_regular_file() && entry.path().extension() == ".dylib") {
                 auto filename = entry.path().stem().string();
-                if (filename.compare(0, strlen(kLinuxLibraryPrefix), kLinuxLibraryPrefix) == 0) {
-                    filename.erase(0, strlen(kLinuxLibraryPrefix));
+                if (filename.compare(0, strlen(kLibraryPrefix), kLibraryPrefix) == 0) {
+                    filename.erase(0, strlen(kLibraryPrefix));
                 }
 #endif
                 SharedLibrary library(entry.path());
@@ -86,11 +91,11 @@ namespace uranus {
 #if defined(_WIN32) || defined(_WIN64)
             if (entry.is_regular_file() && entry.path().extension() == ".dll") {
                 const auto filename = entry.path().stem().string();
-#elif
+#elif defined(__APPLE__)
             if (entry.is_regular_file() && entry.path().extension() == ".so") {
                 auto filename = entry.path().stem().string();
-                if (filename.compare(0, strlen(kLinuxLibraryPrefix), kLinuxLibraryPrefix) == 0) {
-                    filename.erase(0, strlen(kLinuxLibraryPrefix));
+                if (filename.compare(0, strlen(kLibraryPrefix), kLibraryPrefix) == 0) {
+                    filename.erase(0, strlen(kLibraryPrefix));
                 }
 #endif
                 SharedLibrary library(entry.path());

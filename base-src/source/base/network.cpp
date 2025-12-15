@@ -90,6 +90,7 @@ namespace uranus::network {
     }
 
     void Connection::connect() {
+        // Mark the received timestamp
         received_ = std::chrono::steady_clock::now();
 
         co_spawn(socket_.get_executor(), [self = this->shared_from_this()]() -> awaitable<void> {
@@ -99,6 +100,8 @@ namespace uranus::network {
                 co_return;
             }
 #endif
+
+            self->onConnect();
 
             co_await (
                 self->readMessage() &&
@@ -118,6 +121,9 @@ namespace uranus::network {
         socket_.close();
 #endif
         watchdog_.cancel();
+
+        // Call the virtual method
+        onDisconnect();
 
         if (!attr().has("REPEATED")) {
             server_.remove(key_);
