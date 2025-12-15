@@ -38,6 +38,7 @@ namespace uranus {
             ServiceDeleter del = nullptr;
         };
 
-        std::unordered_map<std::string, ServiceNode> services_;
+        std::unordered_map<std::string, ServiceNode> coreServices_;
+        std::unordered_map<std::string, ServiceNode> extendServices_;
     };
 } // uranus
