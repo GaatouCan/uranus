@@ -1,12 +1,18 @@
 #include "ActorConnection.h"
 #include "Gateway.h"
 
+#include "../GameWorld.h"
 #include "../player/PlayerManager.h"
 #include "../player/PlayerContext.h"
 
 #include <spdlog/spdlog.h>
 
+
 namespace uranus {
+
+    using actor::Package;
+    using actor::Envelope;
+
     ActorConnection::ActorConnection(ServerBootstrap &server, TcpSocket &&socket)
         : ConnectionImpl(server, std::move(socket)),
           gateway_(nullptr) {
@@ -44,6 +50,22 @@ namespace uranus {
         }
 
         const auto pid = op.value();
+
+        const auto *mgr = dynamic_cast<PlayerManager *>(getWorld()->getServerModule("PlayerManager"));
+        if (!mgr)
+            return;
+
+        const auto ctx = mgr->find(pid);
+        if (!ctx)
+            return;
+
+        Envelope envelope;
+
+        envelope.type = (Package::kFromClient | Package::kToPlayer);
+        envelope.source = pid;
+        envelope.package = std::move(pkg);
+
+        ctx->pushEnvelope(std::move(envelope));
     }
 
     void ActorConnection::beforeWrite(Package *pkg) {
