@@ -1,4 +1,5 @@
 #include "ServiceManager.h"
+#include "ServiceContext.h"
 
 namespace uranus {
     ServiceManager::ServiceManager(GameWorld &world)
@@ -12,5 +13,9 @@ namespace uranus {
     }
 
     void ServiceManager::stop() {
+    }
+
+    GameWorld &ServiceManager::getWorld() const {
+        return world_;
     }
 } // uranus

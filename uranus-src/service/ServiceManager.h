@@ -2,10 +2,20 @@
 
 #include <actor/ServerModule.h>
 
+#include <shared_mutex>
+#include <unordered_map>
+
 namespace uranus {
 
     using actor::ServerModule;
+    using std::unordered_map;
+    using std::shared_ptr;
+    using std::shared_mutex;
+    using std::unique_lock;
+    using std::shared_lock;
+
     class GameWorld;
+    class ServiceContext;
 
     class ServiceManager final : public ServerModule {
 
@@ -18,7 +28,12 @@ namespace uranus {
         void start() override;
         void stop() override;
 
+        [[nodiscard]] GameWorld &getWorld() const;
+
     private:
         GameWorld &world_;
+
+        mutable shared_mutex mutex_;
+        unordered_map<uint32_t, shared_ptr<ServiceContext>> services_;
     };
 } // uranus
