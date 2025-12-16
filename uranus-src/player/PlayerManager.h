@@ -23,9 +23,7 @@ namespace uranus {
         explicit PlayerManager(GameWorld &world);
         ~PlayerManager() override;
 
-        [[nodiscard]] constexpr const char *getModuleName() override {
-            return "PlayerManager";
-        }
+        SERVER_MODULE_NAME(PlayerManager)
 
         [[nodiscard]] GameWorld &getWorld() const;
 

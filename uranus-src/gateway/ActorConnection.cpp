@@ -51,7 +51,7 @@ namespace uranus {
 
         const auto pid = op.value();
 
-        const auto *mgr = dynamic_cast<PlayerManager *>(getWorld()->getServerModule("PlayerManager"));
+        const auto *mgr = GetServerModule(PlayerManager);
         if (!mgr)
             return;
 

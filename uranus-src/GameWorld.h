@@ -44,4 +44,11 @@ namespace uranus {
         unordered_map<std::string, unique_ptr<ServerModule>> modules_;
         vector<ServerModule *> ordered_;
     };
+
+#define GetServerModule(s) \
+    dynamic_cast<s *>(getWorld()->getServerModule(#s));
+
+#define GET_SERVER_MODULE(gw, s) \
+    dynamic_cast<s *>((gw)->getServerModule(#s));
+
 }

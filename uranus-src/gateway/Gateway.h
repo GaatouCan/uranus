@@ -30,9 +30,7 @@ namespace uranus {
 
         DISABLE_COPY_MOVE(Gateway)
 
-        [[nodiscard]] constexpr const char *getModuleName() override {
-            return "Gateway";
-        }
+        SERVER_MODULE_NAME(Gateway)
 
         void start() override;
         void stop() override;

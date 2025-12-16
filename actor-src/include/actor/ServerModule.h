@@ -19,4 +19,10 @@ namespace uranus::actor {
         virtual void start() = 0;
         virtual void stop() = 0;
     };
+
+#define SERVER_MODULE_NAME(s) \
+[[nodiscard]] constexpr const char *getModuleName() override { \
+    return #s; \
+}
+
 }
