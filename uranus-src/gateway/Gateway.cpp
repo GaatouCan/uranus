@@ -3,6 +3,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "../GameWorld.h"
+
 namespace uranus {
     Gateway::Gateway(GameWorld &world)
         : world_(world) {
@@ -66,5 +68,13 @@ namespace uranus {
         if (bootstrap_) {
             bootstrap_->remove(key);
         }
+    }
+
+    void Gateway::onLogout(uint32_t pid) {
+        if (!world_.isRunning())
+            return;
+
+        unique_lock lock(mutex_);
+        pidToKey_.erase(pid);
     }
 }

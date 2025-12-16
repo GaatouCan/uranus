@@ -42,6 +42,8 @@ namespace uranus {
 
         void remove(const std::string &key) const;
 
+        void onLogout(uint32_t pid);
+
     private:
         GameWorld &world_;
 

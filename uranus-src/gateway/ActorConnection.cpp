@@ -35,6 +35,13 @@ namespace uranus {
     }
 
     void ActorConnection::onDisconnect() {
+        const auto op = attr().get<uint32_t>("PLAYER_ID");
+        if (!op.has_value()) {
+            return;
+        }
+
+        const auto pid = op.value();
+        gateway_->onLogout(pid);
     }
 
     void ActorConnection::onReadMessage(PackageHandle &&pkg) {
