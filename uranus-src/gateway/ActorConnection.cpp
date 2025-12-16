@@ -1,6 +1,9 @@
 #include "ActorConnection.h"
 #include "Gateway.h"
 
+#include "../player/PlayerManager.h"
+#include "../player/PlayerContext.h"
+
 #include <spdlog/spdlog.h>
 
 namespace uranus {
@@ -19,6 +22,18 @@ namespace uranus {
     }
 
     void ActorConnection::onReadMessage(PackageHandle &&pkg) {
+        if (!pkg)
+            return;
+
+        const auto op = attr().get<uint32_t>("PLAYER_ID");
+
+        // Not login
+        if (!op.has_value()) {
+            // TODO
+            return;
+        }
+
+        const auto pid = op.value();
     }
 
     void ActorConnection::beforeWrite(Package *pkg) {

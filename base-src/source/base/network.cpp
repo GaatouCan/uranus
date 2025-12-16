@@ -65,7 +65,7 @@ namespace uranus::network {
         : server_(server),
           socket_(std::move(socket)),
           watchdog_(socket_.get_executor()),
-          expiration_(std::chrono::seconds(30)) {
+          expiration_(std::chrono::seconds(-1)) {
 
         const auto now = std::chrono::system_clock::now();
         const auto durationSinceEpoch = now.time_since_epoch();

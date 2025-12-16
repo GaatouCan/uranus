@@ -14,6 +14,7 @@ namespace uranus {
     }
 
     PlayerManager::~PlayerManager() {
+        players_.clear();
     }
 
     GameWorld &PlayerManager::getWorld() const {
@@ -64,6 +65,9 @@ namespace uranus {
         }
 
         ctx->setUpActor({plr, [](BaseActor *ptr) {
+            if (!ptr)
+                return;
+
             if (auto *temp = dynamic_cast<BasePlayer *>(ptr)) {
                 PlayerFactory::instance().destroy(temp);
                 return;
