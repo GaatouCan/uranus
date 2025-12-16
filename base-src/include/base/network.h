@@ -292,12 +292,12 @@ namespace uranus::network {
         output_.cancel();
         output_.close();
 
-        // Call the virtual method
-        onDisconnect();
-
         if (!attr().has("REPEATED")) {
             server_.remove(key_);
         }
+
+        // Call the virtual method
+        onDisconnect();
     }
 
     template<kCodecType Codec>

@@ -122,12 +122,12 @@ namespace uranus::network {
 #endif
         watchdog_.cancel();
 
-        // Call the virtual method
-        onDisconnect();
-
         if (!attr().has("REPEATED")) {
             server_.remove(key_);
         }
+
+        // Call the virtual method
+        onDisconnect();
     }
 
     bool Connection::isConnected() const {
