@@ -1,9 +1,9 @@
 #include "ActorConnection.h"
 #include "Gateway.h"
 
-#include "../GameWorld.h"
-#include "../player/PlayerManager.h"
-#include "../player/PlayerContext.h"
+#include "GameWorld.h"
+#include "player/PlayerManager.h"
+#include "player/PlayerContext.h"
 
 #include <spdlog/spdlog.h>
 
@@ -42,6 +42,10 @@ namespace uranus {
 
         const auto pid = op.value();
         gateway_->onLogout(pid);
+
+        if (auto *mgr = GetModule(PlayerManager)) {
+            mgr->remove(pid);
+        }
     }
 
     void ActorConnection::onReadMessage(PackageHandle &&pkg) {

@@ -13,6 +13,9 @@ if (MSVC)
 endif ()
 
 add_executable(uranus ${URANUS_FILES})
+
+target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(uranus PUBLIC base)
 target_link_libraries(uranus PUBLIC actor)
 target_link_libraries(uranus PUBLIC spdlog::spdlog)

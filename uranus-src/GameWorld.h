@@ -46,9 +46,9 @@ namespace uranus {
     };
 
 #define GetModule(s) \
-    dynamic_cast<s *>(getWorld()->getModule(#s));
+    dynamic_cast<s *>(getWorld()->getModule(#s))
 
 #define GET_MODULE(gw, s) \
-    dynamic_cast<s *>((gw)->getModule(#s));
+    dynamic_cast<s *>((gw)->getModule(#s))
 
 }

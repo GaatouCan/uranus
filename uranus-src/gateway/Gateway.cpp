@@ -1,9 +1,8 @@
 #include "Gateway.h"
 #include "ActorConnection.h"
+#include "GameWorld.h"
 
 #include <spdlog/spdlog.h>
-
-#include "../GameWorld.h"
 
 namespace uranus {
     Gateway::Gateway(GameWorld &world)

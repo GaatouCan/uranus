@@ -1,9 +1,9 @@
 #include "PlayerContext.h"
 #include "PlayerManager.h"
 
-#include "../GameWorld.h"
-#include "../gateway/ActorConnection.h"
-#include "../gateway/Gateway.h"
+#include "GameWorld.h"
+#include "gateway/ActorConnection.h"
+#include "gateway/Gateway.h"
 
 namespace uranus {
 

@@ -1,7 +1,7 @@
 #include "PlayerManager.h"
 #include "PlayerContext.h"
-#include "../GameWorld.h"
-#include "../factory/PlayerFactory.h"
+#include "GameWorld.h"
+#include "factory/PlayerFactory.h"
 
 #include <actor/BasePlayer.h>
 
