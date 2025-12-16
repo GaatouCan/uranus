@@ -7,12 +7,22 @@
 #include <spdlog/spdlog.h>
 
 namespace uranus {
-
     ActorConnection::ActorConnection(ServerBootstrap &server, TcpSocket &&socket)
-        : ConnectionImpl(server, std::move(socket)) {
+        : ConnectionImpl(server, std::move(socket)),
+          gateway_(nullptr) {
     }
 
     ActorConnection::~ActorConnection() {
+    }
+
+    Gateway *ActorConnection::getGateway() const {
+        return gateway_;
+    }
+
+    GameWorld *ActorConnection::getWorld() const {
+        if (gateway_)
+            return &gateway_->getWorld();
+        return nullptr;
     }
 
     void ActorConnection::onConnect() {
@@ -51,5 +61,9 @@ namespace uranus {
 
     void ActorConnection::onException(std::exception &e) {
         SPDLOG_ERROR(e.what());
+    }
+
+    void ActorConnection::setGateway(Gateway *gateway) {
+        gateway_ = gateway;
     }
 }

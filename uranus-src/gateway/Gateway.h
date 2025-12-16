@@ -37,6 +37,8 @@ namespace uranus {
         void start() override;
         void stop() override;
 
+        [[nodiscard]] GameWorld &getWorld() const;
+
         [[nodiscard]] std::shared_ptr<ActorConnection> find(const std::string &key) const;
         [[nodiscard]] std::shared_ptr<ActorConnection> findByPlayerID(uint32_t pid) const;
 

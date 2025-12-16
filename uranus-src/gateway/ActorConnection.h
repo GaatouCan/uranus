@@ -12,12 +12,18 @@ namespace uranus {
     using actor::PackageCodec;
 
     class Gateway;
+    class GameWorld;
 
     class ActorConnection final : public ConnectionImpl<PackageCodec> {
+
+        friend class Gateway;
 
     public:
         ActorConnection(ServerBootstrap &Server, TcpSocket &&socket);
         ~ActorConnection() override;
+
+        [[nodiscard]] Gateway *getGateway() const;
+        [[nodiscard]] GameWorld *getWorld() const;
 
     protected:
         void onConnect() override;
@@ -32,5 +38,11 @@ namespace uranus {
 
         void onErrorCode(std::error_code ec) override;
         void onException(std::exception &e) override;
+
+    private:
+        void setGateway(Gateway *gateway);
+
+    private:
+        Gateway *gateway_;
     };
 }

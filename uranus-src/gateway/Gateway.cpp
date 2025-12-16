@@ -32,6 +32,10 @@ namespace uranus {
 
     }
 
+    GameWorld &Gateway::getWorld() const {
+        return world_;
+    }
+
     std::shared_ptr<ActorConnection> Gateway::find(const std::string &key) const {
         if (!bootstrap_)
             return nullptr;
