@@ -32,8 +32,8 @@ namespace uranus {
         asio::io_context &getIOContext();
         asio::io_context &getWorkerIOContext();
 
-        void pushServerModule(ServerModule *module);
-        [[nodiscard]] ServerModule *getServerModule(const std::string &name) const;
+        void pushModule(ServerModule *module);
+        [[nodiscard]] ServerModule *getModule(const std::string &name) const;
 
     private:
         asio::io_context ctx_;
@@ -45,10 +45,10 @@ namespace uranus {
         vector<ServerModule *> ordered_;
     };
 
-#define GetServerModule(s) \
-    dynamic_cast<s *>(getWorld()->getServerModule(#s));
+#define GetModule(s) \
+    dynamic_cast<s *>(getWorld()->getModule(#s));
 
-#define GET_SERVER_MODULE(gw, s) \
-    dynamic_cast<s *>((gw)->getServerModule(#s));
+#define GET_MODULE(gw, s) \
+    dynamic_cast<s *>((gw)->getModule(#s));
 
 }

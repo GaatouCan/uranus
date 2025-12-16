@@ -58,7 +58,7 @@ namespace uranus {
 
         const auto pid = op.value();
 
-        const auto *mgr = GetServerModule(PlayerManager);
+        const auto *mgr = GetModule(PlayerManager);
         if (!mgr)
             return;
 

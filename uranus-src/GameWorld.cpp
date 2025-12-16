@@ -31,7 +31,7 @@ namespace uranus {
         return pool_.getIOContext();
     }
 
-    void GameWorld::pushServerModule(ServerModule *module) {
+    void GameWorld::pushModule(ServerModule *module) {
         if (!module)
             return;
 
@@ -44,7 +44,7 @@ namespace uranus {
         ordered_.emplace_back(module);
     }
 
-    ServerModule *GameWorld::getServerModule(const std::string &name) const {
+    ServerModule *GameWorld::getModule(const std::string &name) const {
         const auto iter = modules_.find(name);
         return iter != modules_.end() ? iter->second.get() : nullptr;
     }

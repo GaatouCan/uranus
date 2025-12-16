@@ -1,8 +1,14 @@
 #include "PlayerContext.h"
-
 #include "PlayerManager.h"
 
+#include "../GameWorld.h"
+#include "../gateway/ActorConnection.h"
+#include "../gateway/Gateway.h"
+
 namespace uranus {
+
+    using actor::Package;
+
     PlayerContext::PlayerContext(asio::io_context &ctx)
         : ActorContext(ctx),
           manager_(nullptr) {
@@ -11,7 +17,18 @@ namespace uranus {
     PlayerContext::~PlayerContext() {
     }
 
-    void PlayerContext::send(int ty, uint32_t target, actor::PackageHandle &&pkg) {
+    void PlayerContext::send(int ty, uint32_t target, PackageHandle &&pkg) {
+        if ((ty & Package::kToService) != 0) {
+            // TODO
+        } else if ((ty & Package::kToClient) != 0) {
+            const auto *gateway = GetModule(Gateway);
+            if (gateway) {
+                if (const auto client = gateway->findByPlayerID(getId())) {
+                    client->send(std::move(pkg));
+                    return;
+                }
+            }
+        }
     }
 
     PlayerManager *PlayerContext::getPlayerManager() const {
