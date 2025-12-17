@@ -14,11 +14,6 @@ namespace uranus {
     PlayerFactory::~PlayerFactory() {
     }
 
-    PlayerFactory &PlayerFactory::instance() {
-        static PlayerFactory _instance;
-        return _instance;
-    }
-
     void PlayerFactory::initial() {
         if (const auto dir = std::filesystem::path(); !std::filesystem::exists(dir)) {
             try {

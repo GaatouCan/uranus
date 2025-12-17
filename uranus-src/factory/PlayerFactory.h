@@ -1,6 +1,6 @@
 #pragma once
 
-#include <base/noncopy.h>
+#include <base/Singleton.h>
 #include <base/SharedLibrary.h>
 
 namespace uranus {
@@ -11,20 +11,17 @@ namespace uranus {
 
     using actor::BasePlayer;
 
-    class PlayerFactory final {
+    class PlayerFactory final : public Singleton<PlayerFactory> {
+
+        friend class Singleton;
 
         using PlayerCreator = BasePlayer* (*)();
         using PlayerDeleter = void (*)(BasePlayer *);
 
         PlayerFactory();
+        ~PlayerFactory() override;
 
     public:
-        ~PlayerFactory();
-
-        DISABLE_COPY_MOVE(PlayerFactory)
-
-        static PlayerFactory &instance();
-
         void initial();
 
         [[nodiscard]] BasePlayer* create() const;
