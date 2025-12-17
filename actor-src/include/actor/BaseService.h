@@ -9,5 +9,7 @@ namespace uranus::actor {
     public:
         BaseService();
         ~BaseService() override;
+
+        [[nodiscard]] virtual std::string getName() const = 0;
     };
 }

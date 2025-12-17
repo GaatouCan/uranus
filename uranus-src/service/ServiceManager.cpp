@@ -29,7 +29,7 @@ namespace uranus {
 
             auto *ser = ServiceFactory::instance().create(path);
             if (!ser) {
-                // TODO: log
+                SPDLOG_ERROR("Create service instance failed: {}", path);
                 exit(-1);
             }
 
@@ -50,20 +50,32 @@ namespace uranus {
             }});
 
             services_.insert_or_assign(sid, ctx);
+            SPDLOG_INFO("Created service[{} - {}]", sid, path);
         }
 
         for (const auto &[sid, ctx] : services_) {
             ctx->run();
+            SPDLOG_INFO("Started service [{} - {}]", sid, ctx->getService()->getName());
         }
     }
 
     void ServiceManager::stop() {
         for (const auto &[sid, ctx] : services_) {
             ctx->terminate();
+            SPDLOG_INFO("Stopped service [{} - {}]", sid, ctx->getService()->getName());
         }
     }
 
     GameWorld &ServiceManager::getWorld() const {
         return world_;
+    }
+
+    shared_ptr<ServiceContext> ServiceManager::find(const uint32_t sid) const {
+        if (!world_.isRunning())
+            return nullptr;
+
+        shared_lock lock(mutex_);
+        const auto iter = services_.find(sid);
+        return iter == services_.end() ? nullptr : iter->second;
     }
 } // uranus

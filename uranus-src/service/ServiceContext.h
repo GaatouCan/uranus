@@ -5,7 +5,13 @@
 
 namespace uranus {
 
+    namespace actor {
+        class BaseService;
+    }
+
+    using actor::BaseService;
     using actor::ActorContext;
+    using actor::PackageHandle;
 
     class ServiceManager;
     class GameWorld;
@@ -18,7 +24,9 @@ namespace uranus {
         explicit ServiceContext(asio::io_context &ctx);
         ~ServiceContext() override;
 
-        void send(int ty, uint32_t target, actor::PackageHandle &&pkg) override;
+        [[nodiscard]] BaseService *getService() const;
+
+        void send(int ty, uint32_t target, PackageHandle &&pkg) override;
 
         [[nodiscard]] ServiceManager *getServiceManager() const;
         [[nodiscard]] GameWorld *getWorld() const;

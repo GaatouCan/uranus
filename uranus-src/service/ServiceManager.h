@@ -31,6 +31,8 @@ namespace uranus {
 
         [[nodiscard]] GameWorld &getWorld() const;
 
+        [[nodiscard]] shared_ptr<ServiceContext> find(uint32_t sid) const;
+
     private:
         GameWorld &world_;
 
