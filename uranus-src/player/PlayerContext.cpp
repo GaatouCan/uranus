@@ -4,10 +4,13 @@
 #include "GameWorld.h"
 #include "gateway/ActorConnection.h"
 #include "gateway/Gateway.h"
+#include "service/ServiceManager.h"
+#include "service/ServiceContext.h"
 
 namespace uranus {
 
     using actor::Package;
+    using actor::Envelope;
 
     PlayerContext::PlayerContext(asio::io_context &ctx)
         : ActorContext(ctx),
@@ -19,7 +22,17 @@ namespace uranus {
 
     void PlayerContext::send(int ty, uint32_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
-            // TODO
+            if (const auto *serviceMgr = GetModule(ServiceManager)) {
+                if (const auto ser = serviceMgr->find(target)) {
+                    Envelope envelope;
+
+                    envelope.type = (Package::kFromPlayer | Package::kToService);
+                    envelope.source = getId();
+                    envelope.package = std::move(pkg);
+
+                    ser->pushEnvelope(std::move(envelope));
+                }
+            }
         } else if ((ty & Package::kToClient) != 0) {
             if (const auto *gateway = GetModule(Gateway)) {
                 if (const auto client = gateway->findByPlayerID(getId())) {

@@ -28,7 +28,7 @@ namespace uranus {
         return nullptr;
     }
 
-    void ServiceContext::send(int ty, const uint32_t target, PackageHandle &&pkg) {
+    void ServiceContext::send(const int ty, const uint32_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
             if (target == getId())
                 return;
