@@ -1,5 +1,6 @@
 #pragma once
 
+#include <base/IdentAllocator.h>
 #include <actor/ServerModule.h>
 
 #include <shared_mutex>
@@ -32,6 +33,8 @@ namespace uranus {
 
     private:
         GameWorld &world_;
+
+        IdentAllocator<uint32_t, true> idAlloc_;
 
         mutable shared_mutex mutex_;
         unordered_map<uint32_t, shared_ptr<ServiceContext>> services_;
