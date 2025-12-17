@@ -22,11 +22,6 @@ namespace uranus {
         coreServices_.clear();
     }
 
-    ServiceFactory &ServiceFactory::instance() {
-        static ServiceFactory _inst;
-        return _inst;
-    }
-
     void ServiceFactory::initial() {
         if (const auto dir = std::filesystem::path(kCoreServiceDirectory); !std::filesystem::exists(dir)) {
             try {

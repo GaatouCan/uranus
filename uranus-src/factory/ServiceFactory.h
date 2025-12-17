@@ -1,6 +1,6 @@
 #pragma once
 
-#include <base/noncopy.h>
+#include <base/Singleton.h>
 #include <base/SharedLibrary.h>
 
 #include <unordered_map>
@@ -15,17 +15,14 @@ namespace uranus {
     using ServiceCreator = BaseService *(*)();
     using ServiceDeleter = void (*)(BaseService *);
 
-    class ServiceFactory final {
+    class ServiceFactory final : public Singleton<ServiceFactory> {
+
+        friend class Singleton;
 
         ServiceFactory();
+        ~ServiceFactory() override;
 
     public:
-        ~ServiceFactory();
-
-        DISABLE_COPY_MOVE(ServiceFactory)
-
-        static ServiceFactory& instance();
-
         void initial();
 
         BaseService *create(const std::string &path);
