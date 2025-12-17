@@ -21,8 +21,7 @@ namespace uranus {
         if ((ty & Package::kToService) != 0) {
             // TODO
         } else if ((ty & Package::kToClient) != 0) {
-            const auto *gateway = GetModule(Gateway);
-            if (gateway) {
+            if (const auto *gateway = GetModule(Gateway)) {
                 if (const auto client = gateway->findByPlayerID(getId())) {
                     client->send(std::move(pkg));
                     return;
