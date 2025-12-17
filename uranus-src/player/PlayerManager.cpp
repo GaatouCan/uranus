@@ -33,10 +33,26 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
+        auto *plr = PlayerFactory::instance().create();
+
+        if (!plr)
+            return;
+
         auto ctx = std::make_shared<PlayerContext>(world_.getWorkerIOContext());
 
         ctx->setId(pid);
         ctx->setPlayerManager(this);
+        ctx->setUpActor({plr, [](BaseActor *ptr) {
+            if (!ptr)
+                return;
+
+            if (auto *temp = dynamic_cast<BasePlayer *>(ptr)) {
+                PlayerFactory::instance().destroy(temp);
+                return;
+            }
+
+            delete ptr;
+        }});
 
         bool repeated = false;
 
@@ -54,27 +70,6 @@ namespace uranus {
             ctx->terminate();
             return;
         }
-
-        auto *plr = PlayerFactory::instance().create();
-
-        if (!plr) {
-            ctx->terminate();
-            unique_lock lock(mutex_);
-            players_.erase(pid);
-            return;
-        }
-
-        ctx->setUpActor({plr, [](BaseActor *ptr) {
-            if (!ptr)
-                return;
-
-            if (auto *temp = dynamic_cast<BasePlayer *>(ptr)) {
-                PlayerFactory::instance().destroy(temp);
-                return;
-            }
-
-            delete ptr;
-        }});
 
         ctx->run();
     }
