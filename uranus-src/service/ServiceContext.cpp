@@ -75,6 +75,9 @@ namespace uranus {
     }
 
     ServerModule *ServiceContext::getModule(const std::string &name) const {
+        if (manager_ && manager_->getModuleName() == name)
+            return manager_;
+
         if (const auto *world = getWorld()) {
             return world->getModule(name);
         }

@@ -20,7 +20,7 @@ namespace uranus {
     PlayerContext::~PlayerContext() {
     }
 
-    void PlayerContext::send(int ty, uint32_t target, PackageHandle &&pkg) {
+    void PlayerContext::send(const int ty, const uint32_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
             if (const auto *serviceMgr = GetModule(ServiceManager)) {
                 if (const auto ser = serviceMgr->find(target)) {
@@ -55,6 +55,9 @@ namespace uranus {
     }
 
     ServerModule *PlayerContext::getModule(const std::string &name) const {
+        if (manager_ && manager_->getModuleName() == name)
+            return manager_;
+
         if (const auto *world = getWorld()) {
             return world->getModule(name);
         }
