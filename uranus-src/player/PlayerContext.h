@@ -5,6 +5,8 @@
 namespace uranus {
 
     using actor::ActorContext;
+    using actor::ServerModule;
+    using actor::PackageHandle;
 
     class PlayerManager;
     class GameWorld;
@@ -17,10 +19,12 @@ namespace uranus {
         explicit PlayerContext(asio::io_context &ctx);
         ~PlayerContext() override;
 
-        void send(int ty, uint32_t target, actor::PackageHandle &&pkg) override;
+        void send(int ty, uint32_t target, PackageHandle &&pkg) override;
 
         [[nodiscard]] PlayerManager *getPlayerManager() const;
         [[nodiscard]] GameWorld *getWorld() const;
+
+        [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
 
     private:
         void setPlayerManager(PlayerManager *mgr);

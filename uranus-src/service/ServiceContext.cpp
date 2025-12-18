@@ -74,6 +74,14 @@ namespace uranus {
         return nullptr;
     }
 
+    ServerModule *ServiceContext::getModule(const std::string &name) const {
+        if (const auto *world = getWorld()) {
+            return world->getModule(name);
+        }
+
+        return nullptr;
+    }
+
     void ServiceContext::setServiceManager(ServiceManager *mgr) {
         manager_ = mgr;
     }

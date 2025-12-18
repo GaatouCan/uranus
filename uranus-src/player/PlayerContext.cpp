@@ -54,6 +54,14 @@ namespace uranus {
         return nullptr;
     }
 
+    ServerModule *PlayerContext::getModule(const std::string &name) const {
+        if (const auto *world = getWorld()) {
+            return world->getModule(name);
+        }
+
+        return nullptr;
+    }
+
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {
         manager_ = mgr;
     }

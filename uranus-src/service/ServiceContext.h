@@ -12,6 +12,7 @@ namespace uranus {
     using actor::BaseService;
     using actor::ActorContext;
     using actor::PackageHandle;
+    using actor::ServerModule;
 
     class ServiceManager;
     class GameWorld;
@@ -30,6 +31,7 @@ namespace uranus {
 
         [[nodiscard]] ServiceManager *getServiceManager() const;
         [[nodiscard]] GameWorld *getWorld() const;
+        [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
 
     private:
         void setServiceManager(ServiceManager *mgr);
