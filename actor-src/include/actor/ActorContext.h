@@ -5,13 +5,15 @@
 #include <base/noncopy.h>
 #include <base/types.h>
 #include <base/AttributeMap.h>
+#include <asio/co_spawn.hpp>
 #include <memory>
 #include <functional>
-#include <asio/co_spawn.hpp>
+
 
 namespace uranus::actor {
 
     class BaseActor;
+    class ServerModule;
 
     using std::unique_ptr;
     using std::function;
@@ -36,6 +38,8 @@ namespace uranus::actor {
 
         void setUpActor(ActorHandle &&handle);
         [[nodiscard]] BaseActor *getActor() const;
+
+        virtual ServerModule *getModule(const std::string &name) const = 0;
 
         virtual void run();
         virtual void terminate();
