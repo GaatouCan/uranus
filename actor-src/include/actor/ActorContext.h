@@ -35,6 +35,7 @@ namespace uranus::actor {
 
         void setId(uint32_t id);
         [[nodiscard]] uint32_t getId() const;
+        [[nodiscard]] AttributeMap &attr();
 
         void setUpActor(ActorHandle &&handle);
         [[nodiscard]] BaseActor *getActor() const;
@@ -43,8 +44,6 @@ namespace uranus::actor {
 
         virtual void run();
         virtual void terminate();
-
-        [[nodiscard]] AttributeMap &attr();
 
         [[nodiscard]] bool isRunning() const;
 
