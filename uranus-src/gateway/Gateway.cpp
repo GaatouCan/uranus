@@ -16,12 +16,19 @@ namespace uranus {
     }
 
     void Gateway::start() {
-        bootstrap_ = std::make_unique<network::ServerBootstrapImpl<ActorConnection>>();
+        auto *bootstrap = new network::ServerBootstrapImpl<ActorConnection>();
+        // bootstrap_ = std::make_unique<network::ServerBootstrapImpl<ActorConnection>>();
 
 #ifdef URANUS_SSL
-        bootstrap_->useCertificateChainFile("server.crt");
-        bootstrap_->usePrivateKeyFile("server.pem");
+        bootstrap->useCertificateChainFile("server.crt");
+        bootstrap->usePrivateKeyFile("server.pem");
 #endif
+
+        bootstrap->onInitial([this](const std::shared_ptr<ActorConnection> &conn) {
+            conn->setGateway(this);
+        });
+
+        bootstrap_ = std::unique_ptr<network::ServerBootstrapImpl<ActorConnection>>(bootstrap);
 
         thread_ = std::thread([this] {
             SPDLOG_INFO("Listening on port: {}", 8080);
