@@ -65,6 +65,11 @@ namespace uranus {
         return nullptr;
     }
 
+    std::map<std::string, uint32_t> PlayerContext::getServiceList() const {
+        // TODO
+        return {};
+    }
+
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {
         manager_ = mgr;
     }

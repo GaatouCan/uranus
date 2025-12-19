@@ -85,6 +85,11 @@ namespace uranus {
         return nullptr;
     }
 
+    std::map<std::string, uint32_t> ServiceContext::getServiceList() const {
+        // TODO
+        return {};
+    }
+
     void ServiceContext::setServiceManager(ServiceManager *mgr) {
         manager_ = mgr;
     }

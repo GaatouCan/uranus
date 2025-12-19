@@ -33,6 +33,8 @@ namespace uranus {
         [[nodiscard]] GameWorld *getWorld() const;
         [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
 
+        std::map<std::string, uint32_t> getServiceList() const override;
+
     private:
         void setServiceManager(ServiceManager *mgr);
 

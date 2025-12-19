@@ -6,6 +6,7 @@
 #include <base/types.h>
 #include <base/AttributeMap.h>
 #include <asio/co_spawn.hpp>
+#include <map>
 #include <memory>
 #include <functional>
 
@@ -50,6 +51,8 @@ namespace uranus::actor {
         void pushEnvelope(Envelope &&envelope);
 
         virtual void send(int ty, uint32_t target, PackageHandle &&pkg) = 0;
+
+        virtual std::map<std::string, uint32_t> getServiceList() const = 0;
 
     private:
         awaitable<void> process();
