@@ -1,8 +1,9 @@
 #pragma once
 
 #include "config.export.h"
-#include <actor/ServerModule.h>
 
+#include <actor/ServerModule.h>
+#include <yaml-cpp/node/node.h>
 
 namespace uranus::config {
 
@@ -18,6 +19,11 @@ namespace uranus::config {
 
         void start() override;
         void stop() override;
+
+        const YAML::Node &getServerConfig() const;
+
+    private:
+        YAML::Node config_;
     };
 } // config
 // uranus
