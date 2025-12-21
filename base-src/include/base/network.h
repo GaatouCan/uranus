@@ -210,7 +210,7 @@ namespace uranus::network {
     public:
         using Pointer = shared_ptr<T>;
 
-        using InitialCallback = std::function<void(const Pointer &)>;
+        using InitialCallback = std::function<bool(const Pointer &)>;
         using RemoveCallback = std::function<void(const std::string &)>;
         using ExceptionCallback = std::function<void(std::exception &e)>;
 
@@ -507,7 +507,11 @@ namespace uranus::network {
                 }
 
                 if (onInitial_) {
-                    std::invoke(onInitial_, conn);
+                    const auto ret = std::invoke(onInitial_, conn);
+                    if (!ret) {
+                        conn->disconnect();
+                        continue;
+                    }
                 }
 
                 conn->connect();

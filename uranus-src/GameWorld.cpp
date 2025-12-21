@@ -23,6 +23,7 @@ namespace uranus {
 
     void GameWorld::run() {
         for (const auto &val : ordered_) {
+            SPDLOG_INFO("Start module: {}", val->getModuleName());
             val->start();
         }
 
@@ -32,28 +33,38 @@ namespace uranus {
             exit(-1);
         }
 
+        // Get global server config
         const auto &cfg = config->getServerConfig();
 
+        // Read the worker threads number
         const auto num = cfg["server"]["worker"]["threads"].as<int>();
+
         pool_.start(num);
+        SPDLOG_INFO("Worker pool start with {} thread(s)", num);
 
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
             this->terminate();
         });
 
+        SPDLOG_INFO("GameWorld is running...");
         ctx_.run();
     }
 
     void GameWorld::terminate() {
-        if (!ctx_.stopped()) {
-            guard_.reset();
-            ctx_.stop();
-        }
+        if (ctx_.stopped())
+            return;
 
+        // Shutdown the main io_context first
+        guard_.reset();
+        ctx_.stop();
+
+        // Shutdown the workers pool
         pool_.stop();
 
+        // Shutdown all modules
         for (const auto &val : ordered_ | std::views::reverse) {
+            SPDLOG_INFO("Stop module: {}", val->getModuleName());
             val->stop();
         }
     }

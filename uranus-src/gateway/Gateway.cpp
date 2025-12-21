@@ -40,6 +40,9 @@ namespace uranus {
 
         bootstrap->onInitial([this](const std::shared_ptr<ActorConnection> &conn) {
             conn->setGateway(this);
+
+            SPDLOG_INFO("Accept client from {}", conn->remoteAddress().to_string());
+            return true;
         });
 
         bootstrap_ = std::unique_ptr<network::ServerBootstrapImpl<ActorConnection>>(bootstrap);
