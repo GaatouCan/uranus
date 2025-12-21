@@ -1,7 +1,15 @@
 #include "GameWorld.h"
 
+#include <ranges>
 #include <actor/ServerModule.h>
 #include <format>
+#include <asio/signal_set.hpp>
+#include <config/ConfigModule.h>
+
+#include <yaml-cpp/yaml.h>
+#include <spdlog/spdlog.h>
+
+using uranus::config::ConfigModule;
 
 namespace uranus {
     GameWorld::GameWorld()
@@ -14,9 +22,40 @@ namespace uranus {
     }
 
     void GameWorld::run() {
+        for (const auto &val : ordered_) {
+            val->start();
+        }
+
+        const auto *config = dynamic_cast<ConfigModule *>(getModule("ConfigModule"));
+        if (!config) {
+            SPDLOG_ERROR("Config module not found!");
+            exit(-1);
+        }
+
+        const auto &cfg = config->getServerConfig();
+
+        const auto num = cfg["server"]["worker"]["threads"].as<int>();
+        pool_.start(num);
+
+        asio::signal_set signals(ctx_, SIGINT, SIGTERM);
+        signals.async_wait([this](auto, auto) {
+            this->terminate();
+        });
+
+        ctx_.run();
     }
 
     void GameWorld::terminate() {
+        if (!ctx_.stopped()) {
+            guard_.reset();
+            ctx_.stop();
+        }
+
+        pool_.stop();
+
+        for (const auto &val : ordered_ | std::views::reverse) {
+            val->stop();
+        }
     }
 
     bool GameWorld::isRunning() const {

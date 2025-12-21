@@ -2,7 +2,11 @@
 #include "ActorConnection.h"
 #include "GameWorld.h"
 
+#include <config/ConfigModule.h>
+#include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
+
+using uranus::config::ConfigModule;
 
 namespace uranus {
     Gateway::Gateway(GameWorld &world)
@@ -16,8 +20,18 @@ namespace uranus {
     }
 
     void Gateway::start() {
+        auto *config = dynamic_cast<ConfigModule *>(world_.getModule("ConfigModule"));
+        if (!config) {
+            SPDLOG_ERROR("Config module is not available");
+            exit(-1);
+        }
+
+        const auto &cfg = config->getServerConfig();
+
+        const auto port = cfg["server"]["network"]["port"].as<uint16_t>();
+        const auto threads = cfg["server"]["network"]["threads"].as<int>();
+
         auto *bootstrap = new network::ServerBootstrapImpl<ActorConnection>();
-        // bootstrap_ = std::make_unique<network::ServerBootstrapImpl<ActorConnection>>();
 
 #ifdef URANUS_SSL
         bootstrap->useCertificateChainFile("server.crt");
@@ -30,9 +44,9 @@ namespace uranus {
 
         bootstrap_ = std::unique_ptr<network::ServerBootstrapImpl<ActorConnection>>(bootstrap);
 
-        thread_ = std::thread([this] {
-            SPDLOG_INFO("Listening on port: {}", 8080);
-            bootstrap_->run(4, 8080);
+        thread_ = std::thread([this, port, threads]() {
+            SPDLOG_INFO("Listening on port: {}", port);
+            bootstrap_->run(threads, port);
         });
     }
 

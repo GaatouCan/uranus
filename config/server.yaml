@@ -1,0 +1,6 @@
+server:
+  network:
+    port: 8080
+    threads: 4
+  worker:
+    threads: 4
