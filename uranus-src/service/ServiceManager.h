@@ -5,11 +5,13 @@
 
 #include <shared_mutex>
 #include <unordered_map>
+#include <map>
 
 namespace uranus {
 
     using actor::ServerModule;
     using std::unordered_map;
+    using std::map;
     using std::shared_ptr;
     using std::shared_mutex;
     using std::unique_lock;
@@ -32,6 +34,8 @@ namespace uranus {
         [[nodiscard]] GameWorld &getWorld() const;
 
         [[nodiscard]] shared_ptr<ServiceContext> find(uint32_t sid) const;
+
+        [[nodiscard]] map<std::string, uint32_t> getServiceList() const;
 
     private:
         GameWorld &world_;

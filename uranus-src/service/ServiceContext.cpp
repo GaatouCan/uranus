@@ -86,7 +86,9 @@ namespace uranus {
     }
 
     std::map<std::string, uint32_t> ServiceContext::getServiceList() const {
-        // TODO
+        if (manager_) {
+            return manager_->getServiceList();
+        }
         return {};
     }
 

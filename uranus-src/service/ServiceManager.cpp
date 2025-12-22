@@ -78,4 +78,18 @@ namespace uranus {
         const auto iter = services_.find(sid);
         return iter == services_.end() ? nullptr : iter->second;
     }
+
+    map<std::string, uint32_t> ServiceManager::getServiceList() const {
+        if (!world_.isRunning())
+            return {};
+
+        shared_lock lock(mutex_);
+
+        map<std::string, uint32_t> res;
+        for (const auto &[key, val] : services_) {
+            res[val->getService()->getName()] = key;
+        }
+
+        return res;
+    }
 } // uranus
