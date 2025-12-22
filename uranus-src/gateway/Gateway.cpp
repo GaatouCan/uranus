@@ -20,7 +20,7 @@ namespace uranus {
     }
 
     void Gateway::start() {
-        auto *config = dynamic_cast<ConfigModule *>(world_.getModule("ConfigModule"));
+        const auto *config = dynamic_cast<ConfigModule *>(world_.getModule("ConfigModule"));
         if (!config) {
             SPDLOG_ERROR("Config module is not available");
             exit(-1);
@@ -59,6 +59,17 @@ namespace uranus {
 
     GameWorld &Gateway::getWorld() const {
         return world_;
+    }
+
+    void Gateway::onPlayerLogin(const uint32_t pid, const std::string &key) {
+        if (!bootstrap_)
+            return;
+
+        if (!world_.isRunning())
+            return;
+
+        unique_lock lock(mutex_);
+        pidToKey_[pid] = key;
     }
 
     std::shared_ptr<ActorConnection> Gateway::find(const std::string &key) const {
