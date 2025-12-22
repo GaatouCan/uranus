@@ -66,7 +66,9 @@ namespace uranus {
     }
 
     std::map<std::string, uint32_t> PlayerContext::getServiceList() const {
-        // TODO
+        if (const auto *serviceMgr = GetModule(ServiceManager)) {
+            return serviceMgr->getServiceList();
+        }
         return {};
     }
 
