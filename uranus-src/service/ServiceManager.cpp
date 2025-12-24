@@ -3,13 +3,16 @@
 #include "GameWorld.h"
 #include "factory/ServiceFactory.h"
 
-#include <set>
-#include <spdlog/spdlog.h>
 #include <actor/BaseService.h>
+#include <config/ConfigModule.h>
+#include <yaml-cpp/yaml.h>
+#include <spdlog/spdlog.h>
+
 
 namespace uranus {
 
     using actor::BaseActor;
+    using config::ConfigModule;
 
     ServiceManager::ServiceManager(GameWorld &world)
         : world_(world) {
@@ -21,10 +24,16 @@ namespace uranus {
     void ServiceManager::start() {
         ServiceFactory::instance().initial();
 
-        // FIXME: Read from config
-        std::set<std::string> services;
+        const auto *config = GET_MODULE(&world_, ConfigModule);
+        if (!config) {
+            SPDLOG_ERROR("Config module is not available");
+            exit(-1);
+        }
 
-        for (const auto &path : services) {
+        const auto &cfg = config->getServerConfig();
+
+        for (const auto &item : cfg["server"]["service"]["extend"]) {
+            const auto path = item.as<std::string>();
             const auto sid = idAlloc_.allocate();
 
             auto *ser = ServiceFactory::instance().create(path);

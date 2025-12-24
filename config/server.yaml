@@ -4,3 +4,7 @@ server:
     threads: 4
   worker:
     threads: 4
+  service:
+    core:
+      - core/Greeting
+    extend:

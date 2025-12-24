@@ -52,8 +52,8 @@ namespace uranus::actor {
 
         virtual void send(int ty, uint32_t target, PackageHandle &&pkg) = 0;
 
-        virtual void onErrorCode(std::error_code ec) = 0;
-        virtual void onException(std::exception &e) = 0;
+        virtual void onErrorCode(std::error_code ec) {}
+        virtual void onException(std::exception &e) {}
 
         virtual std::map<std::string, uint32_t> getServiceList() const = 0;
 

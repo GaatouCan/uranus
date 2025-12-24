@@ -20,7 +20,7 @@ namespace uranus {
     }
 
     void Gateway::start() {
-        const auto *config = dynamic_cast<ConfigModule *>(world_.getModule("ConfigModule"));
+        const auto *config = GET_MODULE(&world_, ConfigModule);
         if (!config) {
             SPDLOG_ERROR("Config module is not available");
             exit(-1);
