@@ -19,7 +19,7 @@ namespace uranus {
         friend class Gateway;
 
     public:
-        ActorConnection(ServerBootstrap &Server, TcpSocket &&socket);
+        ActorConnection(ServerBootstrap &server, TcpSocket &&socket);
         ~ActorConnection() override;
 
         [[nodiscard]] Gateway *getGateway() const;

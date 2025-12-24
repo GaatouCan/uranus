@@ -26,7 +26,7 @@ namespace uranus {
                 if (const auto ser = serviceMgr->find(target)) {
                     Envelope envelope;
 
-                    envelope.type = (Package::kFromPlayer | Package::kToService);
+                    envelope.type = (Package::kFromPlayer | ty);
                     envelope.source = getId();
                     envelope.package = std::move(pkg);
 

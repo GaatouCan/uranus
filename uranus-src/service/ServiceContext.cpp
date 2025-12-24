@@ -36,7 +36,7 @@ namespace uranus {
             if (const auto dest = manager_->find(target)) {
                 Envelope envelope;
 
-                envelope.type = (Package::kFromService | Package::kToService);
+                envelope.type = (Package::kFromService | ty);
                 envelope.source = getId();
                 envelope.package = std::move(pkg);
 
@@ -47,7 +47,7 @@ namespace uranus {
                 if (const auto plr = playerManager->find(target)) {
                     Envelope envelope;
 
-                    envelope.type = (Package::kFromService | Package::kToPlayer);
+                    envelope.type = (Package::kFromService | ty);
                     envelope.source = getId();
                     envelope.package = std::move(pkg);
 
