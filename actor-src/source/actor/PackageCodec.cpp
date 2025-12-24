@@ -13,7 +13,6 @@
 #endif
 
 namespace uranus::actor {
-
     struct PackageHeader {
         int64_t id = 0;
         size_t length = 0;
@@ -41,14 +40,14 @@ namespace uranus::actor {
 #endif
 
         if (pkg->payload_.empty()) {
-            const auto [ec, len] = co_await asio::async_write(getSocket(), asio::buffer(&header, sizeof(PackageHeader)));
+            const auto [ec, len] = co_await
+                    asio::async_write(getSocket(), asio::buffer(&header, sizeof(PackageHeader)));
 
             if (ec)
                 co_return ec;
 
             if (len != sizeof(PackageHeader)) {
-                // TODO
-                co_return error_code{};
+                co_return ErrorCode::kReadHeaderLength;
             }
 
             co_return error_code{};
@@ -67,14 +66,13 @@ namespace uranus::actor {
         }
 
         if (len != sizeof(PackageHeader) + payloadLength) {
-            // TODO
-            co_return error_code{};
+            co_return ErrorCode::kReadPayloadLength;
         }
 
         co_return error_code{};
     }
 
-    awaitable<tuple<error_code, PackageHandle>> PackageCodec::decode() {
+    awaitable<tuple<error_code, PackageHandle> > PackageCodec::decode() {
         PackageHeader header;
 
         // Read header
@@ -106,11 +104,22 @@ namespace uranus::actor {
             }
 
             if (len != header.length) {
-                // TODO
-                co_return make_tuple(error_code{}, nullptr);
+                co_return make_tuple(ErrorCode::kWriteLength, nullptr);
             }
         }
 
         co_return make_tuple(error_code{}, std::move(pkg));
+    }
+
+    std::string PackageCodecErrorCategory::message(int val) const {
+        switch (static_cast<PackageCodec::ErrorCode>(val)) {
+            case PackageCodec::ErrorCode::kReadHeaderLength:
+                return "Header's length incorrect while reading package";
+            case PackageCodec::ErrorCode::kReadPayloadLength:
+                return "Payload's length incorrect while reading package";
+            case PackageCodec::ErrorCode::kWriteLength:
+                return "Written bytes length incorrect";
+        }
+        return "";
     }
 }

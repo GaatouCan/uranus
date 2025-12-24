@@ -84,7 +84,7 @@ namespace uranus::actor {
                 }
 
                 if (ec) {
-                    // TODO
+                    onErrorCode(ec);
                     break;
                 }
 
@@ -94,7 +94,7 @@ namespace uranus::actor {
             // Call actor terminate
             handle_->onTerminate();
         } catch (std::exception &e) {
-
+            onException(e);
         }
     }
 }

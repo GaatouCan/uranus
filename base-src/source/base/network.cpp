@@ -165,15 +165,15 @@ namespace uranus::network {
                 watchdog_.expires_at(received_ + expiration_);
 
                 if (auto [ec] = co_await watchdog_.async_wait(); ec) {
-                    if (ec == asio::error::operation_aborted) {
-                        // TODO
-                    } else {
+                    if (ec != asio::error::operation_aborted) {
+                        // Not excepted error
                         onErrorCode(ec);
                     }
 
                     if (isConnected()) {
                         disconnect();
                     }
+
                     co_return;
                 }
 
