@@ -26,7 +26,7 @@ namespace uranus::config {
 
         assert(!config_["server"]["service"].IsNull());
         assert(config_["server"]["service"]["core"] && config_["server"]["service"]["core"].IsSequence());
-        assert(config_["server"]["service"]["extend"] && config_["server"]["service"]["extend"].IsSequence());
+        // assert(config_["server"]["service"]["extend"] && config_["server"]["service"]["extend"].IsSequence());
 
         SPDLOG_INFO("Load configuration file success");
     }

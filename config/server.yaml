@@ -7,4 +7,3 @@ server:
   service:
     core:
       - core/Greeting
-    extend:
