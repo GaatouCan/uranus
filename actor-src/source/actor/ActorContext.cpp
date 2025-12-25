@@ -3,6 +3,7 @@
 
 #include <asio/detached.hpp>
 #include <asio/experimental/promise.hpp>
+#include <asio/bind_allocator.hpp>
 #include <ranges>
 
 namespace uranus::actor {
@@ -80,17 +81,6 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
-    awaitable<PackageHandle> ActorContext::asyncCall(uint32_t target, PackageHandle &&pkg) {
-        if (!isRunning())
-            co_return nullptr;
-
-        const auto sess = sessIdAlloc_.allocate();
-
-        call(sess, target, std::move(pkg));
-
-        auto p = asio::experimental::promise<PackageHandle>(ctx_);
-        co_await p.async_wait(default_token{});
-    }
 
     awaitable<void> ActorContext::process() {
         try {

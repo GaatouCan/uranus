@@ -75,7 +75,7 @@ namespace uranus::actor {
 
         // template<asio::completion_token_for<void(PackageHandle)> Token>
         // auto asyncCall(uint32_t target, PackageHandle &&pkg, Token &&token);
-        awaitable<PackageHandle> asyncCall(uint32_t target, PackageHandle &&pkg);
+        auto asyncCall(uint32_t target, PackageHandle &&pkg);
 
     private:
         awaitable<void> process();
@@ -96,20 +96,10 @@ namespace uranus::actor {
         uint32_t id_;
     };
 
-    // template<asio::completion_token_for<void(PackageHandle)> Token>
-    // auto ActorContext::asyncCall(uint32_t target, PackageHandle &&pkg, Token &&token) {
-    //     return asio::async_initiate<Token, void(PackageHandle)>([this](
-    //         asio::completion_handler_for<void(PackageHandle)> auto handler,
-    //         uint32_t target, PackageHandle &&pkg
-    //     ) {
-    //         auto ret = this->pushSession(std::move(handler));
-    //
-    //         if (ret < 0)
-    //             return;
-    //
-    //         const uint32_t sess = ret;
-    //         this->call(sess, target, std::move(pkg));
-    //
-    //     }, token, target, std::move(pkg));
-    // }
+    inline auto ActorContext::asyncCall(uint32_t target, PackageHandle &&pkg) {
+        auto token = asio::use_awaitable;
+        return asio::async_initiate<asio::use_awaitable_t<>, void(PackageHandle)>([this](auto handler) mutable {
+
+        }, token);
+    }
 }
