@@ -92,6 +92,76 @@ namespace uranus {
         return {};
     }
 
+    bool ServiceContext::sendRequest(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
+        if ((ty & Package::kToService) != 0) {
+            if (target == getId())
+                return false;
+
+            if (const auto dest = manager_->find(target)) {
+                Envelope envelope;
+
+                envelope.type = (Package::kFromService | ty);
+                envelope.source = getId();
+                envelope.session = sess;
+                envelope.package = std::move(pkg);
+
+                dest->pushEnvelope(std::move(envelope));
+                return true;
+            }
+        }
+
+        if ((ty & Package::kToPlayer) != 0) {
+            if (auto *mgr = GetModule(PlayerManager)) {
+                if (const auto plr = mgr->find(target)) {
+                    Envelope envelope;
+
+                    envelope.type = (Package::kFromService | ty);
+                    envelope.source = getId();
+                    envelope.session = sess;
+                    envelope.package = std::move(pkg);
+
+                    plr->pushEnvelope(std::move(envelope));
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    void ServiceContext::sendResponse(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
+        if ((ty & Package::kToService) != 0) {
+            if (target == getId())
+                return;
+
+            if (const auto dest = manager_->find(target)) {
+                Envelope envelope;
+
+                envelope.type = (Package::kFromService | ty);
+                envelope.source = getId();
+                envelope.session = sess;
+                envelope.package = std::move(pkg);
+
+                dest->pushEnvelope(std::move(envelope));
+            }
+        }
+
+        if ((ty & Package::kToPlayer) != 0) {
+            if (auto *mgr = GetModule(PlayerManager)) {
+                if (const auto plr = mgr->find(target)) {
+                    Envelope envelope;
+
+                    envelope.type = (Package::kFromService | ty);
+                    envelope.source = getId();
+                    envelope.session = sess;
+                    envelope.package = std::move(pkg);
+
+                    plr->pushEnvelope(std::move(envelope));
+                }
+            }
+        }
+    }
+
     void ServiceContext::setServiceManager(ServiceManager *mgr) {
         manager_ = mgr;
     }

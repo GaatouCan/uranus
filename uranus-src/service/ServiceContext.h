@@ -31,9 +31,13 @@ namespace uranus {
 
         [[nodiscard]] ServiceManager *getServiceManager() const;
         [[nodiscard]] GameWorld *getWorld() const;
-        [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
 
+        [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
         std::map<std::string, uint32_t> getServiceList() const override;
+
+    protected:
+        bool sendRequest(int ty, uint32_t sess, uint32_t target, PackageHandle &&pkg) override;
+        void sendResponse(int ty, uint32_t sess, uint32_t target, PackageHandle &&pkg) override;
 
     private:
         void setServiceManager(ServiceManager *mgr);
