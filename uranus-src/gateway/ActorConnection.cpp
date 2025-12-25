@@ -2,6 +2,7 @@
 #include "Gateway.h"
 
 #include "GameWorld.h"
+#include "login/LoginAuth.h"
 #include "player/PlayerManager.h"
 #include "player/PlayerContext.h"
 
@@ -56,7 +57,9 @@ namespace uranus {
 
         // Not login
         if (!op.has_value()) {
-            // TODO
+            if (auto *auth = GetModule(LoginAuth)) {
+                auth->onPlayerLogin(pkg.get());
+            }
             return;
         }
 

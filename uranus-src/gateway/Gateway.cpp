@@ -41,6 +41,9 @@ namespace uranus {
         bootstrap->onInitial([this](const std::shared_ptr<ActorConnection> &conn) {
             conn->setGateway(this);
 
+            // FIXME: Do not use watchdog right now
+            conn->setExpirationSecond(-1);
+
             SPDLOG_INFO("Accept client from {}", conn->remoteAddress().to_string());
             return true;
         });

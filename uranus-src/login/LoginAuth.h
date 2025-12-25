@@ -1,10 +1,12 @@
 #pragma once
 
+#include <actor/Package.h>
 #include <actor/ServerModule.h>
 
 namespace uranus {
 
     using actor::ServerModule;
+    using actor::Package;
 
     class GameWorld;
 
@@ -22,6 +24,8 @@ namespace uranus {
 
         void start() override;
         void stop() override;
+
+        void onPlayerLogin(Package *pkg);
 
     private:
         GameWorld &world_;

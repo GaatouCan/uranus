@@ -17,4 +17,9 @@ namespace uranus {
 
     void LoginAuth::stop() {
     }
+
+    void LoginAuth::onPlayerLogin(Package *pkg) {
+        if (pkg->getId() != 1001)
+            return;
+    }
 } // uranus
