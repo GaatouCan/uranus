@@ -29,6 +29,8 @@ namespace uranus::actor {
 
     class ACTOR_API ActorContext : public std::enable_shared_from_this<ActorContext> {
 
+        using SessionHandle = asio::any_completion_handler<void(PackageHandle)>;
+
         struct ACTOR_API SessionNode {
             asio::any_completion_handler<void(PackageHandle)> handle;
             asio::executor_work_guard<asio::any_completion_executor> work;
@@ -36,10 +38,8 @@ namespace uranus::actor {
 
             SessionNode() = delete;
 
-            SessionNode(asio::any_completion_handler<void(PackageHandle)> h, uint32_t s);
+            SessionNode(SessionHandle &&h, uint32_t s);
         };
-
-        using SessionHandle = asio::any_completion_handler<void(PackageHandle)>;
 
     public:
         ActorContext() = delete;
@@ -56,30 +56,34 @@ namespace uranus::actor {
         void setUpActor(ActorHandle &&handle);
         [[nodiscard]] BaseActor *getActor() const;
 
-        virtual ServerModule *getModule(const std::string &name) const = 0;
-
         virtual void run();
         virtual void terminate();
 
         [[nodiscard]] bool isRunning() const;
 
+        /// Post message to this actor from other actor
         void pushEnvelope(Envelope &&envelope);
 
-        virtual void send(int ty, uint32_t target, PackageHandle &&pkg) = 0;
-        virtual void call(uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
-
-        virtual void onErrorCode(std::error_code ec) {}
-        virtual void onException(std::exception &e) {}
-
+#pragma region For actor to call
+        virtual ServerModule *getModule(const std::string &name) const = 0;
         virtual std::map<std::string, uint32_t> getServiceList() const = 0;
 
-        // template<asio::completion_token_for<void(PackageHandle)> Token>
-        // auto asyncCall(uint32_t target, PackageHandle &&pkg, Token &&token);
-        auto asyncCall(uint32_t target, PackageHandle &&pkg);
+        /// Inner actor use this method to send message to other actor
+        virtual void send(int ty, uint32_t target, PackageHandle &&pkg) = 0;
+
+        /// Inner actor use this method to do async remote call to other actor
+        auto remoteCall(uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle>;
+#pragma endregion
+
+    protected:
+        /// Implement this method to tell ActorContext how to post session package
+        virtual bool call(uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
+
+        virtual void onErrorCode(std::error_code ec);
+        virtual void onException(std::exception &e);
 
     private:
         awaitable<void> process();
-        int64_t pushSession(SessionHandle &&handle);
 
     private:
         asio::io_context &ctx_;
@@ -87,7 +91,7 @@ namespace uranus::actor {
 
         ConcurrentChannel<Envelope> mailbox_;
 
-        IdentAllocator<uint32_t, true> sessIdAlloc_;
+        IdentAllocator<uint32_t, true> sessAlloc_;
 
         std::mutex sessMutex_;
         std::unordered_map<uint32_t, SessionNode *> sessions_;
@@ -95,11 +99,4 @@ namespace uranus::actor {
         AttributeMap attr_;
         uint32_t id_;
     };
-
-    inline auto ActorContext::asyncCall(uint32_t target, PackageHandle &&pkg) {
-        auto token = asio::use_awaitable;
-        return asio::async_initiate<asio::use_awaitable_t<>, void(PackageHandle)>([this](auto handler) mutable {
-
-        }, token);
-    }
 }

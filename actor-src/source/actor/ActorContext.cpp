@@ -2,12 +2,11 @@
 #include "BaseActor.h"
 
 #include <asio/detached.hpp>
-#include <asio/experimental/promise.hpp>
 #include <asio/bind_allocator.hpp>
 #include <ranges>
 
 namespace uranus::actor {
-    ActorContext::SessionNode::SessionNode(asio::any_completion_handler<void(PackageHandle)> h, uint32_t s)
+    ActorContext::SessionNode::SessionNode(SessionHandle &&h, uint32_t s)
         : handle(std::move(h)),
           work(asio::make_work_guard(handle)),
           sess(s){
@@ -81,6 +80,81 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
+    auto ActorContext::remoteCall(uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle> {
+        auto token = asio::use_awaitable;
+        return asio::async_initiate<asio::use_awaitable_t<>, void(PackageHandle)>([this](
+            asio::completion_handler_for<void(PackageHandle)> auto handler,
+            const uint32_t dest,
+            PackageHandle &&temp
+        ) mutable {
+            if (!isRunning()) {
+                auto work = asio::make_work_guard(handler);
+                const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
+                asio::dispatch(
+                    work.get_executor(),
+                    asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
+                        std::move(handler)(nullptr);
+                    })
+                );
+                return;
+            }
+
+            const auto sess = sessAlloc_.allocate();
+
+            {
+                unique_lock lock(sessMutex_);
+
+                if (sessions_.contains(sess)) {
+                    lock.unlock();
+                    const auto work = asio::make_work_guard(handler);
+                    const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
+                    asio::dispatch(
+                        work.get_executor(),
+                        asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
+                            std::move(handler)(nullptr);
+                        })
+                    );
+                    return;
+                }
+
+                auto *node = new SessionNode(std::move(handler), sess);
+                sessions_[sess] = node;
+            }
+
+            const auto ret = call(sess, dest, std::move(temp));
+
+            // Delete the node and dispatch the nullptr result while ::call failed.
+            if (!ret) {
+                const SessionNode *node = nullptr;
+
+                {
+                    unique_lock lock(sessMutex_);
+                    if (const auto iter = sessions_.find(sess); iter != sessions_.end()) {
+                       node = iter->second;
+                       sessions_.erase(iter);
+                   }
+                }
+
+                if (node != nullptr) {
+                    const auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
+                    asio::dispatch(
+                        node->work.get_executor(),
+                        asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
+                                std::move(handler)(nullptr);
+                        })
+                    );
+
+                    delete node;
+                }
+            }
+        }, token, target, std::move(pkg));
+    }
+
+    void ActorContext::onErrorCode(std::error_code ec) {
+    }
+
+    void ActorContext::onException(std::exception &e) {
+    }
 
     awaitable<void> ActorContext::process() {
         try {
@@ -138,14 +212,12 @@ namespace uranus::actor {
                         continue;
 
                     auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
-
                     asio::dispatch(
                         node->work.get_executor(),
-                        asio::bind_allocator(
-                            alloc,
-                            [handler = std::move(node->handle)]() mutable {
-                                std::move(handler)(nullptr);
-                            }));
+                        asio::bind_allocator(alloc, [handler = std::move(node->handle)]() mutable {
+                            std::move(handler)(nullptr);
+                        })
+                    );
 
                     delete node;
                 }
@@ -158,49 +230,5 @@ namespace uranus::actor {
         } catch (std::exception &e) {
             onException(e);
         }
-    }
-
-    int64_t ActorContext::pushSession(SessionHandle &&handle) {
-        if (!isRunning()) {
-            const auto work = asio::make_work_guard(handle);
-            const auto alloc = asio::get_associated_allocator(handle, asio::recycling_allocator<void>());
-            asio::dispatch(
-                work.get_executor(),
-                asio::bind_allocator(
-                    alloc,
-                    [handler = std::move(handle)]() mutable {
-                        std::move(handler)(nullptr);
-                    }
-                )
-            );
-
-            return -1;
-        }
-
-        const auto sess = sessIdAlloc_.allocate();
-
-        unique_lock lock(sessMutex_);
-        if (sessions_.contains(sess)) {
-            lock.unlock();
-
-            const auto work = asio::make_work_guard(handle);
-            const auto alloc = asio::get_associated_allocator(handle, asio::recycling_allocator<void>());
-            asio::dispatch(
-                work.get_executor(),
-                asio::bind_allocator(
-                    alloc,
-                    [handler = std::move(handle)]() mutable {
-                        std::move(handler)(nullptr);
-                    }
-                )
-            );
-
-            return -2;
-        }
-
-        auto *node = new SessionNode(std::move(handle), sess);
-        sessions_.insert_or_assign(sess, node);
-
-        return sess;
     }
 }
