@@ -146,6 +146,7 @@ namespace uranus::actor {
                         })
                     );
 
+                    sessAlloc_.recycle(node->sess);
                     delete node;
                 }
             }
@@ -212,6 +213,7 @@ namespace uranus::actor {
                             )
                         );
 
+                        sessAlloc_.recycle(node->sess);
                         delete node;
                     }
                 } else {
