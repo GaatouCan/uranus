@@ -80,10 +80,11 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
-    auto ActorContext::call(uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle> {
+    auto ActorContext::call(int ty, uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle> {
         auto token = asio::use_awaitable;
         return asio::async_initiate<asio::use_awaitable_t<>, void(PackageHandle)>([this](
             asio::completion_handler_for<void(PackageHandle)> auto handler,
+            int type,
             const uint32_t dest,
             PackageHandle &&temp
         ) mutable {
@@ -121,7 +122,8 @@ namespace uranus::actor {
                 sessions_[sess] = node;
             }
 
-            const auto ret = sendRequest(sess, dest, std::move(temp));
+            type |= Package::kRequest;
+            const auto ret = sendRequest(type, sess, dest, std::move(temp));
 
             // Delete the node and dispatch the nullptr result while ::call failed.
             if (!ret) {
@@ -147,7 +149,7 @@ namespace uranus::actor {
                     delete node;
                 }
             }
-        }, token, target, std::move(pkg));
+        }, token, ty, target, std::move(pkg));
     }
 
     void ActorContext::onErrorCode(std::error_code ec) {
@@ -174,10 +176,17 @@ namespace uranus::actor {
                 if ((envelope.type & Package::kRequest) != 0) {
                     const auto sess = envelope.session;
                     const auto from = envelope.source;
+                    int type = Package::kResponse;
+
+                    if ((envelope.type & Package::kFromPlayer) != 0) {
+                        type |= Package::kToPlayer;
+                    }
+                    if ((envelope.type & Package::kFromService) != 0) {
+                        type |= Package::kToService;
+                    }
 
                     auto res = handle_->onRequest(std::move(envelope));
-
-                    sendResponse(sess, from, std::move(res));
+                    sendResponse(type, sess, from, std::move(res));
                 } else if ((envelope.type & Package::kResponse) != 0) {
                     SessionNode *node = nullptr;
 
