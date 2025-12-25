@@ -23,6 +23,7 @@ namespace uranus::actor {
         virtual void onTerminate();
 
         virtual void onPackage(Envelope &&envelope) = 0;
+        virtual PackageHandle onRequest(Envelope &&envelope) = 0;
 
     private:
         void setContext(ActorContext *ctx);

@@ -72,12 +72,13 @@ namespace uranus::actor {
         virtual void send(int ty, uint32_t target, PackageHandle &&pkg) = 0;
 
         /// Inner actor use this method to do async remote call to other actor
-        auto remoteCall(uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle>;
+        auto call(uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle>;
 #pragma endregion
 
     protected:
         /// Implement this method to tell ActorContext how to post session package
-        virtual bool call(uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
+        virtual bool sendRequest(uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
+        virtual void sendResponse(uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
 
         virtual void onErrorCode(std::error_code ec);
         virtual void onException(std::exception &e);
