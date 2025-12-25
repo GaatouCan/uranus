@@ -5,13 +5,13 @@
 #include <base/noncopy.h>
 #include <base/types.h>
 #include <base/AttributeMap.h>
+#include <base/IdentAllocator.h>
+
 #include <asio/co_spawn.hpp>
 #include <asio/any_completion_handler.hpp>
 #include <map>
 #include <memory>
 #include <functional>
-
-#include <base/IdentAllocator.h>
 
 
 namespace uranus::actor {
