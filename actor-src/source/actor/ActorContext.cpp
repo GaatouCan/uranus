@@ -9,7 +9,7 @@ namespace uranus::actor {
     ActorContext::SessionNode::SessionNode(SessionHandle &&h, uint32_t s)
         : handle(std::move(h)),
           work(asio::make_work_guard(handle)),
-          sess(s){
+          sess(s) {
     }
 
     ActorContext::ActorContext(asio::io_context &ctx)
@@ -88,6 +88,7 @@ namespace uranus::actor {
             const uint32_t dest,
             PackageHandle &&temp
         ) mutable {
+            // 如果当前ActorContext未运行，则立即返回
             if (!isRunning()) {
                 auto work = asio::make_work_guard(handler);
                 const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
@@ -102,6 +103,7 @@ namespace uranus::actor {
 
             const auto sess = sessAlloc_.allocate();
 
+            // 判断会话id是否合法
             {
                 unique_lock lock(sessMutex_);
 
@@ -118,6 +120,7 @@ namespace uranus::actor {
                     return;
                 }
 
+                // 创建新的会话回调节点
                 auto *node = new SessionNode(std::move(handler), sess);
                 sessions_[sess] = node;
             }
@@ -125,7 +128,7 @@ namespace uranus::actor {
             type |= Package::kRequest;
             const auto ret = sendRequest(type, sess, dest, std::move(temp));
 
-            // Delete the node and dispatch the nullptr result while ::call failed.
+            // 如果发送请求失败，则删除会话节点并返回空指针
             if (!ret) {
                 const SessionNode *node = nullptr;
 
@@ -162,6 +165,7 @@ namespace uranus::actor {
     awaitable<void> ActorContext::process() {
         try {
             while (isRunning()) {
+                // 从邮箱中读取一条信息
                 auto [ec, envelope] = co_await mailbox_.async_receive();
 
                 if (ec == asio::error::operation_aborted ||
@@ -174,6 +178,7 @@ namespace uranus::actor {
                     break;
                 }
 
+                // 异步请求处理
                 if ((envelope.type & Package::kRequest) != 0) {
                     const auto sess = envelope.session;
                     const auto from = envelope.source;
@@ -188,10 +193,12 @@ namespace uranus::actor {
 
                     auto res = handle_->onRequest(std::move(envelope));
                     sendResponse(type, sess, from, std::move(res));
-                } else if ((envelope.type & Package::kResponse) != 0) {
+                }
+                // 异步请求返回
+                else if ((envelope.type & Package::kResponse) != 0) {
                     SessionNode *node = nullptr;
 
-                    // Find the node
+                    // 查找会话节点
                     {
                         unique_lock lock(sessMutex_);
                         if (const auto it = sessions_.find(envelope.session); it != sessions_.end()) {
@@ -216,12 +223,14 @@ namespace uranus::actor {
                         sessAlloc_.recycle(node->sess);
                         delete node;
                     }
-                } else {
+                }
+                // 普通信息
+                else {
                     handle_->onPackage(std::move(envelope));
                 }
             }
 
-            // Release all sessions
+            // 释放所有会话
             {
                 for (const auto &node: sessions_ | std::views::values) {
                     if (!node)
