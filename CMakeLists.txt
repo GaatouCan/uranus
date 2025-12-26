@@ -56,3 +56,5 @@ add_subdirectory(config-src)
 add_subdirectory(protobuf)
 #add_subdirectory(http-src)
 add_subdirectory(uranus-src)
+
+add_subdirectory(example/game_player)

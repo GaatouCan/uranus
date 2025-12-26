@@ -32,3 +32,12 @@ namespace uranus::actor {
         ActorContext *ctx_;
     };
 }
+
+
+# if defined(_WIN32) || defined(_WIN64)
+#   define ACTOR_EXPORT extern "C" __declspec(dllexport)
+# else
+#   define ACTOR_EXPORT extern "C" __attribute__((visibility("default")))
+# endif
+
+
