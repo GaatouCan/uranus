@@ -482,7 +482,7 @@ namespace uranus::network {
 #ifdef URANUS_SSL
                 const auto conn = std::make_shared<T>(*this, TcpSocket(std::move(socket), sslContext_));
 #else
-                const auto conn = std::make_shared<ActorConnection>(*this, std::move(socket));
+                const auto conn = std::make_shared<T>(*this, std::move(socket));
 #endif
 
                 const auto key = conn->getKey();
