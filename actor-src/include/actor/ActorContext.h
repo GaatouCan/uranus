@@ -115,7 +115,7 @@ namespace uranus::actor {
         IdentAllocator<uint32_t, true> sessAlloc_;
 
         /** 正在进行的会话 **/
-        std::unordered_map<uint32_t, SessionNode *> sessions_;
+        std::unordered_map<uint32_t, unique_ptr<SessionNode>> sessions_;
         std::mutex sessMutex_;
 
         AttributeMap attr_;

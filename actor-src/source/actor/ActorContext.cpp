@@ -1,4 +1,4 @@
-#include "ActorContext.h"
+﻿#include "ActorContext.h"
 #include "BaseActor.h"
 
 #include <asio/detached.hpp>
@@ -121,8 +121,7 @@ namespace uranus::actor {
                 }
 
                 // 创建新的会话回调节点
-                auto *node = new SessionNode(std::move(handler), sess);
-                sessions_[sess] = node;
+                sessions_.emplace(sess, make_unique<SessionNode>(std::move(handler), sess));
             }
 
             type |= Package::kRequest;
@@ -130,12 +129,12 @@ namespace uranus::actor {
 
             // 如果发送请求失败，则删除会话节点并返回空指针
             if (!ret) {
-                const SessionNode *node = nullptr;
+                unique_ptr<SessionNode> node = nullptr;
 
                 {
                     unique_lock lock(sessMutex_);
                     if (const auto iter = sessions_.find(sess); iter != sessions_.end()) {
-                       node = iter->second;
+                       node = std::move(iter->second);
                        sessions_.erase(iter);
                    }
                 }
@@ -150,7 +149,6 @@ namespace uranus::actor {
                     );
 
                     sessAlloc_.recycle(node->sess);
-                    delete node;
                 }
             }
         }, token, ty, target, std::move(pkg));
@@ -196,13 +194,13 @@ namespace uranus::actor {
                 }
                 // 异步请求返回
                 else if ((envelope.type & Package::kResponse) != 0) {
-                    SessionNode *node = nullptr;
+                    unique_ptr<SessionNode> node = nullptr;
 
                     // 查找会话节点
                     {
                         unique_lock lock(sessMutex_);
                         if (const auto it = sessions_.find(envelope.session); it != sessions_.end()) {
-                            node = it->second;
+                            node = std::move(it->second);
                             sessions_.erase(it);
                         }
                     }
@@ -221,7 +219,6 @@ namespace uranus::actor {
                         );
 
                         sessAlloc_.recycle(node->sess);
-                        delete node;
                     }
                 }
                 // 普通信息
@@ -231,24 +228,26 @@ namespace uranus::actor {
             }
 
             // 释放所有会话
-            {
-                for (const auto &node: sessions_ | std::views::values) {
-                    if (!node)
-                        continue;
-
-                    auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
-                    asio::dispatch(
-                        node->work.get_executor(),
-                        asio::bind_allocator(alloc, [handler = std::move(node->handle)]() mutable {
-                            std::move(handler)(nullptr);
-                        })
-                    );
-
-                    delete node;
+            for (auto it = sessions_.begin(); it != sessions_.end();) {
+                if (it->second == nullptr) {
+                    ++it;
+                    continue;
                 }
 
-                sessions_.clear();
+                const auto node = std::move(it->second);
+
+                auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
+                asio::dispatch(
+                    node->work.get_executor(),
+                    asio::bind_allocator(alloc, [handler = std::move(node->handle)]() mutable {
+                        std::move(handler)(nullptr);
+                    })
+                );
+
+                it = sessions_.erase(it);
             }
+
+            sessions_.clear();
 
             // Call actor terminate
             handle_->onTerminate();
