@@ -5,14 +5,12 @@
 #include "base/noncopy.h"
 #include "base/types.h"
 
-namespace uranus::network
-{
+namespace uranus::network {
+
     using asio::awaitable;
     using std::error_code;
 
-    class BASE_API BaseConnection : public std::enable_shared_from_this<BaseConnection>
-    {
-
+    class BASE_API BaseConnection : public std::enable_shared_from_this<BaseConnection> {
     public:
         BaseConnection() = delete;
 
@@ -44,7 +42,6 @@ namespace uranus::network
 
         virtual void onConnect() = 0;
         virtual void onDisconnect() = 0;
-
         virtual void onTimeout() = 0;
         virtual void onErrorCode(error_code ec) = 0;
         virtual void onException(std::exception &e) = 0;
@@ -52,7 +49,7 @@ namespace uranus::network
     private:
         awaitable<void> watchdog();
 
-    private:
+    protected:
         TcpSocket socket_;
 
         std::string key_;

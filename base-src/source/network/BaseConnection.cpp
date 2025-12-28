@@ -8,37 +8,30 @@ using namespace asio::experimental::awaitable_operators;
 using asio::detached;
 using asio::co_spawn;
 
-namespace uranus::network
-{
-    BaseConnection::BaseConnection(TcpSocket&& socket)
+namespace uranus::network {
+    BaseConnection::BaseConnection(TcpSocket &&socket)
         : socket_(std::move(socket)),
           watchdog_(socket_.get_executor()),
-          expiration_(-1)
-    {
+          expiration_(-1) {
         const auto now = std::chrono::system_clock::now();
         const auto durationSinceEpoch = now.time_since_epoch();
         const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
 
 #ifdef URANUS_SSL
-        key_ = std::format("{}-{}", socket_.next_layer().remote_endpoint().address().to_string(),
-                           secondsSinceEpoch.count());
+        key_ = std::format("{}-{}", socket_.next_layer().remote_endpoint().address().to_string(), secondsSinceEpoch.count());
 #else
         key_ = std::format("{}-{}", socket_.remote_endpoint().address().to_string(), secondsSinceEpoch.count());
 #endif
     }
 
-    BaseConnection::~BaseConnection()
-    {
-
+    BaseConnection::~BaseConnection() {
     }
 
-    TcpSocket& BaseConnection::socket()
-    {
+    TcpSocket &BaseConnection::socket() {
         return socket_;
     }
 
-    void BaseConnection::connect()
-    {
+    void BaseConnection::connect() {
         // Mark the received timestamp
         received_ = std::chrono::steady_clock::now();
 
@@ -60,8 +53,7 @@ namespace uranus::network
         }, detached);
     }
 
-    void BaseConnection::disconnect()
-    {
+    void BaseConnection::disconnect() {
         if (!isConnected())
             return;
 
@@ -80,8 +72,7 @@ namespace uranus::network
         onDisconnect();
     }
 
-    bool BaseConnection::isConnected() const
-    {
+    bool BaseConnection::isConnected() const {
 #ifdef URANUS_SSL
         return socket_.next_layer().is_open();
 #else
@@ -89,28 +80,23 @@ namespace uranus::network
 #endif
     }
 
-    const std::string& BaseConnection::getKey() const
-    {
+    const std::string &BaseConnection::getKey() const {
         return key_;
     }
 
-    asio::ip::address BaseConnection::remoteAddress() const
-    {
+    asio::ip::address BaseConnection::remoteAddress() const {
         return socket_.next_layer().remote_endpoint().address();
     }
 
-    void BaseConnection::setExpirationSecond(const int sec)
-    {
+    void BaseConnection::setExpirationSecond(const int sec) {
         expiration_ = std::chrono::seconds(sec);
     }
 
-    AttributeMap& BaseConnection::attr()
-    {
+    AttributeMap &BaseConnection::attr() {
         return attr_;
     }
 
-    awaitable<void> BaseConnection::watchdog()
-    {
+    awaitable<void> BaseConnection::watchdog() {
         if (expiration_ <= SteadyDuration::zero())
             co_return;
 
