@@ -1,5 +1,5 @@
 #include "Gateway.h"
-#include "ActorConnection.h"
+#include "Connection.h"
 #include "GameWorld.h"
 
 #include <config/ConfigModule.h>
@@ -31,24 +31,20 @@ namespace uranus {
         const auto port = cfg["server"]["network"]["port"].as<uint16_t>();
         const auto threads = cfg["server"]["network"]["threads"].as<int>();
 
-        auto *bootstrap = new network::ServerBootstrapImpl<ActorConnection>();
+        bootstrap_ = std::make_unique<ServerBootstrap>();
 
 #ifdef URANUS_SSL
-        bootstrap->useCertificateChainFile("server.crt");
-        bootstrap->usePrivateKeyFile("server.pem");
+        bootstrap_->useCertificateChainFile("server.crt");
+        bootstrap_->usePrivateKeyFile("server.pem");
 #endif
 
-        bootstrap->onInitial([this](const std::shared_ptr<ActorConnection> &conn) {
+        bootstrap_->onInitial([this](ServerBootstrap &bootstrap, TcpSocket &&socket) {
+            auto conn = std::make_shared<Connection>(bootstrap, std::move(socket));
+
             conn->setGateway(this);
 
-            // FIXME: Do not use watchdog right now
-            conn->setExpirationSecond(-1);
-
-            SPDLOG_INFO("Accept client from {}", conn->remoteAddress().to_string());
-            return true;
+            return conn;
         });
-
-        bootstrap_ = std::unique_ptr<network::ServerBootstrapImpl<ActorConnection>>(bootstrap);
 
         thread_ = std::thread([this, port, threads]() {
             SPDLOG_INFO("Listening on port: {}", port);
@@ -75,14 +71,14 @@ namespace uranus {
         pidToKey_[pid] = key;
     }
 
-    std::shared_ptr<ActorConnection> Gateway::find(const std::string &key) const {
+    std::shared_ptr<Connection> Gateway::find(const std::string &key) const {
         if (!bootstrap_)
             return nullptr;
 
-        return std::dynamic_pointer_cast<ActorConnection>(bootstrap_->find(key));
+        return std::dynamic_pointer_cast<Connection>(bootstrap_->find(key));
     }
 
-    std::shared_ptr<ActorConnection> Gateway::findByPlayerID(const uint32_t pid) const {
+    std::shared_ptr<Connection> Gateway::findByPlayerID(const uint32_t pid) const {
         if (!bootstrap_)
             return nullptr;
 
@@ -95,7 +91,7 @@ namespace uranus {
         }
 
         if (!key.empty()) {
-            return std::dynamic_pointer_cast<ActorConnection>(bootstrap_->find(key));
+            return std::dynamic_pointer_cast<Connection>(bootstrap_->find(key));
         }
 
         return nullptr;

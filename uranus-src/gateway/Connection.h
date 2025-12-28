@@ -1,12 +1,12 @@
 #pragma once
 
-#include <base/network.h>
+#include <network/ConnectionAdapter.h>
 #include <actor/PackageCodec.h>
 
 namespace uranus {
 
     using network::ServerBootstrap;
-    using network::ConnectionImpl;
+    using network::ConnectionAdapter;
     using actor::Package;
     using actor::PackageHandle;
     using actor::PackageCodec;
@@ -14,13 +14,13 @@ namespace uranus {
     class Gateway;
     class GameWorld;
 
-    class ActorConnection final : public ConnectionImpl<PackageCodec> {
+    class Connection final : public ConnectionAdapter<PackageCodec> {
 
         friend class Gateway;
 
     public:
-        ActorConnection(ServerBootstrap &server, TcpSocket &&socket);
-        ~ActorConnection() override;
+        Connection(ServerBootstrap &server, TcpSocket &&socket);
+        ~Connection() override;
 
         [[nodiscard]] Gateway *getGateway() const;
         [[nodiscard]] GameWorld *getWorld() const;

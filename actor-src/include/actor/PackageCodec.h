@@ -2,12 +2,12 @@
 
 #include "Package.h"
 
-#include <base/network.h>
+#include <network/MessageCodec.h>
 
 namespace uranus::actor {
 
     using network::MessageCodec;
-    using network::Connection;
+    using network::BaseConnection;
     using asio::awaitable;
     using std::error_code;
     using std::tuple;
@@ -24,7 +24,7 @@ namespace uranus::actor {
         };
 #pragma endregion
 
-        explicit PackageCodec(Connection &conn);
+        explicit PackageCodec(BaseConnection &conn);
         ~PackageCodec() override;
 
         awaitable<error_code> encode(Package *msg) override;

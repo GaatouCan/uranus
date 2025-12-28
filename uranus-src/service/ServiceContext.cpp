@@ -3,7 +3,7 @@
 #include "player/PlayerManager.h"
 #include "player/PlayerContext.h"
 #include "gateway/Gateway.h"
-#include "gateway/ActorConnection.h"
+#include "gateway/Connection.h"
 #include "GameWorld.h"
 
 #include <actor/BaseService.h>

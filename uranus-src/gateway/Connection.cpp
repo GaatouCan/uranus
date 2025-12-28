@@ -1,4 +1,4 @@
-#include "ActorConnection.h"
+#include "Connection.h"
 #include "Gateway.h"
 
 #include "GameWorld.h"
@@ -14,28 +14,28 @@ namespace uranus {
     using actor::Package;
     using actor::Envelope;
 
-    ActorConnection::ActorConnection(ServerBootstrap &server, TcpSocket &&socket)
-        : ConnectionImpl(server, std::move(socket)),
+    Connection::Connection(ServerBootstrap &server, TcpSocket &&socket)
+        : ConnectionAdapter(server, std::move(socket)),
           gateway_(nullptr) {
     }
 
-    ActorConnection::~ActorConnection() {
+    Connection::~Connection() {
     }
 
-    Gateway *ActorConnection::getGateway() const {
+    Gateway *Connection::getGateway() const {
         return gateway_;
     }
 
-    GameWorld *ActorConnection::getWorld() const {
+    GameWorld *Connection::getWorld() const {
         if (gateway_)
             return &gateway_->getWorld();
         return nullptr;
     }
 
-    void ActorConnection::onConnect() {
+    void Connection::onConnect() {
     }
 
-    void ActorConnection::onDisconnect() {
+    void Connection::onDisconnect() {
         const auto op = attr().get<uint32_t>("PLAYER_ID");
         if (!op.has_value()) {
             return;
@@ -49,7 +49,7 @@ namespace uranus {
         }
     }
 
-    void ActorConnection::onReadMessage(PackageHandle &&pkg) {
+    void Connection::onReadMessage(PackageHandle &&pkg) {
         if (!pkg)
             return;
 
@@ -82,24 +82,24 @@ namespace uranus {
         ctx->pushEnvelope(std::move(envelope));
     }
 
-    void ActorConnection::beforeWrite(Package *pkg) {
+    void Connection::beforeWrite(Package *pkg) {
     }
 
-    void ActorConnection::afterWrite(PackageHandle &&pkg) {
+    void Connection::afterWrite(PackageHandle &&pkg) {
     }
 
-    void ActorConnection::onTimeout() {
+    void Connection::onTimeout() {
     }
 
-    void ActorConnection::onErrorCode(std::error_code ec) {
+    void Connection::onErrorCode(std::error_code ec) {
         SPDLOG_ERROR(ec.message());
     }
 
-    void ActorConnection::onException(std::exception &e) {
+    void Connection::onException(std::exception &e) {
         SPDLOG_ERROR(e.what());
     }
 
-    void ActorConnection::setGateway(Gateway *gateway) {
+    void Connection::setGateway(Gateway *gateway) {
         gateway_ = gateway;
     }
 }

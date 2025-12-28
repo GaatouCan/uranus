@@ -2,7 +2,7 @@
 #include "PlayerManager.h"
 
 #include "GameWorld.h"
-#include "gateway/ActorConnection.h"
+#include "gateway/Connection.h"
 #include "gateway/Gateway.h"
 #include "service/ServiceManager.h"
 #include "service/ServiceContext.h"

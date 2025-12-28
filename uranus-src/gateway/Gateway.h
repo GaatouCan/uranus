@@ -1,7 +1,7 @@
 #pragma once
 
 #include <actor/ServerModule.h>
-#include <base/network.h>
+#include <network/ServerBootstrap.h>
 
 #include <unordered_map>
 #include <shared_mutex>
@@ -19,7 +19,7 @@ namespace uranus {
     using network::ServerBootstrap;
 
     class GameWorld;
-    class ActorConnection;
+    class Connection;
 
     class Gateway final : public ServerModule {
     public:
@@ -39,8 +39,8 @@ namespace uranus {
 
         void onPlayerLogin(uint32_t pid, const std::string &key);
 
-        [[nodiscard]] std::shared_ptr<ActorConnection> find(const std::string &key) const;
-        [[nodiscard]] std::shared_ptr<ActorConnection> findByPlayerID(uint32_t pid) const;
+        [[nodiscard]] std::shared_ptr<Connection> find(const std::string &key) const;
+        [[nodiscard]] std::shared_ptr<Connection> findByPlayerID(uint32_t pid) const;
 
         void remove(const std::string &key) const;
 

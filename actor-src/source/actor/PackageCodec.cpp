@@ -18,7 +18,7 @@ namespace uranus::actor {
         size_t length = 0;
     };
 
-    PackageCodec::PackageCodec(Connection &conn)
+    PackageCodec::PackageCodec(BaseConnection &conn)
         : MessageCodec(conn) {
     }
 
@@ -41,7 +41,7 @@ namespace uranus::actor {
 
         if (pkg->payload_.empty()) {
             const auto [ec, len] = co_await
-                    asio::async_write(getSocket(), asio::buffer(&header, sizeof(PackageHeader)));
+                    asio::async_write(socket(), asio::buffer(&header, sizeof(PackageHeader)));
 
             if (ec)
                 co_return ec;
@@ -59,7 +59,7 @@ namespace uranus::actor {
         };
 
         const auto payloadLength = pkg->payload_.size();
-        const auto [ec, len] = co_await asio::async_write(getSocket(), buffers);
+        const auto [ec, len] = co_await asio::async_write(socket(), buffers);
 
         if (ec) {
             co_return ec;
@@ -77,7 +77,7 @@ namespace uranus::actor {
 
         // Read header
         {
-            const auto [ec, len] = co_await asio::async_read(getSocket(), asio::buffer(&header, sizeof(PackageHeader)));
+            const auto [ec, len] = co_await asio::async_read(socket(), asio::buffer(&header, sizeof(PackageHeader)));
             if (ec) {
                 co_return make_tuple(ec, nullptr);
             }
@@ -97,7 +97,7 @@ namespace uranus::actor {
 
         if (header.length > 0) {
             pkg->payload_.resize(header.length);
-            const auto [ec, len] = co_await asio::async_read(getSocket(), asio::buffer(pkg->payload_));
+            const auto [ec, len] = co_await asio::async_read(socket(), asio::buffer(pkg->payload_));
 
             if (ec) {
                 co_return make_tuple(ec, nullptr);
