@@ -27,6 +27,9 @@ namespace uranus {
 
         void onPlayerLogin(Package *pkg);
 
+        void onLoginSuccess(uint32_t pid);
+        void onLoginFailure(uint32_t pid);
+
     private:
         GameWorld &world_;
     };

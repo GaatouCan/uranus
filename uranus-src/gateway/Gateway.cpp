@@ -78,8 +78,14 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        unique_lock lock(mutex_);
-        pidToKey_[pid] = key;
+        {
+            unique_lock lock(mutex_);
+            pidToKey_.insert_or_assign(pid, key);
+        }
+
+        if (const auto conn = bootstrap_->find(key)) {
+            conn->attr().set("PLAYER_ID", pid);
+        }
     }
 
     std::shared_ptr<Connection> Gateway::find(const std::string &key) const {
@@ -106,6 +112,17 @@ namespace uranus {
         }
 
         return nullptr;
+    }
+
+    bool Gateway::hasPlayerLogin(uint32_t pid) const {
+        if (!bootstrap_)
+            return false;
+
+        if (!world_.isRunning())
+            return false;
+
+        shared_lock lock(mutex_);
+        return pidToKey_.contains(pid);
     }
 
     void Gateway::remove(const std::string &key) const {
