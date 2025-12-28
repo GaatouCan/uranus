@@ -25,7 +25,7 @@ namespace uranus {
             return;
 
         Login::ClientLoginRequest req;
-        // req.ParseFromString(pkg->toString());
+        req.ParseFromString(pkg->toString());
 
         const auto pid = req.player_id();
     }
