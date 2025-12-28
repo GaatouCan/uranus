@@ -40,6 +40,25 @@ namespace uranus {
 
         auto ctx = std::make_shared<PlayerContext>(world_.getWorkerIOContext());
 
+        shared_ptr<PlayerContext> old;
+
+        {
+            unique_lock lock(mutex_);
+
+            // If the same player id actor has exists
+            if (const auto it = players_.find(pid); it != players_.end()) {
+                old = it->second;
+                players_.erase(it);
+            }
+
+            players_.insert_or_assign(pid, ctx);
+        }
+
+        // Stop the old one
+        if (old) {
+            old->terminate();
+        }
+
         ctx->setId(pid);
         ctx->setPlayerManager(this);
         ctx->setUpActor({plr, [](BaseActor *ptr) {
@@ -53,23 +72,6 @@ namespace uranus {
 
             delete ptr;
         }});
-
-        bool repeated = false;
-
-        do {
-            unique_lock lock(mutex_);
-            if (players_.contains(pid)) {
-                repeated = true;
-                break;
-            }
-
-            players_.insert_or_assign(pid, ctx);
-        } while (false);
-
-        if (repeated) {
-            ctx->terminate();
-            return;
-        }
 
         ctx->run();
     }

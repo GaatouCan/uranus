@@ -42,8 +42,6 @@ namespace uranus {
         [[nodiscard]] std::shared_ptr<Connection> find(const std::string &key) const;
         [[nodiscard]] std::shared_ptr<Connection> findByPlayerID(uint32_t pid) const;
 
-        [[nodiscard]] bool hasPlayerLogin(uint32_t pid) const;
-
         void remove(const std::string &key) const;
 
         void onLogout(uint32_t pid);

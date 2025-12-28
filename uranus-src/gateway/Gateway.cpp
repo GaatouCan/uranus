@@ -6,6 +6,8 @@
 #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
+#include "player/PlayerManager.h"
+
 using uranus::config::ConfigModule;
 
 namespace uranus {
@@ -78,13 +80,31 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        {
+        bool repeated = false;
+
+        do {
             unique_lock lock(mutex_);
+
+            if (pidToKey_.contains(pid)) {
+                repeated = true;
+                break;
+            }
+
             pidToKey_.insert_or_assign(pid, key);
+        } while (false);
+
+        if (repeated) {
+            // TODO
+            return;
         }
 
         if (const auto conn = bootstrap_->find(key)) {
             conn->attr().set("PLAYER_ID", pid);
+        }
+
+        if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
+            // Create the player actor
+            mgr->onPlayerLogin(pid);
         }
     }
 
@@ -114,17 +134,6 @@ namespace uranus {
         return nullptr;
     }
 
-    bool Gateway::hasPlayerLogin(uint32_t pid) const {
-        if (!bootstrap_)
-            return false;
-
-        if (!world_.isRunning())
-            return false;
-
-        shared_lock lock(mutex_);
-        return pidToKey_.contains(pid);
-    }
-
     void Gateway::remove(const std::string &key) const {
         if (bootstrap_) {
             bootstrap_->remove(key);
@@ -135,7 +144,13 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        unique_lock lock(mutex_);
-        pidToKey_.erase(pid);
+        {
+            unique_lock lock(mutex_);
+            pidToKey_.erase(pid);
+        }
+
+        if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
+            mgr->remove(pid);
+        }
     }
 }

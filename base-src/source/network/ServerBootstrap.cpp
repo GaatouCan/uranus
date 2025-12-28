@@ -137,8 +137,8 @@ namespace uranus::network {
                 } while (false);
 
                 if (repeated) {
-                    conn->disconnect();
                     conn->attr().set("REPEATED", 1);
+                    conn->disconnect();
                     continue;
                 }
 

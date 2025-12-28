@@ -1,7 +1,8 @@
 #include "Connection.h"
 #include "Gateway.h"
-
 #include "GameWorld.h"
+#include "common.h"
+
 #include "login/LoginAuth.h"
 #include "player/PlayerManager.h"
 #include "player/PlayerContext.h"
@@ -43,10 +44,6 @@ namespace uranus {
 
         const auto pid = op.value();
         gateway_->onLogout(pid);
-
-        if (auto *mgr = GetModule(PlayerManager)) {
-            mgr->remove(pid);
-        }
     }
 
     void Connection::onReadMessage(PackageHandle &&pkg) {
@@ -58,7 +55,7 @@ namespace uranus {
         // Not login
         if (!op.has_value()) {
             if (auto *auth = GetModule(LoginAuth)) {
-                auth->onPlayerLogin(pkg.get());
+                auth->onPlayerLogin(pkg.get(), key_);
             }
             return;
         }
@@ -86,6 +83,16 @@ namespace uranus {
     }
 
     void Connection::afterWrite(PackageHandle &&pkg) {
+        if (pkg == nullptr)
+            return;
+
+        // Fail to login
+        if (pkg->getId() == protocol::kLoginFailed ||
+            pkg->getId() == protocol::kLoginRepeated) {
+            attr().erase("PLAYER_ID");
+            disconnect();
+            return;
+        }
     }
 
     void Connection::onTimeout() {

@@ -25,10 +25,10 @@ namespace uranus {
         void start() override;
         void stop() override;
 
-        void onPlayerLogin(Package *pkg);
+        void onPlayerLogin(Package *pkg, const std::string &key);
 
-        void onLoginSuccess(uint32_t pid);
-        void onLoginFailure(uint32_t pid);
+        void onLoginSuccess(uint32_t pid, const std::string &key);
+        void onLoginFailure(uint32_t pid, const std::string &key);
 
     private:
         GameWorld &world_;

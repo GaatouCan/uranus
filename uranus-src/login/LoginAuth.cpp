@@ -24,7 +24,7 @@ namespace uranus {
     void LoginAuth::stop() {
     }
 
-    void LoginAuth::onPlayerLogin(Package *pkg) {
+    void LoginAuth::onPlayerLogin(Package *pkg, const std::string &key) {
         if (pkg->getId() != 1001)
             return;
 
@@ -32,24 +32,29 @@ namespace uranus {
         req.ParseFromString(pkg->toString());
 
         const auto pid = req.player_id();
+        onLoginSuccess(pid, key);
+    }
 
-        const auto *gateway = GET_MODULE(&world_, Gateway);
+    void LoginAuth::onLoginSuccess(uint32_t pid, const std::string &key) {
+        auto *gateway = GET_MODULE(&world_, Gateway);
         if (!gateway) {
             SPDLOG_ERROR("Gateway is nullptr");
             exit(-1);
         }
 
-        if (gateway->hasPlayerLogin(pid)) {
-            SPDLOG_WARN("Player login already exists");
-            onLoginFailure(pid);
-        } else {
-            onLoginSuccess(pid);
+        gateway->onPlayerLogin(pid, key);
+    }
+
+    void LoginAuth::onLoginFailure(uint32_t pid, const std::string &key) {
+        auto *gateway = GET_MODULE(&world_, Gateway);
+        if (!gateway) {
+            SPDLOG_ERROR("Gateway is nullptr");
+            exit(-1);
         }
-    }
 
-    void LoginAuth::onLoginSuccess(uint32_t pid) {
-    }
-
-    void LoginAuth::onLoginFailure(uint32_t pid) {
+        if (const auto conn = gateway->find(key)) {
+            SPDLOG_WARN("Connection[{}] login request failed", key);
+            // TODO
+        }
     }
 } // uranus
