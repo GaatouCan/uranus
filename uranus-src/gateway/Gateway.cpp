@@ -42,9 +42,19 @@ namespace uranus {
             auto conn = std::make_shared<Connection>(bootstrap, std::move(socket));
 
             conn->setGateway(this);
+            conn->setExpirationSecond(30);
+
             SPDLOG_INFO("Accept client from: {}", conn->remoteAddress().to_string());
 
             return conn;
+        });
+
+        bootstrap_->onRemove([](const std::string &key) {
+            SPDLOG_TRACE("Remove connection: {}", key);
+        });
+
+        bootstrap_->onException([](std::exception &e) {
+            SPDLOG_ERROR("Server bootstrap exception: {}", e.what());
         });
 
         thread_ = std::thread([this, port, threads]() {
