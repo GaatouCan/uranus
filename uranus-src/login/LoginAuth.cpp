@@ -1,7 +1,8 @@
 #include "LoginAuth.h"
-
 #include "GameWorld.h"
 #include "gateway/Gateway.h"
+#include "gateway/Connection.h"
+#include "common.h"
 
 #include <login.pb.h>
 #include <spdlog/spdlog.h>
@@ -54,7 +55,18 @@ namespace uranus {
 
         if (const auto conn = gateway->find(key)) {
             SPDLOG_WARN("Connection[{}] login request failed", key);
-            // TODO
+
+            Login::LoginFailed res;
+
+            res.set_player_id(pid);
+            res.set_data("Failed to login");
+
+            auto pkg = Package::getHandle();
+
+            pkg->setId(protocol::kLoginFailed);
+            pkg->setData(res.SerializeAsString());
+
+            conn->send(std::move(pkg));
         }
     }
 } // uranus

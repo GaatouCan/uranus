@@ -8,3 +8,21 @@ message ClientLoginRequest {
   uint32 player_id = 1;
   string token = 2;
 }
+
+message LoginSuccessResponse {
+  uint32 player_id = 1;
+}
+
+message LoginFailed {
+  uint32 player_id = 1;
+  string data = 2;
+}
+
+message LoginRepeated {
+  uint32 player_id = 1;
+  string data = 2;
+}
+
+message Heartbeat {
+  uint32 player_id = 1;
+}

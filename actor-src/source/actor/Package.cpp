@@ -32,6 +32,12 @@ namespace uranus::actor {
         return id_;
     }
 
+    void Package::setData(const std::string &data) {
+        payload_.clear();
+        payload_.reserve(data.size());
+        std::memcpy(payload_.data(), data.data(), data.size());
+    }
+
     std::string Package::toString() const {
         return { payload_.begin(), payload_.end() };
     }

@@ -1,12 +1,14 @@
 #include "Gateway.h"
 #include "Connection.h"
 #include "GameWorld.h"
+#include "player/PlayerManager.h"
+#include "common.h"
 
 #include <config/ConfigModule.h>
 #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
-#include "player/PlayerManager.h"
+#include <login.pb.h>
 
 using uranus::config::ConfigModule;
 
@@ -80,6 +82,10 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
+        const auto conn = find(key);
+        if (!conn)
+            return;
+
         bool repeated = false;
 
         do {
@@ -94,12 +100,32 @@ namespace uranus {
         } while (false);
 
         if (repeated) {
-            // TODO
+            Login::LoginRepeated res;
+            res.set_player_id(pid);
+            res.set_data("Player ID Repeated");
+
+            auto pkg = Package::getHandle();
+
+            pkg->setId(protocol::kLoginRepeated);
+            pkg->setData(res.SerializeAsString());
+
+            conn->send(std::move(pkg));
+
             return;
         }
 
-        if (const auto conn = bootstrap_->find(key)) {
-            conn->attr().set("PLAYER_ID", pid);
+        conn->attr().set("PLAYER_ID", pid);
+
+        {
+            Login::LoginSuccessResponse res;
+            res.set_player_id(pid);
+
+            auto pkg = Package::getHandle();
+
+            pkg->setId(protocol::kServerLoginResponse);
+            pkg->setData(res.SerializeAsString());
+
+            conn->send(std::move(pkg));
         }
 
         if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {

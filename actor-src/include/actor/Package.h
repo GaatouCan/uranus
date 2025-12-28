@@ -64,6 +64,7 @@ namespace uranus::actor {
         void setId(int32_t id);
         [[nodiscard]] int64_t getId() const;
 
+        void setData(const std::string &data);
         [[nodiscard]] std::string toString() const;
 
         void recycle();
