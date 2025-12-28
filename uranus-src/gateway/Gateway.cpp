@@ -42,6 +42,7 @@ namespace uranus {
             auto conn = std::make_shared<Connection>(bootstrap, std::move(socket));
 
             conn->setGateway(this);
+            SPDLOG_INFO("Accept client from: {}", conn->remoteAddress().to_string());
 
             return conn;
         });
