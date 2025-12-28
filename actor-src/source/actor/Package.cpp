@@ -32,6 +32,10 @@ namespace uranus::actor {
         return id_;
     }
 
+    std::string Package::toString() const {
+        return { payload_.begin(), payload_.end() };
+    }
+
     void Package::recycle() {
         id_ = -1;
         payload_.clear();

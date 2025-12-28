@@ -1,3 +1,5 @@
+find_package(Protobuf CONFIG REQUIRED)
+
 if (CMAKE_CROSSCOMPILING)
     find_program(PROTOBUF_PROTOC protoc)
 else ()
@@ -19,6 +21,7 @@ foreach (proto ${PROTOBUF_LIST})
     set(target_name pb_${proto_name})
 
     add_library(${target_name} STATIC ${proto_src} ${proto_hdr})
+#    target_link_libraries(${target_name} PUBLIC protobuf::libprotobuf)
     target_link_libraries(${target_name} PUBLIC protobuf::libprotobuf-lite)
 
     target_include_directories(${target_name} PUBLIC
