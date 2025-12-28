@@ -1,4 +1,5 @@
 #include "BaseConnection.h"
+#include "ServerBootstrap.h"
 
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
@@ -9,8 +10,9 @@ using asio::detached;
 using asio::co_spawn;
 
 namespace uranus::network {
-    BaseConnection::BaseConnection(TcpSocket &&socket)
-        : socket_(std::move(socket)),
+    BaseConnection::BaseConnection(ServerBootstrap &server, TcpSocket &&socket)
+        : server_(server),
+          socket_(std::move(socket)),
           watchdog_(socket_.get_executor()),
           expiration_(-1) {
         const auto now = std::chrono::system_clock::now();
@@ -25,6 +27,10 @@ namespace uranus::network {
     }
 
     BaseConnection::~BaseConnection() {
+    }
+
+    ServerBootstrap &BaseConnection::getServerBootstrap() const {
+        return server_;
     }
 
     TcpSocket &BaseConnection::socket() {
@@ -64,9 +70,9 @@ namespace uranus::network {
 #endif
         watchdog_.cancel();
 
-        // if (!attr().has("REPEATED")) {
-        //     server_.remove(key_);
-        // }
+        if (!attr().has("REPEATED")) {
+            server_.remove(key_);
+        }
 
         // Call the virtual method
         onDisconnect();

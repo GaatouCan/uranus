@@ -15,7 +15,7 @@ namespace uranus::network {
         using MessageType = typename Codec::MessageType;
         using MessageHandleType = typename Codec::MessageHandleType;
 
-        explicit ConnectionAdapter(TcpSocket &&socket);
+        ConnectionAdapter(ServerBootstrap &server, TcpSocket &&socket);
         ~ConnectionAdapter() override;
 
         void connect() override;
@@ -43,8 +43,8 @@ namespace uranus::network {
     };
 
     template<kCodecType Codec>
-    ConnectionAdapter<Codec>::ConnectionAdapter(TcpSocket &&socket)
-        : BaseConnection(std::move(socket)),
+    ConnectionAdapter<Codec>::ConnectionAdapter(ServerBootstrap &server, TcpSocket &&socket)
+        : BaseConnection(server, std::move(socket)),
           codec_(dynamic_cast<BaseConnection &>(*this)),
           output_(socket_.get_executor(), 1024) {
     }
