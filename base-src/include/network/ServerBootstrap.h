@@ -21,7 +21,7 @@ namespace uranus::network {
 
     class BASE_API ServerBootstrap final {
 
-        using InitialCallback   = std::function<shared_ptr<BaseConnection>(ServerBootstrap &, TcpSocket &&)>;
+        using AcceptCallback    = std::function<shared_ptr<BaseConnection>(ServerBootstrap &, TcpSocket &&)>;
         using RemoveCallback    = std::function<void(const std::string &)>;
         using ExceptionCallback = std::function<void(std::exception &e)>;
 
@@ -42,7 +42,7 @@ namespace uranus::network {
         [[nodiscard]] shared_ptr<BaseConnection> find(const std::string &key) const;
         void remove(const std::string &key);
 
-        void onInitial(const InitialCallback &cb);
+        void onAccept(const AcceptCallback &cb);
         void onRemove(const RemoveCallback &cb);
         void onException(const ExceptionCallback &cb);
 
@@ -64,7 +64,7 @@ namespace uranus::network {
         mutable shared_mutex mutex_;
         unordered_map<std::string, shared_ptr<BaseConnection>> conns_;
 
-        InitialCallback onInit_;
+        AcceptCallback onAccept_;
         RemoveCallback onRemove_;
         ExceptionCallback onException_;
 

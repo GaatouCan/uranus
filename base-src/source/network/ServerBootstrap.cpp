@@ -83,8 +83,8 @@ namespace uranus::network {
         }
     }
 
-    void ServerBootstrap::onInitial(const InitialCallback &cb) {
-        onInit_ = cb;
+    void ServerBootstrap::onAccept(const AcceptCallback &cb) {
+        onAccept_ = cb;
     }
 
     void ServerBootstrap::onRemove(const RemoveCallback &cb) {
@@ -113,9 +113,9 @@ namespace uranus::network {
                 }
 
 #ifdef URANUS_SSL
-                const auto conn = std::invoke(onInit_, *this, TcpSocket(std::move(socket), sslContext_));
+                const auto conn = std::invoke(onAccept_, *this, TcpSocket(std::move(socket), sslContext_));
 #else
-                const auto conn = onInit_(*this, std::move(socket));
+                const auto conn = onAccept_(*this, std::move(socket));
 #endif
 
                 if (!conn)

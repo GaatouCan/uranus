@@ -12,8 +12,8 @@ namespace uranus::network {
 
     public:
         using CodecType = Codec;
-        using MessageType = typename Codec::MessageType;
-        using MessageHandleType = typename Codec::MessageHandleType;
+        using MessageType = Codec::MessageType;
+        using MessageHandleType = Codec::MessageHandleType;
 
         ConnectionAdapter(ServerBootstrap &server, TcpSocket &&socket);
         ~ConnectionAdapter() override;
