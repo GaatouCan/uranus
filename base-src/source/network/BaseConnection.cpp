@@ -13,6 +13,7 @@ namespace uranus::network {
     BaseConnection::BaseConnection(ServerBootstrap &server, TcpSocket &&socket)
         : server_(server),
           socket_(std::move(socket)),
+          strand_(asio::make_strand(socket_.get_executor())),
           watchdog_(socket_.get_executor()),
           expiration_(-1) {
         const auto now = std::chrono::system_clock::now();
@@ -41,7 +42,7 @@ namespace uranus::network {
         // Mark the received timestamp
         received_ = std::chrono::steady_clock::now();
 
-        co_spawn(socket_.get_executor(), [self = this->shared_from_this()]() -> awaitable<void> {
+        co_spawn(strand_, [self = this->shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
             if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
                 self->disconnect();

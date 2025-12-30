@@ -5,6 +5,8 @@
 #include "base/noncopy.h"
 #include "base/types.h"
 
+#include <asio/strand.hpp>
+
 namespace uranus::network {
 
     class ServerBootstrap;
@@ -55,6 +57,7 @@ namespace uranus::network {
     protected:
         ServerBootstrap &server_;
         TcpSocket socket_;
+        asio::strand<asio::any_io_executor> strand_;
 
         std::string key_;
         AttributeMap attr_;
