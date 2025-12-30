@@ -19,6 +19,11 @@ namespace uranus::network {
     }
 
     ServerBootstrap::~ServerBootstrap() {
+        for (auto &val: pool_) {
+            if (val.joinable()) {
+                val.join();
+            }
+        }
     }
 
 #ifdef URANUS_SSL
@@ -39,7 +44,11 @@ namespace uranus::network {
             asio::ssl::context::single_dh_use
         );
 #endif
-        pool_.start(num);
+        for (auto i = 0; i < num; i++) {
+            pool_.emplace_back([this] {
+                ctx_.run();
+            });
+        }
 
         co_spawn(ctx_, waitForClient(port), detached);
 
@@ -102,7 +111,7 @@ namespace uranus::network {
             acceptor_.listen(port);
 
             while (!ctx_.stopped()) {
-                auto [ec, socket] = co_await acceptor_.async_accept(pool_.getIOContext());
+                auto [ec, socket] = co_await acceptor_.async_accept();
 
                 if (ec) {
                     continue;

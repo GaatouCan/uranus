@@ -1,6 +1,7 @@
 #pragma once
 
-#include "base/MultiIOContextPool.h"
+#include "base/base.export.h"
+#include "base/noncopy.h"
 #include "base/types.h"
 
 #include <shared_mutex>
@@ -59,7 +60,7 @@ namespace uranus::network {
         asio::ssl::context sslContext_;
 #endif
 
-        MultiIOContextPool pool_;
+        std::vector<std::thread> pool_;
 
         mutable shared_mutex mutex_;
         unordered_map<std::string, shared_ptr<BaseConnection>> conns_;
