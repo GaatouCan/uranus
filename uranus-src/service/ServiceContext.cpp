@@ -92,10 +92,10 @@ namespace uranus {
         return {};
     }
 
-    bool ServiceContext::sendRequest(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
+    void ServiceContext::sendRequest(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
             if (target == getId())
-                return false;
+                return;
 
             if (const auto dest = manager_->find(target)) {
                 Envelope envelope;
@@ -106,7 +106,7 @@ namespace uranus {
                 envelope.package = std::move(pkg);
 
                 dest->pushEnvelope(std::move(envelope));
-                return true;
+                return;
             }
         }
 
@@ -121,12 +121,10 @@ namespace uranus {
                     envelope.package = std::move(pkg);
 
                     plr->pushEnvelope(std::move(envelope));
-                    return true;
+                    return;
                 }
             }
         }
-
-        return false;
     }
 
     void ServiceContext::sendResponse(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {

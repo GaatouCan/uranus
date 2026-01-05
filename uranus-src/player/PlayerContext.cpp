@@ -72,7 +72,7 @@ namespace uranus {
         return {};
     }
 
-    bool PlayerContext::sendRequest(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
+    void PlayerContext::sendRequest(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
             if (const auto *mgr = GetModule(ServiceManager)) {
                 if (const auto ctx = mgr->find(target)) {
@@ -84,12 +84,9 @@ namespace uranus {
                     envelope.package = std::move(pkg);
 
                     ctx->pushEnvelope(std::move(envelope));
-                    return true;
                 }
             }
         }
-
-        return false;
     }
 
     void PlayerContext::sendResponse(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {

@@ -9,6 +9,7 @@
 
 #include <asio/co_spawn.hpp>
 #include <asio/any_completion_handler.hpp>
+#include <asio/bind_allocator.hpp>
 #include <map>
 #include <memory>
 #include <functional>
@@ -81,12 +82,13 @@ namespace uranus::actor {
         virtual void send(int ty, uint32_t target, PackageHandle &&pkg) = 0;
 
         /// 异步调用目标Actor并等待返回结果（RPC）
-        auto call(int ty, uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle>;
+        template<asio::completion_token_for<void(PackageHandle)> CompletionToken = asio::use_awaitable_t<>>
+        auto call(int ty, uint32_t target, PackageHandle &&req, CompletionToken &&token);
 #pragma endregion
 
     protected:
         /// 向目标Actor发送请求
-        virtual bool sendRequest(int ty, uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
+        virtual void sendRequest(int ty, uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
 
         /// 向请求方返回响应
         virtual void sendResponse(int ty, uint32_t sess, uint32_t target, PackageHandle &&pkg) = 0;
@@ -123,4 +125,78 @@ namespace uranus::actor {
         /** Actor的唯一ID **/
         uint32_t id_;
     };
+
+    template<asio::completion_token_for<void(unique_ptr<Package, Message::Deleter>)> CompletionToken>
+    auto ActorContext::call(int ty, uint32_t target, PackageHandle &&req, CompletionToken &&token) {
+        return asio::async_initiate<CompletionToken, void(PackageHandle)>([this](
+             asio::completion_handler_for<void(PackageHandle)> auto handler,
+             int type,
+             const uint32_t dest,
+             PackageHandle &&temp
+        ) mutable {
+             // 如果当前ActorContext未运行，则立即返回
+             if (!isRunning()) {
+                 auto work = asio::make_work_guard(handler);
+                 const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
+                 asio::dispatch(
+                     work.get_executor(),
+                     asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
+                         std::move(handler)(nullptr);
+                     })
+                 );
+                 return;
+             }
+
+             const auto sess = sessAlloc_.allocate();
+
+             // 判断会话id是否合法
+             {
+                 unique_lock lock(sessMutex_);
+
+                 if (sessions_.contains(sess)) {
+                     lock.unlock();
+                     const auto work = asio::make_work_guard(handler);
+                     const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
+                     asio::dispatch(
+                         work.get_executor(),
+                         asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
+                             std::move(handler)(nullptr);
+                         })
+                     );
+                     return;
+                 }
+
+                 // 创建新的会话回调节点
+                 sessions_.emplace(sess, make_unique<SessionNode>(std::move(handler), sess));
+             }
+
+             type |= Package::kRequest;
+             sendRequest(type, sess, dest, std::move(temp));
+
+             // 如果发送请求失败，则删除会话节点并返回空指针
+             // if (!ret) {
+             //     unique_ptr<SessionNode> node = nullptr;
+             //
+             //     {
+             //         unique_lock lock(sessMutex_);
+             //         if (const auto iter = sessions_.find(sess); iter != sessions_.end()) {
+             //            node = std::move(iter->second);
+             //            sessions_.erase(iter);
+             //        }
+             //     }
+             //
+             //     if (node != nullptr) {
+             //         const auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
+             //         asio::dispatch(
+             //             node->work.get_executor(),
+             //             asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
+             //                     std::move(handler)(nullptr);
+             //             })
+             //         );
+             //
+             //         sessAlloc_.recycle(node->sess);
+             //     }
+             // }
+         }, token, ty, target, std::move(req));
+    }
 }

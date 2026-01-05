@@ -2,7 +2,6 @@
 #include "BaseActor.h"
 
 #include <asio/detached.hpp>
-#include <asio/bind_allocator.hpp>
 #include <ranges>
 
 namespace uranus::actor {
@@ -78,80 +77,6 @@ namespace uranus::actor {
             return;
 
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
-    }
-
-    auto ActorContext::call(int ty, uint32_t target, PackageHandle &&pkg) -> awaitable<PackageHandle> {
-        auto token = asio::use_awaitable;
-        return asio::async_initiate<asio::use_awaitable_t<>, void(PackageHandle)>([this](
-            asio::completion_handler_for<void(PackageHandle)> auto handler,
-            int type,
-            const uint32_t dest,
-            PackageHandle &&temp
-        ) mutable {
-            // 如果当前ActorContext未运行，则立即返回
-            if (!isRunning()) {
-                auto work = asio::make_work_guard(handler);
-                const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
-                asio::dispatch(
-                    work.get_executor(),
-                    asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
-                        std::move(handler)(nullptr);
-                    })
-                );
-                return;
-            }
-
-            const auto sess = sessAlloc_.allocate();
-
-            // 判断会话id是否合法
-            {
-                unique_lock lock(sessMutex_);
-
-                if (sessions_.contains(sess)) {
-                    lock.unlock();
-                    const auto work = asio::make_work_guard(handler);
-                    const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
-                    asio::dispatch(
-                        work.get_executor(),
-                        asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
-                            std::move(handler)(nullptr);
-                        })
-                    );
-                    return;
-                }
-
-                // 创建新的会话回调节点
-                sessions_.emplace(sess, make_unique<SessionNode>(std::move(handler), sess));
-            }
-
-            type |= Package::kRequest;
-            const auto ret = sendRequest(type, sess, dest, std::move(temp));
-
-            // 如果发送请求失败，则删除会话节点并返回空指针
-            if (!ret) {
-                unique_ptr<SessionNode> node = nullptr;
-
-                {
-                    unique_lock lock(sessMutex_);
-                    if (const auto iter = sessions_.find(sess); iter != sessions_.end()) {
-                       node = std::move(iter->second);
-                       sessions_.erase(iter);
-                   }
-                }
-
-                if (node != nullptr) {
-                    const auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
-                    asio::dispatch(
-                        node->work.get_executor(),
-                        asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
-                                std::move(handler)(nullptr);
-                        })
-                    );
-
-                    sessAlloc_.recycle(node->sess);
-                }
-            }
-        }, token, ty, target, std::move(pkg));
     }
 
     void ActorContext::onErrorCode(std::error_code ec) {
