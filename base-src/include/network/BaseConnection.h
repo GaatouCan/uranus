@@ -9,8 +9,6 @@
 
 namespace uranus::network {
 
-    class ServerBootstrap;
-
     using asio::awaitable;
     using std::error_code;
 
@@ -18,12 +16,11 @@ namespace uranus::network {
     public:
         BaseConnection() = delete;
 
-        BaseConnection(ServerBootstrap &server, TcpSocket &&socket);
+        explicit BaseConnection(TcpSocket &&socket);
         virtual ~BaseConnection();
 
         DISABLE_COPY_MOVE(BaseConnection)
 
-        [[nodiscard]] ServerBootstrap &getServerBootstrap() const;
         [[nodiscard]] TcpSocket &socket();
 
         virtual void connect();
@@ -42,8 +39,8 @@ namespace uranus::network {
         virtual void sendMessage(Message *msg) = 0;
 
     protected:
-        virtual awaitable<void> readMessage() = 0;
-        virtual awaitable<void> writeMessage() = 0;
+        virtual awaitable<void> readLoop() = 0;
+        virtual awaitable<void> writeLoop() = 0;
 
         virtual void onConnect() = 0;
         virtual void onDisconnect() = 0;
@@ -55,7 +52,6 @@ namespace uranus::network {
         awaitable<void> watchdog();
 
     protected:
-        ServerBootstrap &server_;
         TcpSocket socket_;
         asio::strand<asio::any_io_executor> strand_;
 

@@ -34,6 +34,7 @@ namespace uranus::network {
     void ServerBootstrap::usePrivateKeyFile(const std::string &filename) {
         sslContext_.use_private_key_file(filename, asio::ssl::context::pem);
     }
+#endif
 
     void ServerBootstrap::run(const int num, const uint16_t port) {
 #ifdef URANUS_SSL
@@ -66,30 +67,6 @@ namespace uranus::network {
 
         guard_.reset();
         ctx_.stop();
-        conns_.clear();
-    }
-
-    shared_ptr<BaseConnection> ServerBootstrap::find(const std::string &key) const {
-        if (ctx_.stopped())
-            return nullptr;
-
-        shared_lock lock(mutex_);
-        const auto iter = conns_.find(key);
-        return iter != conns_.end() ? iter->second : nullptr;
-    }
-
-    void ServerBootstrap::remove(const std::string &key) {
-        if (ctx_.stopped())
-            return;
-
-        {
-            unique_lock lock(mutex_);
-            conns_.erase(key);
-        }
-
-        if (onRemove_) {
-            std::invoke(onRemove_, key);
-        }
     }
 
     void ServerBootstrap::onAccept(const AcceptCallback &cb) {
@@ -122,34 +99,13 @@ namespace uranus::network {
                 }
 
 #ifdef URANUS_SSL
-                const auto conn = std::invoke(onAccept_, *this, TcpSocket(std::move(socket), sslContext_));
+                const auto conn = std::invoke(onAccept_, TcpSocket(std::move(socket), sslContext_));
 #else
-                const auto conn = onAccept_(*this, std::move(socket));
+                const auto conn = std::invoke(onAccept_, std::move(socket));
 #endif
 
                 if (!conn)
                     continue;
-
-                const auto key = conn->getKey();
-
-                bool repeated = false;
-
-                do {
-                    unique_lock lock(mutex_);
-
-                    if (conns_.contains(key)) {
-                        repeated = true;
-                        break;
-                    }
-
-                    conns_.insert_or_assign(key, conn);
-                } while (false);
-
-                if (repeated) {
-                    conn->attr().set("REPEATED", 1);
-                    conn->disconnect();
-                    continue;
-                }
 
                 conn->connect();
             }
@@ -159,5 +115,4 @@ namespace uranus::network {
             }
         }
     }
-#endif
 }

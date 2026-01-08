@@ -15,7 +15,7 @@ namespace uranus::network {
         using MessageType = Codec::MessageType;
         using MessageHandleType = Codec::MessageHandleType;
 
-        ConnectionAdapter(ServerBootstrap &server, TcpSocket &&socket);
+        explicit ConnectionAdapter(TcpSocket &&socket);
         ~ConnectionAdapter() override;
 
         void connect() override;
@@ -30,8 +30,8 @@ namespace uranus::network {
         void send(MessageType *msg);
 
     protected:
-        awaitable<void> readMessage() override;
-        awaitable<void> writeMessage() override;
+        awaitable<void> readLoop() override;
+        awaitable<void> writeLoop() override;
 
         virtual void onReadMessage(MessageHandleType &&msg) = 0;
         virtual void beforeWrite(MessageType *msg) = 0;
@@ -43,8 +43,8 @@ namespace uranus::network {
     };
 
     template<kCodecType Codec>
-    ConnectionAdapter<Codec>::ConnectionAdapter(ServerBootstrap &server, TcpSocket &&socket)
-        : BaseConnection(server, std::move(socket)),
+    ConnectionAdapter<Codec>::ConnectionAdapter(TcpSocket &&socket)
+        : BaseConnection(std::move(socket)),
           codec_(dynamic_cast<BaseConnection &>(*this)),
           output_(socket_.get_executor(), 1024) {
     }
@@ -132,7 +132,7 @@ namespace uranus::network {
     }
 
     template<kCodecType Codec>
-    awaitable<void> ConnectionAdapter<Codec>::readMessage() {
+    awaitable<void> ConnectionAdapter<Codec>::readLoop() {
         try {
             while (isConnected()) {
                 auto [ec, msg] = co_await codec_.decode();
@@ -152,7 +152,7 @@ namespace uranus::network {
     }
 
     template<kCodecType Codec>
-    awaitable<void> ConnectionAdapter<Codec>::writeMessage() {
+    awaitable<void> ConnectionAdapter<Codec>::writeLoop() {
         try {
             while (isConnected() && output_.is_open()) {
                 auto [ec, msg] = co_await output_.async_receive();

@@ -1,21 +1,22 @@
 #include "BaseConnection.h"
-#include "ServerBootstrap.h"
 
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
 
-using namespace asio::experimental::awaitable_operators;
-using asio::detached;
-using asio::co_spawn;
-
 namespace uranus::network {
-    BaseConnection::BaseConnection(ServerBootstrap &server, TcpSocket &&socket)
-        : server_(server),
-          socket_(std::move(socket)),
+
+    using namespace asio::experimental::awaitable_operators;
+    using asio::detached;
+    using asio::co_spawn;
+
+
+    BaseConnection::BaseConnection(TcpSocket &&socket)
+        : socket_(std::move(socket)),
           strand_(asio::make_strand(socket_.get_executor())),
           watchdog_(socket_.get_executor()),
           expiration_(-1) {
+
         const auto now = std::chrono::system_clock::now();
         const auto durationSinceEpoch = now.time_since_epoch();
         const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
@@ -28,10 +29,6 @@ namespace uranus::network {
     }
 
     BaseConnection::~BaseConnection() {
-    }
-
-    ServerBootstrap &BaseConnection::getServerBootstrap() const {
-        return server_;
     }
 
     TcpSocket &BaseConnection::socket() {
@@ -53,8 +50,8 @@ namespace uranus::network {
             self->onConnect();
 
             co_await (
-                self->readMessage() &&
-                self->writeMessage() &&
+                self->readLoop() &&
+                self->writeLoop() &&
                 self->watchdog()
             );
         }, detached);
@@ -70,10 +67,6 @@ namespace uranus::network {
         socket_.close();
 #endif
         watchdog_.cancel();
-
-        if (!attr().has("REPEATED")) {
-            server_.remove(key_);
-        }
 
         // Call the virtual method
         onDisconnect();

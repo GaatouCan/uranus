@@ -39,8 +39,6 @@ namespace uranus {
         void onErrorCode(std::error_code ec) override;
         void onException(std::exception &e) override;
 
-        void onRepeated();
-
     private:
         void setGateway(Gateway *gateway);
 

@@ -4,8 +4,6 @@
 #include "base/noncopy.h"
 #include "base/types.h"
 
-#include <shared_mutex>
-#include <unordered_map>
 #include <memory>
 #include <functional>
 
@@ -15,14 +13,11 @@ namespace uranus::network {
 
     using asio::awaitable;
     using std::shared_ptr;
-    using std::shared_mutex;
-    using std::unique_lock;
-    using std::shared_lock;
     using std::unordered_map;
 
     class BASE_API ServerBootstrap final {
 
-        using AcceptCallback    = std::function<shared_ptr<BaseConnection>(ServerBootstrap &, TcpSocket &&)>;
+        using AcceptCallback    = std::function<shared_ptr<BaseConnection>(TcpSocket &&)>;
         using RemoveCallback    = std::function<void(const std::string &)>;
         using ExceptionCallback = std::function<void(std::exception &e)>;
 
@@ -39,9 +34,6 @@ namespace uranus::network {
 
         void run(int num, uint16_t port);
         void terminate();
-
-        [[nodiscard]] shared_ptr<BaseConnection> find(const std::string &key) const;
-        void remove(const std::string &key);
 
         void onAccept(const AcceptCallback &cb);
         void onRemove(const RemoveCallback &cb);
@@ -61,9 +53,6 @@ namespace uranus::network {
 #endif
 
         std::vector<std::thread> pool_;
-
-        mutable shared_mutex mutex_;
-        unordered_map<std::string, shared_ptr<BaseConnection>> conns_;
 
         AcceptCallback onAccept_;
         RemoveCallback onRemove_;
