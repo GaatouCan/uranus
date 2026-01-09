@@ -133,10 +133,10 @@ namespace uranus::actor {
             DISABLE_COPY_MOVE(SessionNode)
 
         public:
-            asio::any_completion_handler<void(PackageHandle)> handle;
-            asio::executor_work_guard<asio::any_completion_executor> work;
-            SteadyTimer timer;
-            int64_t sess;
+            asio::any_completion_handler<void(PackageHandle)> handle_;
+            asio::executor_work_guard<asio::any_completion_executor> work_;
+            SteadyTimer timer_;
+            int64_t sess_;
         };
 
     public:

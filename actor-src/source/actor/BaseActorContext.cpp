@@ -8,23 +8,23 @@
 namespace uranus::actor {
 
     BaseActorContext::SessionNode::SessionNode(asio::io_context &ctx, SessionHandle &&h, const int64_t s)
-        : handle(std::move(h)),
-          work(asio::make_work_guard(handle)),
-          timer(ctx),
-          sess(s) {
+        : handle_(std::move(h)),
+          work_(asio::make_work_guard(handle_)),
+          timer_(ctx),
+          sess_(s) {
         co_spawn(ctx, [self = shared_from_this()]() mutable -> awaitable<void> {
             try {
-                self->timer.expires_after(std::chrono::seconds(5));
-                const auto [ec] = co_await self->timer.async_wait();
+                self->timer_.expires_after(std::chrono::seconds(5));
+                const auto [ec] = co_await self->timer_.async_wait();
 
                 if (ec == asio::error::operation_aborted)
                     co_return;
 
-                const auto work = asio::make_work_guard(self->handle);
-                const auto alloc = asio::get_associated_allocator(self->handle, asio::recycling_allocator<void>());
+                const auto work = asio::make_work_guard(self->handle_);
+                const auto alloc = asio::get_associated_allocator(self->handle_, asio::recycling_allocator<void>());
                 asio::dispatch(
                     work.get_executor(),
-                    asio::bind_allocator(alloc, [handler = std::move(self->handle)]() mutable {
+                    asio::bind_allocator(alloc, [handler = std::move(self->handle_)]() mutable {
                         std::move(handler)(nullptr);
                     })
                 );
@@ -170,19 +170,19 @@ namespace uranus::actor {
                     }
 
                     if (node != nullptr) {
-                        const auto work = asio::make_work_guard(node->handle);
-                        const auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
+                        const auto work = asio::make_work_guard(node->handle_);
+                        const auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
                         asio::dispatch(
                             work.get_executor(),
                             asio::bind_allocator(
                                 alloc,
-                                [handler = std::move(node->handle), res = std::move(envelope.package)]() mutable {
+                                [handler = std::move(node->handle_), res = std::move(envelope.package)]() mutable {
                                     std::move(handler)(std::move(res));
                                 }
                             )
                         );
 
-                        sessAlloc_.recycle(node->sess);
+                        sessAlloc_.recycle(node->sess_);
                     }
                 }
                 // 普通信息
@@ -200,10 +200,10 @@ namespace uranus::actor {
 
                 const auto node = it->second;
 
-                auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
+                auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
                 asio::dispatch(
-                    node->work.get_executor(),
-                    asio::bind_allocator(alloc, [handler = std::move(node->handle)]() mutable {
+                    node->work_.get_executor(),
+                    asio::bind_allocator(alloc, [handler = std::move(node->handle_)]() mutable {
                         std::move(handler)(nullptr);
                     })
                 );
