@@ -1,8 +1,7 @@
 #pragma once
 
+#include "AbstractConnection.h"
 #include "base/AttributeMap.h"
-#include "base/Message.h"
-#include "base/noncopy.h"
 #include "base/types.h"
 
 #include <asio/strand.hpp>
@@ -12,31 +11,30 @@ namespace uranus::network {
     using asio::awaitable;
     using std::error_code;
 
-    class BASE_API BaseConnection : public std::enable_shared_from_this<BaseConnection> {
+    class BASE_API BaseConnection : public AbstractConnection, public std::enable_shared_from_this<BaseConnection> {
     public:
         BaseConnection() = delete;
 
         explicit BaseConnection(TcpSocket &&socket);
-        virtual ~BaseConnection();
+        ~BaseConnection() override;
 
         DISABLE_COPY_MOVE(BaseConnection)
 
         [[nodiscard]] TcpSocket &socket();
 
-        virtual void connect();
-        virtual void disconnect();
+        void connect() override;
+        void disconnect() override;
 
-        [[nodiscard]] bool isConnected() const;
-
-        [[nodiscard]] const std::string &getKey() const;
+        [[nodiscard]] bool isConnected() const override;
+        [[nodiscard]] const std::string &getKey() const override;
         [[nodiscard]] asio::ip::address remoteAddress() const;
 
         void setExpirationSecond(int sec);
 
         AttributeMap &attr();
 
-        virtual void sendMessage(MessageHandle &&msg) = 0;
-        virtual void sendMessage(Message *msg) = 0;
+        // virtual void sendMessage(MessageHandle &&msg) = 0;
+        // virtual void sendMessage(Message *msg) = 0;
 
     protected:
         virtual awaitable<void> readLoop() = 0;
