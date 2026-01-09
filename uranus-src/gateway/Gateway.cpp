@@ -42,7 +42,7 @@ namespace uranus {
         bootstrap_->usePrivateKeyFile("server.pem");
 #endif
 
-        bootstrap_->onAccept([this](ServerBootstrap &bootstrap, TcpSocket &&socket) {
+        bootstrap_->onAccept([this](TcpSocket &&socket) {
             auto conn = std::make_shared<Connection>(bootstrap, std::move(socket));
 
             conn->setGateway(this);
