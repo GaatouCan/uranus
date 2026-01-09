@@ -12,26 +12,41 @@ namespace uranus::actor {
           work_(asio::make_work_guard(handle_)),
           timer_(ctx),
           sess_(s) {
+
         co_spawn(ctx, [self = shared_from_this()]() mutable -> awaitable<void> {
             try {
                 self->timer_.expires_after(std::chrono::seconds(5));
                 const auto [ec] = co_await self->timer_.async_wait();
 
-                if (ec == asio::error::operation_aborted)
+                if (ec)
                     co_return;
 
-                const auto work = asio::make_work_guard(self->handle_);
-                const auto alloc = asio::get_associated_allocator(self->handle_, asio::recycling_allocator<void>());
-                asio::dispatch(
-                    work.get_executor(),
-                    asio::bind_allocator(alloc, [handler = std::move(self->handle_)]() mutable {
-                        std::move(handler)(nullptr);
-                    })
-                );
+                if (!self->completed_.test_and_set(std::memory_order_acquire)) {
+                    const auto work = asio::make_work_guard(self->handle_);
+                    const auto alloc = asio::get_associated_allocator(self->handle_, asio::recycling_allocator<void>());
+                    asio::dispatch(
+                        work.get_executor(),
+                        asio::bind_allocator(alloc, [handler = std::move(self->handle_)]() mutable {
+                            std::move(handler)(nullptr);
+                    }));
+                }
             } catch (std::exception &e) {
 
             }
         }, asio::detached);
+    }
+
+    BaseActorContext::SessionNode::~SessionNode() {
+        if (!completed_.test_and_set(std::memory_order_acquire)) {
+            const auto work = asio::make_work_guard(handle_);
+            const auto alloc = asio::get_associated_allocator(handle_, asio::recycling_allocator<void>());
+            asio::dispatch(
+                work.get_executor(),
+                asio::bind_allocator(alloc, [handler = std::move(handle_)]() mutable {
+                    std::move(handler)(nullptr);
+                })
+            );
+        }
     }
 
     BaseActorContext::BaseActorContext(asio::io_context &ctx, ActorHandle &&handle)
@@ -98,12 +113,14 @@ namespace uranus::actor {
         }
 
         const auto sess = sessAlloc_.allocate();
+
         // 判断会话id是否合法
         {
             unique_lock lock(sessMutex_);
 
             if (sessions_.contains(sess)) {
                 lock.unlock();
+
                 const auto work = asio::make_work_guard(handle);
                 const auto alloc = asio::get_associated_allocator(handle, asio::recycling_allocator<void>());
                 asio::dispatch(
@@ -170,17 +187,22 @@ namespace uranus::actor {
                     }
 
                     if (node != nullptr) {
-                        const auto work = asio::make_work_guard(node->handle_);
-                        const auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
-                        asio::dispatch(
-                            work.get_executor(),
-                            asio::bind_allocator(
-                                alloc,
-                                [handler = std::move(node->handle_), res = std::move(envelope.package)]() mutable {
-                                    std::move(handler)(std::move(res));
-                                }
-                            )
-                        );
+                        if (!node->completed_.test_and_set(std::memory_order_acquire)) {
+                            node->timer_.cancel();
+
+                            const auto work = asio::make_work_guard(node->handle_);
+                            const auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
+
+                            asio::dispatch(
+                                work.get_executor(),
+                                asio::bind_allocator(
+                                    alloc,
+                                    [handler = std::move(node->handle_), res = std::move(envelope.package)]() mutable {
+                                        std::move(handler)(std::move(res));
+                                    }
+                                )
+                            );
+                        }
 
                         sessAlloc_.recycle(node->sess_);
                     }
