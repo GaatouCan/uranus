@@ -5,6 +5,7 @@
 
 #include <asio/as_tuple.hpp>
 #include <asio/use_awaitable.hpp>
+#include <asio/strand.hpp>
 #include <asio/ip/tcp.hpp>
 #include <asio/experimental/concurrent_channel.hpp>
 
@@ -20,6 +21,8 @@ namespace uranus {
     using SystemDuration = std::chrono::duration<SystemTimePoint>;
 
     using ThreadID = std::thread::id;
+
+    using ExecutorStrand = asio::strand<asio::any_io_executor>;
 
     using default_token = asio::as_tuple_t<asio::use_awaitable_t<>>;
 

@@ -45,6 +45,7 @@ namespace uranus::network {
             asio::ssl::context::single_dh_use
         );
 #endif
+
         for (auto i = 0; i < num; i++) {
             pool_.emplace_back([this] {
                 ctx_.run();

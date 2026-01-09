@@ -10,7 +10,6 @@ namespace uranus::network {
     using asio::detached;
     using asio::co_spawn;
 
-
     BaseConnection::BaseConnection(TcpSocket &&socket)
         : socket_(std::move(socket)),
           strand_(asio::make_strand(socket_.get_executor())),
@@ -39,7 +38,7 @@ namespace uranus::network {
         // Mark the received timestamp
         received_ = std::chrono::steady_clock::now();
 
-        co_spawn(strand_, [self = this->shared_from_this()]() -> awaitable<void> {
+        co_spawn(strand_, [self = shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
             if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
                 self->disconnect();
@@ -85,7 +84,11 @@ namespace uranus::network {
     }
 
     asio::ip::address BaseConnection::remoteAddress() const {
+#ifdef URANUS_SSL
         return socket_.next_layer().remote_endpoint().address();
+#else
+        return socket_.remote_endpoint().address();
+#endif
     }
 
     void BaseConnection::setExpirationSecond(const int sec) {
