@@ -1,16 +1,14 @@
 #pragma once
 
-#include "actor.export.h"
 #include <base/noncopy.h>
-
 
 namespace uranus::actor {
 
-    class ACTOR_API ServerModule {
+    class ServerModule {
 
     public:
-        ServerModule();
-        virtual ~ServerModule();
+        ServerModule() = default;
+        virtual ~ServerModule() = default;
 
         DISABLE_COPY_MOVE(ServerModule)
 
