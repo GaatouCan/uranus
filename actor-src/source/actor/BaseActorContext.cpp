@@ -2,56 +2,46 @@
 #include "BaseActor.h"
 
 #include <asio/detached.hpp>
+#include <asio/bind_allocator.hpp>
 #include <ranges>
 
 namespace uranus::actor {
-    BaseActorContext::SessionNode::SessionNode(SessionHandle &&h, uint32_t s)
-        : handle(std::move(h)),
-          work(asio::make_work_guard(handle)),
-          sess(s) {
-    }
+    using std::make_unique;
 
-    BaseActorContext::BaseActorContext(asio::io_context &ctx)
+    // BaseActorContext::SessionNode::SessionNode(SessionHandle &&h, uint32_t s)
+    //     : handle(std::move(h)),
+    //       work(asio::make_work_guard(handle)),
+    //       sess(s) {
+    // }
+    //
+
+    // void BaseActorContext::onErrorCode(std::error_code ec) {
+    // }
+    //
+    // void BaseActorContext::onException(std::exception &e) {
+    // }
+
+
+    BaseActorContext::BaseActorContext(asio::io_context &ctx, ActorHandle &&handle)
         : ctx_(ctx),
-          mailbox_(ctx_, 1024),
-          id_(0) {
+          strand_(asio::make_strand(ctx_)),
+          handle_(std::move(handle)),
+          mailbox_(ctx_, 1024) {
+        if (handle_ == nullptr)
+            std::abort();
+
+        handle_->onInitial(this);
     }
 
     BaseActorContext::~BaseActorContext() {
-
     }
 
-    void BaseActorContext::setId(const uint32_t id) {
-        id_ = id;
-    }
-
-    uint32_t BaseActorContext::getId() const {
-        return id_;
-    }
-
-    void BaseActorContext::setUpActor(ActorHandle &&handle) {
-        if (!handle)
-            return;
-
-        if (handle_)
-            return;
-
-        handle_ = std::move(handle);
-        handle_->setContext(this);
-    }
-
-    BaseActor *BaseActorContext::getActor() const {
-        return handle_.get();
+    AttributeMap &BaseActorContext::attr() {
+        return attr_;
     }
 
     void BaseActorContext::run() {
-        if (!handle_)
-            throw std::runtime_error("ActorContext::run - Actor is null");
-
-        // Call actor initial
-        handle_->onInitial();
-
-        co_spawn(ctx_, [self = shared_from_this()]() -> awaitable<void> {
+        co_spawn(ctx_, [self = shared_from_this()]() mutable -> awaitable<void> {
             co_await self->process();
         }, asio::detached);
     }
@@ -64,12 +54,15 @@ namespace uranus::actor {
         mailbox_.close();
     }
 
-    AttributeMap &BaseActorContext::attr() {
-        return attr_;
-    }
-
     bool BaseActorContext::isRunning() const {
         return mailbox_.is_open();
+    }
+
+    BaseActor *BaseActorContext::getActor() const {
+        if (handle_)
+            return handle_.get();
+
+        return nullptr;
     }
 
     void BaseActorContext::pushEnvelope(Envelope &&envelope) {
@@ -79,10 +72,42 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
-    void BaseActorContext::onErrorCode(std::error_code ec) {
-    }
+    void BaseActorContext::createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) {
+        if (!isRunning()) {
+            const auto work = asio::make_work_guard(handle);
+            const auto alloc = asio::get_associated_allocator(handle, asio::recycling_allocator<void>());
+            asio::dispatch(
+                work.get_executor(),
+                asio::bind_allocator(alloc, [handler = std::move(handle)]() mutable {
+                    std::move(handler)(nullptr);
+                })
+            );
+            return;
+        }
 
-    void BaseActorContext::onException(std::exception &e) {
+        const auto sess = sessAlloc_.allocate();
+        // 判断会话id是否合法
+        {
+            unique_lock lock(sessMutex_);
+
+            if (sessions_.contains(sess)) {
+                lock.unlock();
+                const auto work = asio::make_work_guard(handle);
+                const auto alloc = asio::get_associated_allocator(handle, asio::recycling_allocator<void>());
+                asio::dispatch(
+                    work.get_executor(),
+                    asio::bind_allocator(alloc, [handler = std::move(handle)]() mutable {
+                        std::move(handler)(nullptr);
+                    })
+                );
+                return;
+
+               //  co_spawn(work.get_executor())
+            }
+
+            // 创建新的会话回调节点
+            // sessions_.emplace(sess, make_unique<SessionNode>(std::move(handle), sess));
+        }
     }
 
     awaitable<void> BaseActorContext::process() {
@@ -97,7 +122,7 @@ namespace uranus::actor {
                 }
 
                 if (ec) {
-                    onErrorCode(ec);
+                    // onErrorCode(ec);
                     break;
                 }
 
@@ -114,70 +139,70 @@ namespace uranus::actor {
                         type |= Package::kToService;
                     }
 
-                    auto res = handle_->onRequest(std::move(envelope));
+                    auto res = handle_->onRequest(std::move(envelope.package));
                     sendResponse(type, sess, from, std::move(res));
                 }
                 // 异步请求返回
                 else if ((envelope.type & Package::kResponse) != 0) {
-                    unique_ptr<SessionNode> node = nullptr;
-
-                    // 查找会话节点
-                    {
-                        unique_lock lock(sessMutex_);
-                        if (const auto it = sessions_.find(envelope.session); it != sessions_.end()) {
-                            node = std::move(it->second);
-                            sessions_.erase(it);
-                        }
-                    }
-
-                    if (node != nullptr) {
-                        const auto work = asio::make_work_guard(node->handle);
-                        const auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
-                        asio::dispatch(
-                            work.get_executor(),
-                            asio::bind_allocator(
-                                alloc,
-                                [handler = std::move(node->handle), res = std::move(envelope.package)]() mutable {
-                                    std::move(handler)(std::move(res));
-                                }
-                            )
-                        );
-
-                        sessAlloc_.recycle(node->sess);
-                    }
+                    // unique_ptr<SessionNode> node = nullptr;
+                    //
+                    // // 查找会话节点
+                    // {
+                    //     unique_lock lock(sessMutex_);
+                    //     if (const auto it = sessions_.find(envelope.session); it != sessions_.end()) {
+                    //         node = std::move(it->second);
+                    //         sessions_.erase(it);
+                    //     }
+                    // }
+                    //
+                    // if (node != nullptr) {
+                    //     const auto work = asio::make_work_guard(node->handle);
+                    //     const auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
+                    //     asio::dispatch(
+                    //         work.get_executor(),
+                    //         asio::bind_allocator(
+                    //             alloc,
+                    //             [handler = std::move(node->handle), res = std::move(envelope.package)]() mutable {
+                    //                 std::move(handler)(std::move(res));
+                    //             }
+                    //         )
+                    //     );
+                    //
+                    //     sessAlloc_.recycle(node->sess);
+                    // }
                 }
                 // 普通信息
                 else {
-                    handle_->onPackage(std::move(envelope));
+                    handle_->onPackage(std::move(envelope.package));
                 }
             }
 
             // 释放所有会话
-            for (auto it = sessions_.begin(); it != sessions_.end();) {
-                if (it->second == nullptr) {
-                    ++it;
-                    continue;
-                }
-
-                const auto node = std::move(it->second);
-
-                auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
-                asio::dispatch(
-                    node->work.get_executor(),
-                    asio::bind_allocator(alloc, [handler = std::move(node->handle)]() mutable {
-                        std::move(handler)(nullptr);
-                    })
-                );
-
-                it = sessions_.erase(it);
-            }
-
-            sessions_.clear();
+            // for (auto it = sessions_.begin(); it != sessions_.end();) {
+            //     if (it->second == nullptr) {
+            //         ++it;
+            //         continue;
+            //     }
+            //
+            //     const auto node = std::move(it->second);
+            //
+            //     auto alloc = asio::get_associated_allocator(node->handle, asio::recycling_allocator<void>());
+            //     asio::dispatch(
+            //         node->work.get_executor(),
+            //         asio::bind_allocator(alloc, [handler = std::move(node->handle)]() mutable {
+            //             std::move(handler)(nullptr);
+            //         })
+            //     );
+            //
+            //     it = sessions_.erase(it);
+            // }
+            //
+            // sessions_.clear();
 
             // Call actor terminate
             handle_->onTerminate();
         } catch (std::exception &e) {
-            onException(e);
+            // onException(e);
         }
     }
 }

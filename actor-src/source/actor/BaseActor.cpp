@@ -8,17 +8,14 @@ namespace uranus::actor {
     BaseActor::~BaseActor() {
     }
 
-    BaseActorContext *BaseActor::getContext() const {
+    ActorContext *BaseActor::getContext() const {
         return ctx_;
     }
 
-    void BaseActor::onInitial() {
+    void BaseActor::onInitial(ActorContext *ctx) {
+        ctx_ = ctx;
     }
 
     void BaseActor::onTerminate() {
-    }
-
-    void BaseActor::setContext(BaseActorContext *ctx) {
-        ctx_ = ctx;
     }
 }

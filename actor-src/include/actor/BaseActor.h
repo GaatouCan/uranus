@@ -5,11 +5,9 @@
 
 namespace uranus::actor {
 
-    class BaseActorContext;
+    class ActorContext;
 
     class ACTOR_API BaseActor {
-
-        friend class BaseActorContext;
 
     public:
         BaseActor();
@@ -17,19 +15,16 @@ namespace uranus::actor {
 
         DISABLE_COPY_MOVE(BaseActor)
 
-        [[nodiscard]] BaseActorContext *getContext() const;
+        [[nodiscard]] ActorContext *getContext() const;
 
-        virtual void onInitial();
+        virtual void onInitial(ActorContext *ctx);
         virtual void onTerminate();
 
-        virtual void onPackage(Envelope &&envelope) = 0;
-        virtual PackageHandle onRequest(Envelope &&envelope) = 0;
+        virtual void onPackage(PackageHandle &&pkg) = 0;
+        virtual PackageHandle onRequest(PackageHandle &&pkg) = 0;
 
     private:
-        void setContext(BaseActorContext *ctx);
-
-    private:
-        BaseActorContext *ctx_;
+        ActorContext *ctx_;
     };
 }
 

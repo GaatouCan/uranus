@@ -13,6 +13,7 @@ namespace uranus::actor {
 
     class ActorContext {
 
+    protected:
         using SessionHandle = asio::any_completion_handler<void(PackageHandle)>;
 
     public:
