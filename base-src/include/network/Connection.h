@@ -1,25 +1,27 @@
 #pragma once
 
-#include "base/Message.h"
 #include "base/noncopy.h"
+#include "base/Message.h"
+#include "base/AttributeMap.h"
 
-#include <string>
 
 namespace uranus::network {
 
-    class AbstractConnection {
+    class Connection {
 
     public:
-        AbstractConnection() = default;
-        virtual ~AbstractConnection() = default;
+        Connection() = default;
+        virtual ~Connection() = default;
 
-        DISABLE_COPY_MOVE(AbstractConnection)
+        DISABLE_COPY_MOVE(Connection)
 
         virtual void connect() = 0;
         virtual void disconnect() = 0;
         [[nodiscard]] virtual bool isConnected() const = 0;
 
         [[nodiscard]] virtual const std::string &getKey() const = 0;
+
+        virtual AttributeMap &attr() = 0;
 
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;

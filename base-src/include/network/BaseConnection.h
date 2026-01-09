@@ -1,7 +1,6 @@
 #pragma once
 
-#include "AbstractConnection.h"
-#include "base/AttributeMap.h"
+#include "Connection.h"
 #include "base/types.h"
 
 namespace uranus::network {
@@ -9,7 +8,7 @@ namespace uranus::network {
     using asio::awaitable;
     using std::error_code;
 
-    class BASE_API BaseConnection : public AbstractConnection, public std::enable_shared_from_this<BaseConnection> {
+    class BASE_API BaseConnection : public Connection, public std::enable_shared_from_this<BaseConnection> {
 
     public:
         BaseConnection() = delete;
@@ -29,7 +28,7 @@ namespace uranus::network {
         [[nodiscard]] const std::string &getKey() const override;
         [[nodiscard]] asio::ip::address remoteAddress() const;
 
-        AttributeMap &attr();
+        AttributeMap &attr() override;
 
         void setExpirationSecond(int sec);
 

@@ -1,5 +1,5 @@
 #include "ServerBootstrap.h"
-#include "AbstractConnection.h"
+#include "Connection.h"
 
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>

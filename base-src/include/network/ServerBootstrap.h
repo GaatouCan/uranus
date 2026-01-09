@@ -9,7 +9,7 @@
 
 namespace uranus::network {
 
-    class AbstractConnection;
+    class Connection;
 
     using asio::awaitable;
     using std::shared_ptr;
@@ -17,7 +17,7 @@ namespace uranus::network {
 
     class BASE_API ServerBootstrap final {
 
-        using AcceptCallback    = std::function<shared_ptr<AbstractConnection>(TcpSocket &&)>;
+        using AcceptCallback    = std::function<shared_ptr<Connection>(TcpSocket &&)>;
         using RemoveCallback    = std::function<void(const std::string &)>;
         using ExceptionCallback = std::function<void(std::exception &e)>;
 
