@@ -19,7 +19,7 @@ namespace uranus::network {
         virtual void disconnect() = 0;
         [[nodiscard]] virtual bool isConnected() const = 0;
 
-        [[nodiscard]] virtual const std::string &getKey() const = 0;
+        // [[nodiscard]] virtual const std::string &getKey() const = 0;
 
         virtual AttributeMap &attr() = 0;
 

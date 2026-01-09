@@ -3,6 +3,7 @@
 #include <mimalloc.h>
 
 namespace uranus::actor {
+
     namespace detail {
         void *BufferHeap::allocate(const std::size_t size) {
             thread_local mi_heap_t *heap = mi_heap_new();
@@ -21,10 +22,9 @@ namespace uranus::actor {
           id_(-1) {
     }
 
-    Package::~Package() {
-    }
+    Package::~Package() = default;
 
-    void Package::setId(int32_t id) {
+    void Package::setId(const int64_t id) {
         id_ = id;
     }
 
@@ -34,8 +34,20 @@ namespace uranus::actor {
 
     void Package::setData(const std::string &data) {
         payload_.clear();
-        payload_.reserve(data.size());
+        payload_.resize(data.size());
         std::memcpy(payload_.data(), data.data(), data.size());
+    }
+
+    void Package::setData(const std::vector<uint8_t> &bytes) {
+        payload_.clear();
+        payload_.resize(bytes.size());
+        std::memcpy(payload_.data(), bytes.data(), bytes.size());
+    }
+
+    void Package::setData(const uint8_t *data, const size_t length) {
+        payload_.clear();
+        payload_.resize(length);
+        std::memcpy(payload_.data(), data, length);
     }
 
     std::string Package::toString() const {
@@ -59,14 +71,14 @@ namespace uranus::actor {
           package(nullptr) {
     }
 
-    Envelope::Envelope(const int32_t ty, const uint32_t src, PackageHandle &&pkg)
+    Envelope::Envelope(const int32_t ty, const int64_t src, PackageHandle &&pkg)
         : type(ty),
           source(src),
           session(0),
           package(std::move(pkg)) {
     }
 
-    Envelope::Envelope(const int32_t ty, const uint32_t src, const uint32_t sess, PackageHandle &&pkg)
+    Envelope::Envelope(const int32_t ty, const int64_t src, const int64_t sess, PackageHandle &&pkg)
         : type(ty),
           source(src),
           session(sess),

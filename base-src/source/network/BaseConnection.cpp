@@ -21,10 +21,12 @@ namespace uranus::network {
         const auto secondsSinceEpoch = std::chrono::duration_cast<std::chrono::seconds>(durationSinceEpoch);
 
 #ifdef URANUS_SSL
-        key_ = std::format("{}-{}", socket_.next_layer().remote_endpoint().address().to_string(), secondsSinceEpoch.count());
+        const auto key = std::format("{}-{}", socket_.next_layer().remote_endpoint().address().to_string(), secondsSinceEpoch.count());
 #else
-        key_ = std::format("{}-{}", socket_.remote_endpoint().address().to_string(), secondsSinceEpoch.count());
+        const auto key = std::format("{}-{}", socket_.remote_endpoint().address().to_string(), secondsSinceEpoch.count());
 #endif
+
+        attr_.set("CONNECTION_KEY", key);
     }
 
     BaseConnection::~BaseConnection() {
@@ -79,9 +81,9 @@ namespace uranus::network {
 #endif
     }
 
-    const std::string &BaseConnection::getKey() const {
-        return key_;
-    }
+    // const std::string &BaseConnection::getKey() const {
+    //     return key_;
+    // }
 
     asio::ip::address BaseConnection::remoteAddress() const {
 #ifdef URANUS_SSL

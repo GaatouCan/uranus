@@ -1,35 +1,35 @@
-﻿#include "ActorContext.h"
+﻿#include "BaseActorContext.h"
 #include "BaseActor.h"
 
 #include <asio/detached.hpp>
 #include <ranges>
 
 namespace uranus::actor {
-    ActorContext::SessionNode::SessionNode(SessionHandle &&h, uint32_t s)
+    BaseActorContext::SessionNode::SessionNode(SessionHandle &&h, uint32_t s)
         : handle(std::move(h)),
           work(asio::make_work_guard(handle)),
           sess(s) {
     }
 
-    ActorContext::ActorContext(asio::io_context &ctx)
+    BaseActorContext::BaseActorContext(asio::io_context &ctx)
         : ctx_(ctx),
           mailbox_(ctx_, 1024),
           id_(0) {
     }
 
-    ActorContext::~ActorContext() {
+    BaseActorContext::~BaseActorContext() {
 
     }
 
-    void ActorContext::setId(const uint32_t id) {
+    void BaseActorContext::setId(const uint32_t id) {
         id_ = id;
     }
 
-    uint32_t ActorContext::getId() const {
+    uint32_t BaseActorContext::getId() const {
         return id_;
     }
 
-    void ActorContext::setUpActor(ActorHandle &&handle) {
+    void BaseActorContext::setUpActor(ActorHandle &&handle) {
         if (!handle)
             return;
 
@@ -40,11 +40,11 @@ namespace uranus::actor {
         handle_->setContext(this);
     }
 
-    BaseActor *ActorContext::getActor() const {
+    BaseActor *BaseActorContext::getActor() const {
         return handle_.get();
     }
 
-    void ActorContext::run() {
+    void BaseActorContext::run() {
         if (!handle_)
             throw std::runtime_error("ActorContext::run - Actor is null");
 
@@ -56,7 +56,7 @@ namespace uranus::actor {
         }, asio::detached);
     }
 
-    void ActorContext::terminate() {
+    void BaseActorContext::terminate() {
         if (!mailbox_.is_open())
             return;
 
@@ -64,28 +64,28 @@ namespace uranus::actor {
         mailbox_.close();
     }
 
-    AttributeMap &ActorContext::attr() {
+    AttributeMap &BaseActorContext::attr() {
         return attr_;
     }
 
-    bool ActorContext::isRunning() const {
+    bool BaseActorContext::isRunning() const {
         return mailbox_.is_open();
     }
 
-    void ActorContext::pushEnvelope(Envelope &&envelope) {
+    void BaseActorContext::pushEnvelope(Envelope &&envelope) {
         if (!isRunning())
             return;
 
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
-    void ActorContext::onErrorCode(std::error_code ec) {
+    void BaseActorContext::onErrorCode(std::error_code ec) {
     }
 
-    void ActorContext::onException(std::exception &e) {
+    void BaseActorContext::onException(std::exception &e) {
     }
 
-    awaitable<void> ActorContext::process() {
+    awaitable<void> BaseActorContext::process() {
         try {
             while (isRunning()) {
                 // 从邮箱中读取一条信息

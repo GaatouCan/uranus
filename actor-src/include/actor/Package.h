@@ -61,10 +61,13 @@ namespace uranus::actor {
 
         Package() = delete;
 
-        void setId(int32_t id);
+        void setId(int64_t id);
         [[nodiscard]] int64_t getId() const;
 
         void setData(const std::string &data);
+        void setData(const std::vector<uint8_t> &bytes);
+        void setData(const uint8_t *data, size_t length);
+
         [[nodiscard]] std::string toString() const;
 
         void recycle();
@@ -81,15 +84,16 @@ namespace uranus::actor {
 
     struct ACTOR_API Envelope final {
         int32_t type;
-        uint32_t source;
 
-        uint32_t session;
+        int64_t source;
+        int64_t session;
+
         PackageHandle package;
 
         Envelope();
 
-        Envelope(int32_t ty, uint32_t src, PackageHandle &&pkg);
-        Envelope(int32_t ty, uint32_t src, uint32_t sess, PackageHandle &&pkg);
+        Envelope(int32_t ty, int64_t src, PackageHandle &&pkg);
+        Envelope(int32_t ty, int64_t src, int64_t sess, PackageHandle &&pkg);
 
         Envelope(const Envelope &) = delete;
         Envelope &operator=(const Envelope &) = delete;
