@@ -15,6 +15,8 @@ namespace uranus::actor {
     class BaseActor;
 
     using std::unique_ptr;
+    using std::shared_ptr;
+    using std::make_shared;
     using std::function;
     using asio::awaitable;
     using asio::co_spawn;
@@ -118,67 +120,23 @@ namespace uranus::actor {
 //         /** Actor的唯一ID **/
 //         uint32_t id_;
 //     };
-//
-//     template<asio::completion_token_for<void(unique_ptr<Package, Message::Deleter>)> CompletionToken>
-//     auto BaseActorContext::call(int ty, uint32_t target, PackageHandle &&req, CompletionToken &&token) {
-//         return asio::async_initiate<CompletionToken, void(PackageHandle)>([this](
-//              asio::completion_handler_for<void(PackageHandle)> auto handler,
-//              int type,
-//              const uint32_t dest,
-//              PackageHandle &&temp
-//         ) mutable {
-//              // 如果当前ActorContext未运行，则立即返回
-//              if (!isRunning()) {
-//                  auto work = asio::make_work_guard(handler);
-//                  const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
-//                  asio::dispatch(
-//                      work.get_executor(),
-//                      asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
-//                          std::move(handler)(nullptr);
-//                      })
-//                  );
-//                  return;
-//              }
-//
-//              const auto sess = sessAlloc_.allocate();
-//
-//              // 判断会话id是否合法
-//              {
-//                  unique_lock lock(sessMutex_);
-//
-//                  if (sessions_.contains(sess)) {
-//                      lock.unlock();
-//                      const auto work = asio::make_work_guard(handler);
-//                      const auto alloc = asio::get_associated_allocator(handler, asio::recycling_allocator<void>());
-//                      asio::dispatch(
-//                          work.get_executor(),
-//                          asio::bind_allocator(alloc, [handler = std::move(handler)]() mutable {
-//                              std::move(handler)(nullptr);
-//                          })
-//                      );
-//                      return;
-//                  }
-//
-//                  // 创建新的会话回调节点
-//                  sessions_.emplace(sess, make_unique<SessionNode>(std::move(handler), sess));
-//              }
-//
-//              type |= Package::kRequest;
-//              sendRequest(type, sess, dest, std::move(temp));
-//          }, token, ty, target, std::move(req));
-//     }
 
     class ACTOR_API BaseActorContext : public ActorContext, public std::enable_shared_from_this<BaseActorContext> {
 
-        struct ACTOR_API SessionNode {
+        class ACTOR_API SessionNode : public std::enable_shared_from_this<SessionNode> {
+
+        public:
+            SessionNode() = delete;
+
+            SessionNode(asio::io_context &ctx, SessionHandle &&h, int64_t s);
+
+            DISABLE_COPY_MOVE(SessionNode)
+
+        public:
             asio::any_completion_handler<void(PackageHandle)> handle;
             asio::executor_work_guard<asio::any_completion_executor> work;
             SteadyTimer timer;
-
             int64_t sess;
-
-            SessionNode() = delete;
-            SessionNode(SessionHandle &&h, uint32_t s);
         };
 
     public:
@@ -223,7 +181,7 @@ namespace uranus::actor {
 
         IdentAllocator<int64_t, true> sessAlloc_;
 
-        std::unordered_map<int64_t, unique_ptr<SessionNode>> sessions_;
+        std::unordered_map<int64_t, shared_ptr<SessionNode>> sessions_;
         std::mutex sessMutex_;
 
         AttributeMap attr_;
