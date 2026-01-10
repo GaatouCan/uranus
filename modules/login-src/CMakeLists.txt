@@ -32,6 +32,7 @@ foreach (proto ${PROTOBUF_LIST})
             COMMAND ${PROTOBUF_PROTOC}
             ARGS --cpp_out ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/gen -I ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/def ${proto}
             DEPENDS ${proto})
+
     list(APPEND PROTO_GEN_FILES ${proto_hdr} ${proto_src})
 endforeach ()
 
@@ -43,6 +44,7 @@ generate_export_header(login
 )
 
 target_compile_definitions(login PRIVATE login_EXPORTS)
+target_compile_definitions(login PRIVATE ABSL_USES_STD_STRING_VIEW)
 target_include_directories(login
         PRIVATE include/login
         PUBLIC include
@@ -51,7 +53,6 @@ target_include_directories(login
 target_link_libraries(login PUBLIC actor)
 target_link_libraries(login PUBLIC spdlog::spdlog)
 target_link_libraries(login PUBLIC protobuf::libprotobuf-lite)
-target_compile_definitions(login PRIVATE ABSL_USES_STD_STRING_VIEW=1)
 
 set_target_properties(login PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(login PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
