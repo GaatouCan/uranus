@@ -1,12 +1,13 @@
 #pragma once
 
+#include "login.export.h"
 #include <actor/ServerModule.h>
 
 namespace uranus::login {
 
     using actor::ServerModule;
 
-    class LoginAuth final : public ServerModule {
+    class LOGIN_API LoginAuth final : public ServerModule {
 
     public:
         SERVER_MODULE_NAME(LoginAuth)

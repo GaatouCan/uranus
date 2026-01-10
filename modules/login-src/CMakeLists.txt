@@ -38,7 +38,7 @@ endforeach ()
 add_library(login SHARED ${LOGIN_AUTH_FILES} ${PROTO_GEN_FILES})
 
 generate_export_header(login
-        EXPORT_MACRO_NAME AUTH_API
+        EXPORT_MACRO_NAME LOGIN_API
         EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/include/login/login.export.h
 )
 
