@@ -29,6 +29,23 @@ namespace uranus::config {
         // assert(config_["server"]["service"]["extend"] && config_["server"]["service"]["extend"].IsSequence());
 
         SPDLOG_INFO("Load configuration file success");
+
+        registerLogicConfig();
+
+        for (auto &[ty, val] : logicMap_) {
+            const auto it = pathMap_.find(ty);
+            if (it == pathMap_.end()) {
+                SPDLOG_ERROR("Failed to find config path: {}", -(static_cast<int>(ty)));
+                std::abort();
+            }
+
+            const auto &path = it->second;
+
+            if (!val->reload(path)) {
+                SPDLOG_ERROR("Failed to load config file: {}", path);
+                std::abort();
+            }
+        }
     }
 
     void ConfigModule::stop() {
@@ -37,12 +54,4 @@ namespace uranus::config {
     const YAML::Node &ConfigModule::getServerConfig() const {
         return config_;
     }
-
-    // const LogicConfig *ConfigModule::find(const std::string &path) const {
-    //     const auto it = logicMap_.find(path);
-    //     if (it == logicMap_.end())
-    //         return nullptr;
-    //
-    //     return it->second.get();
-    // }
 }

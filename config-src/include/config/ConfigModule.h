@@ -2,6 +2,7 @@
 
 #include "config.export.h"
 #include "LogicConfig.h"
+#include "LogicConfigType.h"
 
 #include <unordered_map>
 #include <memory>
@@ -31,18 +32,22 @@ namespace uranus::config {
 
         template<class T>
         requires std::derived_from<T, LogicConfig>
-        [[nodiscard]] const T *find(const std::string &path) const;
+        [[nodiscard]] const T *find(LogicConfigType ty) const;
+
+    private:
+        void registerLogicConfig();
 
     private:
         YAML::Node config_;
 
-        unordered_map<std::string, unique_ptr<LogicConfig>> logicMap_;
+        unordered_map<LogicConfigType, std::string> pathMap_;
+        unordered_map<LogicConfigType, unique_ptr<LogicConfig>> logicMap_;
     };
 
     template<class T>
     requires std::derived_from<T, LogicConfig>
-    const T *ConfigModule::find(const std::string &path) const {
-        const auto it = logicMap_.find(path);
+    const T *ConfigModule::find(const LogicConfigType ty) const {
+        const auto it = logicMap_.find(ty);
 
         if (it == logicMap_.end())
             return nullptr;

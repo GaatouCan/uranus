@@ -13,6 +13,6 @@ namespace uranus::config {
 
         DISABLE_COPY_MOVE(LogicConfig)
 
-        virtual bool reload(std::string_view dir);
+        virtual bool reload(std::string_view dir) = 0;
     };
 }
