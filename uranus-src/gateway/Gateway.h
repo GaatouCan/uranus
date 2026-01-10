@@ -18,7 +18,6 @@ namespace uranus {
     using std::unique_ptr;
     using std::make_unique;
     using std::make_shared;
-    using std::thread;
     using std::shared_mutex;
     using std::unique_lock;
     using std::shared_lock;
@@ -47,15 +46,6 @@ namespace uranus {
 
         [[nodiscard]] GameWorld &getWorld() const;
 
-        // void onPlayerLogin(uint32_t pid, const std::string &key);
-
-        // [[nodiscard]] std::shared_ptr<ClientConnection> find(const std::string &key) const;
-        // [[nodiscard]] std::shared_ptr<ClientConnection> findByPlayerID(uint32_t pid) const;
-
-        // void remove(const std::string &key) const;
-
-        // void onLogout(uint32_t pid);
-
         void emplace(int64_t pid, const shared_ptr<ClientConnection> &conn);
         void remove(int64_t pid);
 
@@ -65,7 +55,6 @@ namespace uranus {
     private:
         GameWorld &world_;
 
-        thread thread_;
         unique_ptr<ServerBootstrap> bootstrap_;
 
         mutable shared_mutex mutex_;

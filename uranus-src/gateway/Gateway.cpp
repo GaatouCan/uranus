@@ -15,9 +15,7 @@ namespace uranus {
     }
 
     Gateway::~Gateway() {
-        if (thread_.joinable()) {
-            thread_.join();
-        }
+
     }
 
     void Gateway::start() {
@@ -58,10 +56,8 @@ namespace uranus {
             SPDLOG_ERROR("Server bootstrap exception: {}", e.what());
         });
 
-        thread_ = std::thread([this]() {
-            SPDLOG_INFO("Listening on port: {}", 8090);
-            bootstrap_->run(4, 8090);
-        });
+        SPDLOG_INFO("Listening on port: {}", 8090);
+        bootstrap_->runInThread(4, 8090);
     }
 
     void Gateway::stop() {
@@ -73,11 +69,72 @@ namespace uranus {
     }
 
     void Gateway::emplace(int64_t pid, const shared_ptr<ClientConnection> &conn) {
+        if (!bootstrap_)
+            return;
+
+        if (!world_.isRunning())
+            return;
+
+        bool repeated = false;
+
+        do {
+            unique_lock lock(mutex_);
+
+            if (conns_.contains(pid)) {
+                repeated = true;
+                break;
+            }
+
+            conns_.insert_or_assign(pid, conn);
+        } while (false);
+
+        if (repeated) {
+            // TODO
+
+            conn->disconnect();
+            return;
+        }
+
+        // TODO
+        if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
+            // Create the player actor
+            mgr->onPlayerLogin(pid);
+        }
     }
 
-    void Gateway::remove(int64_t pid) {
+    void Gateway::remove(const int64_t pid) {
+        if (!world_.isRunning())
+            return;
+
+        shared_ptr<ClientConnection> conn;
+
+        {
+            unique_lock lock(mutex_);
+            const auto it = conns_.find(pid);
+            if (it != conns_.end()) {
+                conn = it->second;
+                conns_.erase(it);
+            }
+        }
+
+        if (conn != nullptr) {
+            conn->disconnect();
+        }
+
+        if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
+            mgr->remove(pid);
+        }
     }
 
-    shared_ptr<ClientConnection> Gateway::find(int64_t pid) const {
+    shared_ptr<ClientConnection> Gateway::find(const int64_t pid) const {
+        if (bootstrap_ == nullptr)
+            return nullptr;
+
+        if (!world_.isRunning())
+            return nullptr;
+
+        shared_lock lock(mutex_);
+        const auto it = conns_.find(pid);
+        return it != conns_.end() ? it->second : nullptr;
     }
 }

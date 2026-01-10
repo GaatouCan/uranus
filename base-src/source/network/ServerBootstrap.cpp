@@ -19,13 +19,13 @@ namespace uranus::network {
     }
 
     ServerBootstrap::~ServerBootstrap() {
-        if (thread_.joinable()) {
-            thread_.join();
+        if (thread_ != nullptr & thread_->joinable()) {
+            thread_->join();
         }
 
         for (auto &val: pool_) {
-            if (val.joinable()) {
-                val.join();
+            if (val != nullptr && val->joinable()) {
+                val->join();
             }
         }
     }
@@ -51,9 +51,9 @@ namespace uranus::network {
 #endif
 
         for (auto i = 0; i < num; i++) {
-            pool_.emplace_back([this] {
+            pool_.emplace_back(make_unique<thread>([this] {
                 ctx_.run();
-            });
+            }));
         }
 
         co_spawn(ctx_, waitForClient(port), detached);
@@ -77,14 +77,14 @@ namespace uranus::network {
 #endif
 
         for (auto i = 0; i < num; i++) {
-            pool_.emplace_back([this] {
+            pool_.emplace_back(make_unique<thread>([this] {
                 ctx_.run();
-            });
+            }));
         }
 
         co_spawn(ctx_, waitForClient(port), detached);
 
-        thread_ = thread([this] {
+        thread_ = make_unique<thread>([this] {
             asio::signal_set signals(ctx_, SIGINT, SIGTERM);
             signals.async_wait([this](auto, auto) {
                 terminate();

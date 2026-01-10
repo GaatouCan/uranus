@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <functional>
+#include <memory>
 
 namespace uranus::network {
 
@@ -16,6 +17,8 @@ namespace uranus::network {
     using std::unordered_map;
     using std::thread;
     using std::vector;
+    using std::unique_ptr;
+    using std::make_unique;
 
     class BASE_API ServerBootstrap final {
 
@@ -56,8 +59,8 @@ namespace uranus::network {
         asio::ssl::context sslContext_;
 #endif
 
-        thread thread_;
-        vector<thread> pool_;
+        unique_ptr<thread> thread_;
+        vector<unique_ptr<thread>> pool_;
 
         AcceptCallback onAccept_;
         RemoveCallback onRemove_;
