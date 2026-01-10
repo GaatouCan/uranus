@@ -20,8 +20,7 @@ namespace uranus {
           gateway_(nullptr) {
     }
 
-    ClientConnection::~ClientConnection() {
-    }
+    ClientConnection::~ClientConnection() = default;
 
     Gateway *ClientConnection::getGateway() const {
         return gateway_;
@@ -43,7 +42,7 @@ namespace uranus {
         }
 
         const auto pid = op.value();
-        gateway_->onLogout(pid);
+        gateway_->remove(pid);
     }
 
     void ClientConnection::onReadMessage(PackageHandle &&pkg) {

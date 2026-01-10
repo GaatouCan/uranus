@@ -2,7 +2,6 @@
 #include "ClientConnection.h"
 #include "GameWorld.h"
 #include "player/PlayerManager.h"
-#include "common.h"
 
 // #include <config/ConfigModule.h>
 // #include <yaml-cpp/yaml.h>
@@ -106,19 +105,9 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        shared_ptr<ClientConnection> conn;
-
         {
             unique_lock lock(mutex_);
-            const auto it = conns_.find(pid);
-            if (it != conns_.end()) {
-                conn = it->second;
-                conns_.erase(it);
-            }
-        }
-
-        if (conn != nullptr) {
-            conn->disconnect();
+            conns_.erase(pid);
         }
 
         if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
