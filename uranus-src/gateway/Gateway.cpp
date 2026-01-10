@@ -3,12 +3,14 @@
 #include "GameWorld.h"
 #include "player/PlayerManager.h"
 
-// #include <config/ConfigModule.h>
-// #include <yaml-cpp/yaml.h>
+#include <config/ConfigModule.h>
+#include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
-
 namespace uranus {
+
+    using config::ConfigModule;
+
     Gateway::Gateway(GameWorld &world)
         : world_(world) {
     }
@@ -18,16 +20,16 @@ namespace uranus {
     }
 
     void Gateway::start() {
-        // const auto *config = GET_MODULE(&world_, ConfigModule);
-        // if (!config) {
-        //     SPDLOG_ERROR("Config module is not available");
-        //     exit(-1);
-        // }
-        //
-        // const auto &cfg = config->getServerConfig();
-        //
-        // const auto port = cfg["server"]["network"]["port"].as<uint16_t>();
-        // const auto threads = cfg["server"]["network"]["threads"].as<int>();
+        const auto *config = GET_MODULE(&world_, ConfigModule);
+        if (!config) {
+            SPDLOG_ERROR("Config module is not available");
+            exit(-1);
+        }
+
+        const auto &cfg = config->getServerConfig();
+
+        const auto port = cfg["server"]["network"]["port"].as<uint16_t>();
+        const auto threads = cfg["server"]["network"]["threads"].as<int>();
 
         bootstrap_ = std::make_unique<ServerBootstrap>();
 
@@ -55,8 +57,8 @@ namespace uranus {
             SPDLOG_ERROR("Server bootstrap exception: {}", e.what());
         });
 
-        SPDLOG_INFO("Listening on port: {}", 8090);
-        bootstrap_->runInThread(4, 8090);
+        SPDLOG_INFO("Listening on port: {}", port);
+        bootstrap_->runInThread(threads, port);
     }
 
     void Gateway::stop() {
