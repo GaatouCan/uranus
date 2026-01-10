@@ -5,8 +5,8 @@ file(GLOB_RECURSE CONFIG_MODULE_FILES
 if (MSVC)
     foreach(file ${CONFIG_MODULE_FILES})
         get_filename_component(PARENT_DIR "${file}" DIRECTORY)
-        string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}" "" GROUP "${PARENT_DIR}")
-        string(REPLACE "/" "\\" GROUP "${GROUP}")
+        string(REPLACE "." "" GROUP "${PARENT_DIR}")
+        string(REPLACE "." "\\" GROUP "${GROUP}")
         set(GROUP "${GROUP}")
         source_group("${GROUP}" FILES "${file}")
     endforeach()
@@ -16,13 +16,13 @@ add_library(config SHARED ${CONFIG_MODULE_FILES})
 
 generate_export_header(config
         EXPORT_MACRO_NAME CONFIG_API
-        EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/include/config/config.export.h
+        EXPORT_FILE_NAME include/config/config.export.h
 )
 
 target_compile_definitions(config PRIVATE config_EXPORTS)
 target_include_directories(config
-        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/config
-        PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE include/config
+        PUBLIC include
 )
 
 target_link_libraries(config PUBLIC actor)

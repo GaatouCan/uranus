@@ -51,7 +51,7 @@ find_package(yaml-cpp CONFIG REQUIRED)
 
 add_subdirectory(base-src)
 add_subdirectory(actor-src)
-add_subdirectory(config-src)
+add_subdirectory(modules/config-src)
 #add_subdirectory(protobuf)
 #add_subdirectory(http-src)
 add_subdirectory(uranus-src)
