@@ -23,6 +23,7 @@ namespace uranus::actor {
         DISABLE_COPY_MOVE(ActorContext)
 
         virtual AttributeMap &attr() = 0;
+        [[nodiscard]] virtual const AttributeMap &attr() const = 0;
 
         [[nodiscard]] virtual ServerModule *getModule(const std::string &name) const = 0;
 

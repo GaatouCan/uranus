@@ -29,7 +29,7 @@ namespace uranus {
     void PlayerManager::stop() {
     }
 
-    void PlayerManager::onPlayerLogin(const uint32_t pid) {
+    void PlayerManager::onPlayerLogin(const int64_t pid) {
         if (!world_.isRunning())
             return;
 
@@ -38,7 +38,19 @@ namespace uranus {
         if (!plr)
             return;
 
-        auto ctx = std::make_shared<PlayerContext>(world_.getWorkerIOContext());
+        auto handle = ActorHandle(plr, [](BaseActor *ptr) {
+            if (!ptr)
+                return;
+
+            if (auto *temp = dynamic_cast<BasePlayer *>(ptr)) {
+                PlayerFactory::instance().destroy(temp);
+                return;
+            }
+
+            delete ptr;
+        });
+
+        auto ctx = std::make_shared<PlayerContext>(world_.getWorkerIOContext(), std::move(handle));
 
         shared_ptr<PlayerContext> old;
 
@@ -59,33 +71,13 @@ namespace uranus {
             old->terminate();
         }
 
-        ctx->setId(pid);
         ctx->setPlayerManager(this);
-        ctx->setUpActor({plr, [](BaseActor *ptr) {
-            if (!ptr)
-                return;
-
-            if (auto *temp = dynamic_cast<BasePlayer *>(ptr)) {
-                PlayerFactory::instance().destroy(temp);
-                return;
-            }
-
-            delete ptr;
-        }});
+        ctx->setPlayerId(pid);
 
         ctx->run();
     }
 
-    shared_ptr<PlayerContext> PlayerManager::find(const uint32_t pid) const {
-        if (!world_.isRunning())
-            return nullptr;
-
-        shared_lock lock(mutex_);
-        const auto it = players_.find(pid);
-        return it != players_.end() ? it->second : nullptr;
-    }
-
-    void PlayerManager::remove(const uint32_t pid) {
+    void PlayerManager::onPlayerLogout(const int64_t pid) {
         if (!world_.isRunning())
             return;
 
@@ -103,5 +95,14 @@ namespace uranus {
         if (ctx) {
             ctx->terminate();
         }
+    }
+
+    shared_ptr<PlayerContext> PlayerManager::find(const int64_t pid) const {
+        if (!world_.isRunning())
+            return nullptr;
+
+        shared_lock lock(mutex_);
+        const auto it = players_.find(pid);
+        return it != players_.end() ? it->second : nullptr;
     }
 } // uranus

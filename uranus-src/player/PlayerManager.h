@@ -23,6 +23,7 @@ namespace uranus {
         explicit PlayerManager(GameWorld &world);
         ~PlayerManager() override;
 
+        DISABLE_COPY_MOVE(PlayerManager)
         SERVER_MODULE_NAME(PlayerManager)
 
         [[nodiscard]] GameWorld &getWorld() const;
@@ -30,15 +31,15 @@ namespace uranus {
         void start() override;
         void stop() override;
 
-        void onPlayerLogin(uint32_t pid);
+        void onPlayerLogin(int64_t pid);
+        void onPlayerLogout(int64_t pid);
 
-        [[nodiscard]] shared_ptr<PlayerContext> find(uint32_t pid) const;
-        void remove(uint32_t pid);
+        [[nodiscard]] shared_ptr<PlayerContext> find(int64_t pid) const;
 
     private:
         GameWorld &world_;
 
         mutable shared_mutex mutex_;
-        unordered_map<uint32_t, shared_ptr<PlayerContext>> players_;
+        unordered_map<int64_t, shared_ptr<PlayerContext>> players_;
     };
 } // uranus

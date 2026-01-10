@@ -111,7 +111,7 @@ namespace uranus {
         }
 
         if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
-            mgr->remove(pid);
+            mgr->onPlayerLogout(pid);
         }
     }
 

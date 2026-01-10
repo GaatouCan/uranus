@@ -13,22 +13,22 @@ namespace uranus {
     using actor::Package;
     using actor::Envelope;
 
-    ServiceContext::ServiceContext(asio::io_context &ctx)
-        : ActorContext(ctx),
+    ServiceContext::ServiceContext(asio::io_context &ctx, ActorHandle &&actor)
+        : BaseActorContext(ctx, std::move(actor)),
           manager_(nullptr) {
     }
 
     ServiceContext::~ServiceContext() {
     }
 
-    BaseService *ServiceContext::getService() const {
-        if (auto *act = getActor()) {
-            return dynamic_cast<BaseService *>(act);
-        }
-        return nullptr;
-    }
+    // BaseService *ServiceContext::getService() const {
+    //     if (auto *act = getActor()) {
+    //         return dynamic_cast<BaseService *>(act);
+    //     }
+    //     return nullptr;
+    // }
 
-    void ServiceContext::send(const int ty, const uint32_t target, PackageHandle &&pkg) {
+    void ServiceContext::send(const int ty, const int64_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
             if (target == getId())
                 return;
@@ -85,14 +85,14 @@ namespace uranus {
         return nullptr;
     }
 
-    std::map<std::string, uint32_t> ServiceContext::getServiceList() const {
-        if (manager_) {
-            return manager_->getServiceList();
-        }
-        return {};
-    }
+    // std::map<std::string, uint32_t> ServiceContext::getServiceList() const {
+    //     if (manager_) {
+    //         return manager_->getServiceList();
+    //     }
+    //     return {};
+    // }
 
-    void ServiceContext::sendRequest(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
+    void ServiceContext::sendRequest(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
             if (target == getId())
                 return;
@@ -127,7 +127,7 @@ namespace uranus {
         }
     }
 
-    void ServiceContext::sendResponse(const int ty, const uint32_t sess, const uint32_t target, PackageHandle &&pkg) {
+    void ServiceContext::sendResponse(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
         if ((ty & Package::kToService) != 0) {
             if (target == getId())
                 return;

@@ -51,7 +51,6 @@ namespace uranus {
 
         [[nodiscard]] shared_ptr<ClientConnection> find(int64_t pid) const;
 
-
     private:
         GameWorld &world_;
 

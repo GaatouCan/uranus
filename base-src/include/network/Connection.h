@@ -19,9 +19,8 @@ namespace uranus::network {
         virtual void disconnect() = 0;
         [[nodiscard]] virtual bool isConnected() const = 0;
 
-        // [[nodiscard]] virtual const std::string &getKey() const = 0;
-
         virtual AttributeMap &attr() = 0;
+        [[nodiscard]] virtual const AttributeMap &attr() const = 0;
 
         virtual void sendMessage(MessageHandle &&msg) = 0;
         virtual void sendMessage(Message *msg) = 0;

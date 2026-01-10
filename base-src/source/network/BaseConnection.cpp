@@ -101,6 +101,10 @@ namespace uranus::network {
         return attr_;
     }
 
+    const AttributeMap &BaseConnection::attr() const {
+        return attr_;
+    }
+
     awaitable<void> BaseConnection::watchdog() {
         if (expiration_ <= SteadyDuration::zero())
             co_return;

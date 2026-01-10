@@ -67,6 +67,10 @@ namespace uranus::actor {
         return attr_;
     }
 
+    const AttributeMap &BaseActorContext::attr() const {
+        return attr_;
+    }
+
     void BaseActorContext::run() {
         co_spawn(ctx_, [self = shared_from_this()]() mutable -> awaitable<void> {
             co_await self->process();

@@ -29,6 +29,7 @@ namespace uranus::network {
         [[nodiscard]] asio::ip::address remoteAddress() const;
 
         AttributeMap &attr() override;
+        [[nodiscard]] const AttributeMap &attr() const override;
 
         void setExpirationSecond(int sec);
 

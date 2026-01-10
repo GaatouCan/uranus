@@ -55,6 +55,7 @@ namespace uranus::actor {
         DISABLE_COPY_MOVE(BaseActorContext)
 
         AttributeMap &attr() override;
+        [[nodiscard]] const AttributeMap &attr() const override;
 
         virtual void run();
         virtual void terminate();

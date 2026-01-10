@@ -75,7 +75,7 @@ namespace uranus {
         envelope.source = pid;
         envelope.package = std::move(pkg);
 
-        // ctx->pushEnvelope(std::move(envelope));
+        ctx->pushEnvelope(std::move(envelope));
     }
 
     void ClientConnection::beforeWrite(Package *pkg) {
