@@ -23,9 +23,9 @@ target_link_libraries(uranus PUBLIC actor)
 target_link_libraries(uranus PUBLIC config)
 target_link_libraries(uranus PUBLIC spdlog::spdlog)
 
-target_link_libraries(uranus PUBLIC pb_login)
+#target_link_libraries(uranus PUBLIC pb_login)
 
-target_link_libraries(uranus PUBLIC protobuf::libprotobuf-lite)
+#target_link_libraries(uranus PUBLIC protobuf::libprotobuf-lite)
 
 set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

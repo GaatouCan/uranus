@@ -1,7 +1,10 @@
 #pragma once
 
+
+#include <network/ServerBootstrap.h>
 #include <network/ConnectionAdapter.h>
 #include <actor/PackageCodec.h>
+
 
 namespace uranus {
 
@@ -14,13 +17,13 @@ namespace uranus {
     class Gateway;
     class GameWorld;
 
-    class Connection final : public ConnectionAdapter<PackageCodec> {
+    class ClientConnection final : public ConnectionAdapter<PackageCodec> {
 
         friend class Gateway;
 
     public:
-        Connection(ServerBootstrap &server, TcpSocket &&socket);
-        ~Connection() override;
+        explicit ClientConnection(TcpSocket &&socket);
+        ~ClientConnection() override;
 
         [[nodiscard]] Gateway *getGateway() const;
         [[nodiscard]] GameWorld *getWorld() const;

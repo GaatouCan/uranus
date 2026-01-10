@@ -1,9 +1,9 @@
-#include "Connection.h"
+#include "ClientConnection.h"
 #include "Gateway.h"
 #include "GameWorld.h"
 #include "common.h"
 
-#include "login/LoginAuth.h"
+// #include "login/LoginAuth.h"
 #include "player/PlayerManager.h"
 #include "player/PlayerContext.h"
 
@@ -15,28 +15,28 @@ namespace uranus {
     using actor::Package;
     using actor::Envelope;
 
-    Connection::Connection(ServerBootstrap &server, TcpSocket &&socket)
-        : ConnectionAdapter(server, std::move(socket)),
+    ClientConnection::ClientConnection(TcpSocket &&socket)
+        : ConnectionAdapter(std::move(socket)),
           gateway_(nullptr) {
     }
 
-    Connection::~Connection() {
+    ClientConnection::~ClientConnection() {
     }
 
-    Gateway *Connection::getGateway() const {
+    Gateway *ClientConnection::getGateway() const {
         return gateway_;
     }
 
-    GameWorld *Connection::getWorld() const {
+    GameWorld *ClientConnection::getWorld() const {
         if (gateway_)
             return &gateway_->getWorld();
         return nullptr;
     }
 
-    void Connection::onConnect() {
+    void ClientConnection::onConnect() {
     }
 
-    void Connection::onDisconnect() {
+    void ClientConnection::onDisconnect() {
         const auto op = attr().get<uint32_t>("PLAYER_ID");
         if (!op.has_value()) {
             return;
@@ -46,7 +46,7 @@ namespace uranus {
         gateway_->onLogout(pid);
     }
 
-    void Connection::onReadMessage(PackageHandle &&pkg) {
+    void ClientConnection::onReadMessage(PackageHandle &&pkg) {
         if (!pkg)
             return;
 
@@ -54,9 +54,9 @@ namespace uranus {
 
         // Not login
         if (!op.has_value()) {
-            if (auto *auth = GetModule(LoginAuth)) {
-                auth->onPlayerLogin(pkg.get(), key_);
-            }
+            // if (auto *auth = GetModule(LoginAuth)) {
+            //     auth->onPlayerLogin(pkg.get(), key_);
+            // }
             return;
         }
 
@@ -76,13 +76,13 @@ namespace uranus {
         envelope.source = pid;
         envelope.package = std::move(pkg);
 
-        ctx->pushEnvelope(std::move(envelope));
+        // ctx->pushEnvelope(std::move(envelope));
     }
 
-    void Connection::beforeWrite(Package *pkg) {
+    void ClientConnection::beforeWrite(Package *pkg) {
     }
 
-    void Connection::afterWrite(PackageHandle &&pkg) {
+    void ClientConnection::afterWrite(PackageHandle &&pkg) {
         if (pkg == nullptr)
             return;
 
@@ -95,18 +95,18 @@ namespace uranus {
         }
     }
 
-    void Connection::onTimeout() {
+    void ClientConnection::onTimeout() {
     }
 
-    void Connection::onErrorCode(std::error_code ec) {
+    void ClientConnection::onErrorCode(std::error_code ec) {
         SPDLOG_ERROR(ec.message());
     }
 
-    void Connection::onException(std::exception &e) {
+    void ClientConnection::onException(std::exception &e) {
         SPDLOG_ERROR(e.what());
     }
 
-    void Connection::setGateway(Gateway *gateway) {
+    void ClientConnection::setGateway(Gateway *gateway) {
         gateway_ = gateway;
     }
 }

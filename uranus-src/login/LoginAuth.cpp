@@ -1,7 +1,7 @@
 #include "LoginAuth.h"
 #include "GameWorld.h"
 #include "gateway/Gateway.h"
-#include "gateway/Connection.h"
+#include "gateway/ClientConnection.h"
 #include "common.h"
 
 #include <login.pb.h>
