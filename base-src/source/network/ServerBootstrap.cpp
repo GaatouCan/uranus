@@ -19,6 +19,10 @@ namespace uranus::network {
     }
 
     ServerBootstrap::~ServerBootstrap() {
+        if (thread_.joinable()) {
+            thread_.join();
+        }
+
         for (auto &val: pool_) {
             if (val.joinable()) {
                 val.join();
@@ -60,6 +64,34 @@ namespace uranus::network {
         });
 
         ctx_.run();
+    }
+
+    void ServerBootstrap::runInThread(const int num, const uint16_t port) {
+#ifdef URANUS_SSL
+        sslContext_.set_options(
+            asio::ssl::context::no_sslv2 |
+            asio::ssl::context::no_sslv3 |
+            asio::ssl::context::default_workarounds |
+            asio::ssl::context::single_dh_use
+        );
+#endif
+
+        for (auto i = 0; i < num; i++) {
+            pool_.emplace_back([this] {
+                ctx_.run();
+            });
+        }
+
+        co_spawn(ctx_, waitForClient(port), detached);
+
+        thread_ = thread([this] {
+            asio::signal_set signals(ctx_, SIGINT, SIGTERM);
+            signals.async_wait([this](auto, auto) {
+                terminate();
+            });
+
+            ctx_.run();
+        });
     }
 
     void ServerBootstrap::terminate() {

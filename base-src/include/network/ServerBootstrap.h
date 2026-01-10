@@ -14,6 +14,8 @@ namespace uranus::network {
     using asio::awaitable;
     using std::shared_ptr;
     using std::unordered_map;
+    using std::thread;
+    using std::vector;
 
     class BASE_API ServerBootstrap final {
 
@@ -33,6 +35,8 @@ namespace uranus::network {
 #endif
 
         void run(int num, uint16_t port);
+        void runInThread(int num, uint16_t port);
+
         void terminate();
 
         void onAccept(const AcceptCallback &cb);
@@ -52,7 +56,8 @@ namespace uranus::network {
         asio::ssl::context sslContext_;
 #endif
 
-        std::vector<std::thread> pool_;
+        thread thread_;
+        vector<thread> pool_;
 
         AcceptCallback onAccept_;
         RemoveCallback onRemove_;
