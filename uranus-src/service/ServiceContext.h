@@ -26,7 +26,7 @@ namespace uranus {
         ServiceContext(asio::io_context &ctx, ActorHandle &&actor);
         ~ServiceContext() override;
 
-        // [[nodiscard]] BaseService *getService() const;
+        [[nodiscard]] BaseService *getService() const;
 
         void send(int ty, int64_t target, PackageHandle &&pkg) override;
 
@@ -35,6 +35,9 @@ namespace uranus {
 
         [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
         // std::map<std::string, uint32_t> getServiceList() const override;
+
+        void setServiceId(int64_t sid);
+        [[nodiscard]] int64_t getServiceId() const;
 
     protected:
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;

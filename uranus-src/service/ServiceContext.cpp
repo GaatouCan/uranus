@@ -21,23 +21,24 @@ namespace uranus {
     ServiceContext::~ServiceContext() {
     }
 
-    // BaseService *ServiceContext::getService() const {
-    //     if (auto *act = getActor()) {
-    //         return dynamic_cast<BaseService *>(act);
-    //     }
-    //     return nullptr;
-    // }
+    BaseService *ServiceContext::getService() const {
+        return dynamic_cast<BaseService *>(getActor());
+    }
 
     void ServiceContext::send(const int ty, const int64_t target, PackageHandle &&pkg) {
+        const auto sid = getServiceId();
+        if (sid < 0)
+            return;
+
         if ((ty & Package::kToService) != 0) {
-            if (target == getId())
+            if (target == sid)
                 return;
 
             if (const auto dest = manager_->find(target)) {
                 Envelope envelope;
 
                 envelope.type = (Package::kFromService | ty);
-                envelope.source = getId();
+                envelope.source = sid;
                 envelope.package = std::move(pkg);
 
                 dest->pushEnvelope(std::move(envelope));
@@ -48,7 +49,7 @@ namespace uranus {
                     Envelope envelope;
 
                     envelope.type = (Package::kFromService | ty);
-                    envelope.source = getId();
+                    envelope.source = sid;
                     envelope.package = std::move(pkg);
 
                     plr->pushEnvelope(std::move(envelope));
@@ -56,7 +57,7 @@ namespace uranus {
             }
         } else if ((ty & Package::kToClient) != 0) {
             if (const auto *gateway = GetModule(Gateway)) {
-                if (const auto client = gateway->findByPlayerID(target)) {
+                if (const auto client = gateway->find(target)) {
                     client->send(std::move(pkg));
                 }
             }
@@ -85,23 +86,31 @@ namespace uranus {
         return nullptr;
     }
 
-    // std::map<std::string, uint32_t> ServiceContext::getServiceList() const {
-    //     if (manager_) {
-    //         return manager_->getServiceList();
-    //     }
-    //     return {};
-    // }
+    void ServiceContext::setServiceId(int64_t sid) {
+        attr().set("SERVICE_ID", sid);
+    }
+
+    int64_t ServiceContext::getServiceId() const {
+        if (const auto op = attr().get<int>("SERVICE_ID"); op.has_value()) {
+            return op.value();
+        }
+        return -1;
+    }
 
     void ServiceContext::sendRequest(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
+        const auto sid = getServiceId();
+        if (sid < 0)
+            return;
+
         if ((ty & Package::kToService) != 0) {
-            if (target == getId())
+            if (target == sid)
                 return;
 
             if (const auto dest = manager_->find(target)) {
                 Envelope envelope;
 
                 envelope.type = (Package::kFromService | ty);
-                envelope.source = getId();
+                envelope.source = sid;
                 envelope.session = sess;
                 envelope.package = std::move(pkg);
 
@@ -111,12 +120,12 @@ namespace uranus {
         }
 
         if ((ty & Package::kToPlayer) != 0) {
-            if (auto *mgr = GetModule(PlayerManager)) {
+            if (const auto *mgr = GetModule(PlayerManager)) {
                 if (const auto plr = mgr->find(target)) {
                     Envelope envelope;
 
                     envelope.type = (Package::kFromService | ty);
-                    envelope.source = getId();
+                    envelope.source = sid;
                     envelope.session = sess;
                     envelope.package = std::move(pkg);
 
@@ -128,15 +137,19 @@ namespace uranus {
     }
 
     void ServiceContext::sendResponse(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
+        const auto sid = getServiceId();
+        if (sid < 0)
+            return;
+
         if ((ty & Package::kToService) != 0) {
-            if (target == getId())
+            if (target == sid)
                 return;
 
             if (const auto dest = manager_->find(target)) {
                 Envelope envelope;
 
                 envelope.type = (Package::kFromService | ty);
-                envelope.source = getId();
+                envelope.source = sid;
                 envelope.session = sess;
                 envelope.package = std::move(pkg);
 
@@ -145,12 +158,12 @@ namespace uranus {
         }
 
         if ((ty & Package::kToPlayer) != 0) {
-            if (auto *mgr = GetModule(PlayerManager)) {
+            if (const auto *mgr = GetModule(PlayerManager)) {
                 if (const auto plr = mgr->find(target)) {
                     Envelope envelope;
 
                     envelope.type = (Package::kFromService | ty);
-                    envelope.source = getId();
+                    envelope.source = sid;
                     envelope.session = sess;
                     envelope.package = std::move(pkg);
 

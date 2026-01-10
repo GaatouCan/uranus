@@ -4,15 +4,15 @@
 #include "factory/ServiceFactory.h"
 
 #include <actor/BaseService.h>
-#include <config/ConfigModule.h>
-#include <yaml-cpp/yaml.h>
+// #include <config/ConfigModule.h>
+// #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
 
 namespace uranus {
 
     using actor::BaseActor;
-    using config::ConfigModule;
+    // using config::ConfigModule;
 
     ServiceManager::ServiceManager(GameWorld &world)
         : world_(world) {
@@ -24,15 +24,15 @@ namespace uranus {
     void ServiceManager::start() {
         ServiceFactory::instance().initial();
 
-        const auto *config = GET_MODULE(&world_, ConfigModule);
-        if (!config) {
-            SPDLOG_ERROR("Config module is not available");
-            exit(-1);
-        }
+        // const auto *config = GET_MODULE(&world_, ConfigModule);
+        // if (!config) {
+        //     SPDLOG_ERROR("Config module is not available");
+        //     exit(-1);
+        // }
+        //
+        // const auto &cfg = config->getServerConfig();
 
-        const auto &cfg = config->getServerConfig();
-
-        for (const auto &item : cfg["server"]["service"]["extend"]) {
+        for (const auto &item : {"ccc"}) {
             const auto path = item.as<std::string>();
             const auto sid = idAlloc_.allocate();
 
@@ -42,11 +42,7 @@ namespace uranus {
                 exit(-1);
             }
 
-            const auto ctx = std::make_shared<ServiceContext>(world_.getWorkerIOContext());
-
-            ctx->setId(sid);
-            ctx->setServiceManager(this);
-            ctx->setUpActor({ser, [path](BaseActor *ptr) {
+            auto handle = ActorHandle(ser, [path](BaseActor *ptr) {
                 if (!ptr)
                     return;
 
@@ -56,7 +52,12 @@ namespace uranus {
                 }
 
                 delete ptr;
-            }});
+            });
+
+            const auto ctx = std::make_shared<ServiceContext>(world_.getWorkerIOContext(), std::move(handle));
+
+            ctx->setServiceManager(this);
+            ctx->setServiceId(sid);
 
             services_.insert_or_assign(sid, ctx);
             SPDLOG_INFO("Created service[{} - {}]", sid, path);
@@ -79,7 +80,7 @@ namespace uranus {
         return world_;
     }
 
-    shared_ptr<ServiceContext> ServiceManager::find(const uint32_t sid) const {
+    shared_ptr<ServiceContext> ServiceManager::find(const int64_t sid) const {
         if (!world_.isRunning())
             return nullptr;
 
