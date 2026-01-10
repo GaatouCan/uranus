@@ -1,11 +1,14 @@
 #pragma once
 
 #include "login.export.h"
+
 #include <actor/ServerModule.h>
+#include <actor/Package.h>
 
 namespace uranus::login {
 
     using actor::ServerModule;
+    using actor::PackageHandle;
 
     class LOGIN_API LoginAuth final : public ServerModule {
 
@@ -15,5 +18,7 @@ namespace uranus::login {
 
         void start() override;
         void stop() override;
+
+        void onLoginRequest(PackageHandle &&pkg);
     };
 }

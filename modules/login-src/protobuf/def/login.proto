@@ -2,27 +2,22 @@ syntax = "proto3";
 
 option optimize_for = LITE_RUNTIME;
 
-package Login;
+package login;
 
-message ClientLoginRequest {
-  uint32 player_id = 1;
+message LoginRequest {
+  int64 player_id = 1;
   string token = 2;
 }
 
-message LoginSuccessResponse {
-  uint32 player_id = 1;
+message LoginSuccess {
+  int64 player_id = 1;
 }
 
 message LoginFailed {
-  uint32 player_id = 1;
-  string data = 2;
-}
-
-message LoginRepeated {
-  uint32 player_id = 1;
-  string data = 2;
+  int64 player_id = 1;
+  string reason = 2;
 }
 
 message Heartbeat {
-  uint32 player_id = 1;
+  int64 player_id = 1;
 }
