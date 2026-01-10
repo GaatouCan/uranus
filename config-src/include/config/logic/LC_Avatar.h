@@ -7,6 +7,9 @@ namespace uranus {
 
     using config::LogicConfig;
 
+    /**
+     * @brief LogicConfig_Avatar
+     */
     class CONFIG_API LC_Avatar final : public LogicConfig {
 
     public:
