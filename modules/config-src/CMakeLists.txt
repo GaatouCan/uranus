@@ -16,7 +16,7 @@ add_library(config SHARED ${CONFIG_MODULE_FILES})
 
 generate_export_header(config
         EXPORT_MACRO_NAME CONFIG_API
-        EXPORT_FILE_NAME include/config/config.export.h
+        EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/include/config/config.export.h
 )
 
 target_compile_definitions(config PRIVATE config_EXPORTS)
