@@ -15,7 +15,7 @@ namespace uranus {
     }
 
     void PlayerFactory::initial() {
-        if (const auto dir = std::filesystem::path(); !std::filesystem::exists(dir)) {
+        if (const auto dir = std::filesystem::path(kPlayerDirectory); !std::filesystem::exists(dir)) {
             try {
                 std::filesystem::create_directories(dir);
             } catch (std::filesystem::filesystem_error &e) {
