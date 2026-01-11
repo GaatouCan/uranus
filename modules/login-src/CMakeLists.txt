@@ -21,9 +21,9 @@ else ()
     set(PROTOBUF_PROTOC $<TARGET_FILE:protobuf::protoc>)
 endif ()
 
-file(GLOB_RECURSE PROTOBUF_LIST ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/def/*.proto)
+file(GLOB_RECURSE LOGIN_PROTO_LIST ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/def/*.proto)
 
-foreach (proto ${PROTOBUF_LIST})
+foreach (proto ${LOGIN_PROTO_LIST})
     get_filename_component(proto_name ${proto} NAME_WE)
     set(proto_src ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/gen/${proto_name}.pb.cc)
     set(proto_hdr ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/gen/${proto_name}.pb.h)
@@ -33,10 +33,10 @@ foreach (proto ${PROTOBUF_LIST})
             ARGS --cpp_out ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/gen -I ${CMAKE_CURRENT_SOURCE_DIR}/protobuf/def ${proto}
             DEPENDS ${proto})
 
-    list(APPEND PROTO_GEN_FILES ${proto_hdr} ${proto_src})
+    list(APPEND LOGIN_GEN_FILES ${proto_hdr} ${proto_src})
 endforeach ()
 
-add_library(login SHARED ${LOGIN_AUTH_FILES} ${PROTO_GEN_FILES})
+add_library(login SHARED ${LOGIN_AUTH_FILES} ${LOGIN_GEN_FILES})
 
 generate_export_header(login
         EXPORT_MACRO_NAME LOGIN_API

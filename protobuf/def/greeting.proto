@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option optimize_for = LITE_RUNTIME;
+
+package greeting;
+
+message GreetingRequest {
+  string data = 1;
+}
+
+message GreetingResponse {
+  string data = 1;
+}
