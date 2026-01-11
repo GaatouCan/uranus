@@ -21,6 +21,9 @@ namespace uranus::login {
         using FailureCallback = std::function<void(int64_t, const std::string &)>;
         using LogoutCallback = std::function<void(int64_t, const std::string &)>;
 
+        LoginAuth();
+        ~LoginAuth() override;
+
         SERVER_MODULE_NAME(LoginAuth)
         DISABLE_COPY_MOVE(LoginAuth)
 
@@ -36,6 +39,7 @@ namespace uranus::login {
 
         static PackageHandle PackLoginSuccess(int64_t pid);
         static PackageHandle PackLoginFailure(int64_t pid, const std::string &reason);
+        static PackageHandle PackLogoutResponse(const std::string &reason);
 
     private:
         SuccessCallback onSuccess_;

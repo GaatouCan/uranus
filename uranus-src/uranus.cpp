@@ -4,14 +4,14 @@
 #include "gateway/Gateway.h"
 #include "player/PlayerManager.h"
 #include "service/ServiceManager.h"
-#include "login/LoginAuth.h"
 
 #include <config/ConfigModule.h>
+#include <login/LoginAuth.h>
 
 using uranus::GameWorld;
 
 using uranus::config::ConfigModule;
-using uranus::LoginAuth;
+using uranus::login::LoginAuth;
 using uranus::PlayerManager;
 using uranus::ServiceManager;
 using uranus::Gateway;
@@ -22,7 +22,7 @@ int main() {
     auto *world = new GameWorld();
 
     world->pushModule(new ConfigModule());
-    world->pushModule(new LoginAuth(*world));
+    world->pushModule(new LoginAuth());
     world->pushModule(new PlayerManager(*world));
     world->pushModule(new ServiceManager(*world));
     world->pushModule(new Gateway(*world));

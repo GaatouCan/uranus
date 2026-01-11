@@ -7,6 +7,12 @@ namespace uranus::login {
 
     using actor::Package;
 
+    LoginAuth::LoginAuth() {
+    }
+
+    LoginAuth::~LoginAuth() {
+    }
+
     void LoginAuth::start() {
     }
 
@@ -83,6 +89,18 @@ namespace uranus::login {
         res.set_reason(reason);
 
         pkg->setId(kLoginFailure);
+        pkg->setData(res.SerializeAsString());
+
+        return pkg;
+    }
+
+    PackageHandle LoginAuth::PackLogoutResponse(const std::string &reason) {
+        auto pkg = Package::getHandle();
+
+        ::login::LogoutResponse res;
+        res.set_data(reason);
+
+        pkg->setId(kLogoutResponse);
         pkg->setData(res.SerializeAsString());
 
         return pkg;
