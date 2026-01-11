@@ -22,6 +22,8 @@ namespace gameplay {
 
         void onPackage(PackageHandle &&pkg) override;
         PackageHandle onRequest(PackageHandle &&pkg) override;
+
+        void sendToClient(PackageHandle &&pkg) const;
     };
 
 }

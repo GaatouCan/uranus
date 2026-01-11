@@ -26,6 +26,10 @@ if (PROTO_GEN_FILES)
     add_library(proto_static STATIC ${PROTO_GEN_FILES})
 
     target_link_libraries(proto_static PUBLIC protobuf::libprotobuf-lite)
+    target_include_directories(proto_static PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/gen>
+            $<INSTALL_INTERFACE:include>
+    )
 
     set_target_properties(proto_static PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
     set_target_properties(proto_static PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)

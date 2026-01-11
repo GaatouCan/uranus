@@ -1,6 +1,10 @@
 #include "GamePlayer.h"
+#include "actor/ActorContext.h"
 
 namespace gameplay {
+
+    using uranus::actor::Package;
+
     GamePlayer::GamePlayer() {
     }
 
@@ -15,12 +19,8 @@ namespace gameplay {
 
     }
 
-    void GamePlayer::onPackage(PackageHandle &&pkg) {
-    }
-
-    PackageHandle GamePlayer::onRequest(PackageHandle &&pkg) {
-        // TODO
-        return nullptr;
+    void GamePlayer::sendToClient(PackageHandle &&pkg) const {
+        getContext()->send(Package::kToClient, 0, std::move(pkg));
     }
 }
 
