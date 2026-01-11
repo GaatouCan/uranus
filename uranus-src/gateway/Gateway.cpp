@@ -35,8 +35,8 @@ namespace uranus {
         bootstrap_ = std::make_unique<ServerBootstrap>();
 
 #ifdef URANUS_SSL
-        bootstrap_->useCertificateChainFile("server.crt");
-        bootstrap_->usePrivateKeyFile("server.pem");
+        bootstrap_->useCertificateChainFile("config/server.crt");
+        bootstrap_->usePrivateKeyFile("config/server.pem");
 #endif
 
         bootstrap_->onAccept([this](TcpSocket &&socket) {
