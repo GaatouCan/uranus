@@ -4,6 +4,7 @@
 #include "player/PlayerManager.h"
 
 #include <config/ConfigModule.h>
+#include <login/LoginAuth.h>
 #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
@@ -69,7 +70,7 @@ namespace uranus {
         return world_;
     }
 
-    void Gateway::emplace(int64_t pid, const shared_ptr<ClientConnection> &conn) {
+    void Gateway::emplace(const int64_t pid, const shared_ptr<ClientConnection> &conn) {
         if (!bootstrap_)
             return;
 
@@ -90,13 +91,17 @@ namespace uranus {
         } while (false);
 
         if (repeated) {
-            // TODO
+            auto res = login::LoginAuth::PackLoginFailure(pid, "Player ID repeated");
+            conn->send(std::move(res));
 
-            conn->disconnect();
             return;
         }
 
-        // TODO
+        conn->attr().set("PLAYER_ID", pid);
+
+        auto res = login::LoginAuth::PackLoginSuccess(pid);
+        conn->send(std::move(res));
+
         if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
             // Create the player actor
             mgr->onPlayerLogin(pid);

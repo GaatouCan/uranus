@@ -1,19 +1,19 @@
 #include "ClientConnection.h"
 #include "Gateway.h"
 #include "GameWorld.h"
-#include "common.h"
 
-// #include "login/LoginAuth.h"
 #include "player/PlayerManager.h"
 #include "player/PlayerContext.h"
 
+#include <login/LoginAuth.h>
+#include <login/LoginProtocol.h>
 #include <spdlog/spdlog.h>
-
 
 namespace uranus {
 
     using actor::Package;
     using actor::Envelope;
+    using login::LoginAuth;
 
     ClientConnection::ClientConnection(TcpSocket &&socket)
         : ConnectionAdapter(std::move(socket)),
@@ -36,7 +36,7 @@ namespace uranus {
     }
 
     void ClientConnection::onDisconnect() {
-        const auto op = attr().get<uint32_t>("PLAYER_ID");
+        const auto op = attr().get<int64_t>("PLAYER_ID");
         if (!op.has_value()) {
             return;
         }
@@ -49,13 +49,13 @@ namespace uranus {
         if (!pkg)
             return;
 
-        const auto op = attr().get<uint32_t>("PLAYER_ID");
+        const auto op = attr().get<int64_t>("PLAYER_ID");
 
         // Not login
         if (!op.has_value()) {
-            // if (auto *auth = GetModule(LoginAuth)) {
-            //     auth->onPlayerLogin(pkg.get(), key_);
-            // }
+            if (auto *auth = GetModule(LoginAuth)) {
+                auth->onLoginRequest(std::move(pkg), shared_from_this());
+            }
             return;
         }
 
@@ -85,10 +85,8 @@ namespace uranus {
         if (pkg == nullptr)
             return;
 
-        // Fail to login
-        if (pkg->getId() == protocol::kLoginFailed ||
-            pkg->getId() == protocol::kLoginRepeated) {
-            attr().erase("PLAYER_ID");
+        // Fail to login or request to logout
+        if (pkg->getId() == login::kLoginFailure || pkg->getId() == login::kLogoutResponse) {
             disconnect();
             return;
         }

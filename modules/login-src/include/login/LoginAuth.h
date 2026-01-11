@@ -7,19 +7,24 @@
 #include <functional>
 
 
+namespace uranus::network {
+    class Connection;
+}
+
 namespace uranus::login {
 
     using actor::ServerModule;
     using actor::PackageHandle;
+    using network::Connection;
     using std::function;
     using std::shared_ptr;
 
     class LOGIN_API LoginAuth final : public ServerModule {
 
     public:
-        using SuccessCallback = std::function<void(int64_t)>;
-        using FailureCallback = std::function<void(int64_t, const std::string &)>;
-        using LogoutCallback = std::function<void(int64_t, const std::string &)>;
+        using SuccessCallback   = std::function<void(const shared_ptr<Connection> &, int64_t)>;
+        using FailureCallback   = std::function<void(const shared_ptr<Connection> &, int64_t, const std::string &)>;
+        using LogoutCallback    = std::function<void(const shared_ptr<Connection> &, int64_t, const std::string &)>;
 
         LoginAuth();
         ~LoginAuth() override;
@@ -30,8 +35,8 @@ namespace uranus::login {
         void start() override;
         void stop() override;
 
-        void onLoginRequest(PackageHandle &&pkg);
-        void onLogoutRequest(PackageHandle &&pkg);
+        void onLoginRequest(PackageHandle &&pkg, const shared_ptr<Connection> &conn);
+        void onLogoutRequest(PackageHandle &&pkg, const shared_ptr<Connection> &conn);
 
         void onLoginSuccess(const SuccessCallback &cb);
         void onLoginFailure(const FailureCallback &cb);

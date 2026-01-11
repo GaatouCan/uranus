@@ -1,6 +1,8 @@
 #include "LoginAuth.h"
 #include "LoginProtocol.h"
 
+#include <network/Connection.h>
+
 #include "login.pb.h"
 
 namespace uranus::login {
@@ -19,7 +21,7 @@ namespace uranus::login {
     void LoginAuth::stop() {
     }
 
-    void LoginAuth::onLoginRequest(PackageHandle &&pkg) {
+    void LoginAuth::onLoginRequest(PackageHandle &&pkg, const shared_ptr<Connection> &conn) {
         if (pkg->id_ != kLoginRequest)
             return;
 
@@ -32,17 +34,17 @@ namespace uranus::login {
 
         if (pid <= 0) {
             if (onFailure_) {
-                std::invoke(onFailure_, pid, "Token is invalid");
+                std::invoke(onFailure_, conn, pid, "Token is invalid");
             }
             return;
         }
 
         if (onSuccess_) {
-            std::invoke(onSuccess_, pid);
+            std::invoke(onSuccess_, conn, pid);
         }
     }
 
-    void LoginAuth::onLogoutRequest(PackageHandle &&pkg) {
+    void LoginAuth::onLogoutRequest(PackageHandle &&pkg, const shared_ptr<Connection> &conn) {
         if (pkg->id_ != kLogoutRequest)
             return;
 
@@ -53,7 +55,7 @@ namespace uranus::login {
         const auto reason = req.reason();
 
         if (onLogout_) {
-            std::invoke(onLogout_, pid, reason);
+            std::invoke(onLogout_, conn, pid, reason);
         }
     }
 
