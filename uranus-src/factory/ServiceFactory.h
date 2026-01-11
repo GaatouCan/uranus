@@ -28,16 +28,16 @@ namespace uranus {
         BaseService *create(const std::string &path);
         void destroy(BaseService *ptr, const std::string &path);
 
-        template<typename Fn>
-        void foreachServiceLibrary(Fn &&fn) {
-            for (const auto &[key, val] : coreServices_) {
-                std::invoke(fn, key, val, true);
-            }
-
-            for (const auto &[key, val] : extendServices_) {
-                std::invoke(fn, key, val, false);
-            }
-        }
+        // template<typename Fn>
+        // void foreachServiceLibrary(Fn &&fn) {
+        //     for (const auto &[key, val] : coreServices_) {
+        //         std::invoke(fn, key, val, true);
+        //     }
+        //
+        //     for (const auto &[key, val] : extendServices_) {
+        //         std::invoke(fn, key, val, false);
+        //     }
+        // }
 
     private:
         struct ServiceNode {

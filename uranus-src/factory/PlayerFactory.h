@@ -27,7 +27,7 @@ namespace uranus {
         [[nodiscard]] BasePlayer* create() const;
         void destroy(BasePlayer *plr);
 
-        [[nodiscard]] const SharedLibrary &getPlayerLibrary() const;
+        // [[nodiscard]] const SharedLibrary &getPlayerLibrary() const;
 
     private:
         SharedLibrary lib_;

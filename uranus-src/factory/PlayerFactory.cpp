@@ -59,7 +59,7 @@ namespace uranus {
         }
     }
 
-    const SharedLibrary &PlayerFactory::getPlayerLibrary() const {
-        return lib_;
-    }
+    // const SharedLibrary &PlayerFactory::getPlayerLibrary() const {
+    //     return lib_;
+    // }
 }
