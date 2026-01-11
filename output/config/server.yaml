@@ -1,0 +1,11 @@
+server:
+  network:
+    port: 8090
+    threads: 4
+
+  worker:
+    threads: 4
+
+  service:
+    core: []
+    extend: []
