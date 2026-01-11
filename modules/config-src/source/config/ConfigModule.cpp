@@ -6,12 +6,6 @@
 
 namespace uranus::config {
     ConfigModule::ConfigModule() {
-    }
-
-    ConfigModule::~ConfigModule() {
-    }
-
-    void ConfigModule::start() {
         SPDLOG_INFO("Using configuration file: config/server.yaml");
         config_ = YAML::LoadFile("config/server.yaml");
 
@@ -29,7 +23,12 @@ namespace uranus::config {
         // assert(config_["server"]["service"]["extend"] && config_["server"]["service"]["extend"].IsSequence());
 
         SPDLOG_INFO("Load configuration file success");
+    }
 
+    ConfigModule::~ConfigModule() {
+    }
+
+    void ConfigModule::start() {
         registerLogicConfig();
 
         for (auto &[ty, val] : logicMap_) {
