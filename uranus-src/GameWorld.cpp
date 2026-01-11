@@ -67,6 +67,8 @@ namespace uranus {
             SPDLOG_INFO("Stop module: {}", val->getModuleName());
             val->stop();
         }
+
+        SPDLOG_INFO("GameWorld terminated");
     }
 
     bool GameWorld::isRunning() const {

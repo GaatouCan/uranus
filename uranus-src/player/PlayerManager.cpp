@@ -4,6 +4,7 @@
 #include "factory/PlayerFactory.h"
 
 #include <actor/BasePlayer.h>
+#include <spdlog/spdlog.h>
 
 namespace uranus {
 
@@ -74,6 +75,8 @@ namespace uranus {
         ctx->setPlayerManager(this);
         ctx->setPlayerId(pid);
 
+        SPDLOG_INFO("Player[{}] login in success.", pid);
+
         ctx->run();
     }
 
@@ -93,6 +96,7 @@ namespace uranus {
         }
 
         if (ctx) {
+            SPDLOG_INFO("Player[{}] logout", pid);
             ctx->terminate();
         }
     }

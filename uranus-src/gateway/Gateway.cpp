@@ -35,6 +35,9 @@ namespace uranus {
         bootstrap_ = std::make_unique<ServerBootstrap>();
 
 #ifdef URANUS_SSL
+        SPDLOG_INFO("Use certificate chain file: {}", "config/server.crt");
+        SPDLOG_INFO("Use private key file: {}", "config/server.key");
+
         bootstrap_->useCertificateChainFile("config/server.crt");
         bootstrap_->usePrivateKeyFile("config/server.pem");
 #endif
@@ -58,7 +61,9 @@ namespace uranus {
             SPDLOG_ERROR("Server bootstrap exception: {}", e.what());
         });
 
+        SPDLOG_INFO("Use IO Threads: {}", threads);
         SPDLOG_INFO("Listening on port: {}", port);
+
         bootstrap_->runInThread(threads, port);
     }
 
@@ -97,6 +102,7 @@ namespace uranus {
             return;
         }
 
+        SPDLOG_INFO("Player[{}] login from: {}", pid, conn->remoteAddress().to_string());
         conn->attr().set("PLAYER_ID", pid);
 
         auto res = login::LoginAuth::PackLoginSuccess(pid);

@@ -47,6 +47,8 @@ namespace uranus {
             SPDLOG_ERROR("Failed to load player creator or deleter");
             exit(-3);
         }
+
+        SPDLOG_INFO("Use player library: {}", filename);
     }
 
     BasePlayer *PlayerFactory::create() const {
