@@ -13,9 +13,18 @@ message LoginSuccess {
   int64 player_id = 1;
 }
 
-message LoginFailed {
+message LoginFailure {
   int64 player_id = 1;
   string reason = 2;
+}
+
+message LogoutRequest {
+  int64 player_id = 1;
+  string reason = 2;
+}
+
+message LogoutResponse {
+  string data = 1;
 }
 
 message Heartbeat {

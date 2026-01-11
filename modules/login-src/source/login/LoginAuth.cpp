@@ -1,8 +1,11 @@
 #include "LoginAuth.h"
+#include "LoginProtocol.h"
 
 #include "login.pb.h"
 
 namespace uranus::login {
+
+    using actor::Package;
 
     void LoginAuth::start() {
     }
@@ -11,7 +14,7 @@ namespace uranus::login {
     }
 
     void LoginAuth::onLoginRequest(PackageHandle &&pkg) {
-        if (pkg->id_ != 1001)
+        if (pkg->id_ != kLoginRequest)
             return;
 
         ::login::LoginRequest request;
@@ -19,12 +22,69 @@ namespace uranus::login {
         request.ParseFromArray(pkg->payload_.data(), pkg->payload_.size());
 
         const auto pid = request.player_id();
+        const auto token = request.token();
 
         if (pid <= 0) {
-            // TODO: failed
+            if (onFailure_) {
+                std::invoke(onFailure_, pid, "Token is invalid");
+            }
             return;
         }
 
-        // TODO: Success
+        if (onSuccess_) {
+            std::invoke(onSuccess_, pid);
+        }
+    }
+
+    void LoginAuth::onLogoutRequest(PackageHandle &&pkg) {
+        if (pkg->id_ != kLogoutRequest)
+            return;
+
+        ::login::LogoutRequest req;
+        req.ParseFromArray(pkg->payload_.data(), pkg->payload_.size());
+
+        const auto pid = req.player_id();
+        const auto reason = req.reason();
+
+        if (onLogout_) {
+            std::invoke(onLogout_, pid, reason);
+        }
+    }
+
+    void LoginAuth::onLoginSuccess(const SuccessCallback &cb) {
+        onSuccess_ = cb;
+    }
+
+    void LoginAuth::onLoginFailure(const FailureCallback &cb) {
+        onFailure_ = cb;
+    }
+
+    void LoginAuth::onPlayerLogout(const LogoutCallback &cb) {
+        onLogout_ = cb;
+    }
+
+    PackageHandle LoginAuth::PackLoginSuccess(const int64_t pid) {
+        auto pkg = Package::getHandle();
+
+        ::login::LoginSuccess res;
+        res.set_player_id(pid);
+
+        pkg->setId(kLoginSuccess);
+        pkg->setData(res.SerializeAsString());
+
+        return pkg;
+    }
+
+    PackageHandle LoginAuth::PackLoginFailure(const int64_t pid, const std::string &reason) {
+        auto pkg = Package::getHandle();
+
+        ::login::LoginFailure res;
+        res.set_player_id(pid);
+        res.set_reason(reason);
+
+        pkg->setId(kLoginFailure);
+        pkg->setData(res.SerializeAsString());
+
+        return pkg;
     }
 }
