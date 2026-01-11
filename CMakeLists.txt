@@ -58,3 +58,5 @@ add_subdirectory(modules/login-src)
 #add_subdirectory(protobuf)
 #add_subdirectory(http-src)
 add_subdirectory(uranus-src)
+
+add_subdirectory(gameplay/player)
