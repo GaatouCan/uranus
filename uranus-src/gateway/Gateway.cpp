@@ -96,8 +96,9 @@ namespace uranus {
         } while (false);
 
         if (repeated) {
-            auto res = login::LoginAuth::PackLoginFailure(pid, "Player ID repeated");
-            conn->send(std::move(res));
+            // auto res = login::LoginAuth::PackLoginFailure(pid, "Player ID repeated");
+            // conn->send(std::move(res));
+            login::LoginAuth::sendLoginFailure(conn, pid, "Player ID repeated");
 
             return;
         }
@@ -105,8 +106,7 @@ namespace uranus {
         SPDLOG_INFO("Player[{}] login from: {}", pid, conn->remoteAddress().to_string());
         conn->attr().set("PLAYER_ID", pid);
 
-        auto res = login::LoginAuth::PackLoginSuccess(pid);
-        conn->send(std::move(res));
+        login::LoginAuth::sendLoginSuccess(conn, pid);
 
         if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
             // Create the player actor

@@ -46,17 +46,11 @@ int main() {
         });
 
         login->onLoginFailure([](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
-            if (const auto client = std::dynamic_pointer_cast<ClientConnection>(conn)) {
-                auto res = LoginAuth::PackLoginFailure(pid, reason);
-                client->send(std::move(res));
-            }
+            LoginAuth::sendLoginFailure(conn, pid, reason);
         });
 
         login->onPlayerLogout([](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
-            if (const auto client = std::dynamic_pointer_cast<ClientConnection>(conn)) {
-                auto res = LoginAuth::PackLogoutResponse(reason);
-                client->send(std::move(res));
-            }
+            LoginAuth::sendLogoutResponse(conn, reason);
         });
     }
 

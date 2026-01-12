@@ -42,9 +42,13 @@ namespace uranus::login {
         void onLoginFailure(const FailureCallback &cb);
         void onPlayerLogout(const LogoutCallback &cb);
 
-        static PackageHandle PackLoginSuccess(int64_t pid);
-        static PackageHandle PackLoginFailure(int64_t pid, const std::string &reason);
-        static PackageHandle PackLogoutResponse(const std::string &reason);
+        // static PackageHandle PackLoginSuccess(int64_t pid);
+        // static PackageHandle PackLoginFailure(int64_t pid, const std::string &reason);
+        // static PackageHandle PackLogoutResponse(const std::string &reason);
+
+        static void sendLoginSuccess(const shared_ptr<Connection> &conn, int64_t pid);
+        static void sendLoginFailure(const shared_ptr<Connection> &conn, int64_t pid, const std::string &reason);
+        static void sendLogoutResponse(const shared_ptr<Connection> &conn, const std::string &reason);
 
     private:
         SuccessCallback onSuccess_;

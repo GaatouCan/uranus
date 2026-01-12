@@ -71,7 +71,47 @@ namespace uranus::login {
         onLogout_ = cb;
     }
 
-    PackageHandle LoginAuth::PackLoginSuccess(const int64_t pid) {
+    // PackageHandle LoginAuth::PackLoginSuccess(const int64_t pid) {
+    //     auto pkg = Package::getHandle();
+    //
+    //     ::login::LoginSuccess res;
+    //     res.set_player_id(pid);
+    //
+    //     pkg->setId(kLoginSuccess);
+    //     pkg->setData(res.SerializeAsString());
+    //
+    //     return pkg;
+    // }
+    //
+    // PackageHandle LoginAuth::PackLoginFailure(const int64_t pid, const std::string &reason) {
+    //     auto pkg = Package::getHandle();
+    //
+    //     ::login::LoginFailure res;
+    //     res.set_player_id(pid);
+    //     res.set_reason(reason);
+    //
+    //     pkg->setId(kLoginFailure);
+    //     pkg->setData(res.SerializeAsString());
+    //
+    //     return pkg;
+    // }
+    //
+    // PackageHandle LoginAuth::PackLogoutResponse(const std::string &reason) {
+    //     auto pkg = Package::getHandle();
+    //
+    //     ::login::LogoutResponse res;
+    //     res.set_data(reason);
+    //
+    //     pkg->setId(kLogoutResponse);
+    //     pkg->setData(res.SerializeAsString());
+    //
+    //     return pkg;
+    // }
+
+    void LoginAuth::sendLoginSuccess(const shared_ptr<Connection> &conn, const int64_t pid) {
+        if (conn == nullptr)
+            return;
+
         auto pkg = Package::getHandle();
 
         ::login::LoginSuccess res;
@@ -80,10 +120,13 @@ namespace uranus::login {
         pkg->setId(kLoginSuccess);
         pkg->setData(res.SerializeAsString());
 
-        return pkg;
+        conn->sendMessage(std::move(pkg));
     }
 
-    PackageHandle LoginAuth::PackLoginFailure(const int64_t pid, const std::string &reason) {
+    void LoginAuth::sendLoginFailure(const shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
+        if (conn == nullptr)
+            return;
+
         auto pkg = Package::getHandle();
 
         ::login::LoginFailure res;
@@ -93,10 +136,13 @@ namespace uranus::login {
         pkg->setId(kLoginFailure);
         pkg->setData(res.SerializeAsString());
 
-        return pkg;
+        conn->sendMessage(std::move(pkg));
     }
 
-    PackageHandle LoginAuth::PackLogoutResponse(const std::string &reason) {
+    void LoginAuth::sendLogoutResponse(const shared_ptr<Connection> &conn, const std::string &reason) {
+        if (conn == nullptr)
+            return;
+
         auto pkg = Package::getHandle();
 
         ::login::LogoutResponse res;
@@ -105,6 +151,6 @@ namespace uranus::login {
         pkg->setId(kLogoutResponse);
         pkg->setData(res.SerializeAsString());
 
-        return pkg;
+        conn->sendMessage(std::move(pkg));
     }
 }
