@@ -85,12 +85,12 @@ namespace uranus::network {
         co_spawn(ctx_, waitForClient(port), detached);
 
         thread_ = make_unique<thread>([this] {
-            asio::signal_set signals(ctx_, SIGINT, SIGTERM);
-            signals.async_wait([this](auto, auto) {
-                terminate();
-            });
-
             ctx_.run();
+        });
+
+        asio::signal_set signals(ctx_, SIGINT, SIGTERM);
+        signals.async_wait([this](auto, auto) {
+            terminate();
         });
     }
 
