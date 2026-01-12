@@ -1,10 +1,10 @@
 #include "logic/LC_Appearance.h"
 
 #include <fstream>
+#include <spdlog/spdlog.h>
 
 namespace uranus {
-    bool LC_Appearance::reload(std::string_view dir) {
-        int ret = 0;
+    bool LC_Appearance::reload(const std::string_view dir) {
 
         LOAD_LOGIC_CONFIG("avatar.json", loadAvatarConfig)
 
@@ -18,7 +18,7 @@ namespace uranus {
 
     int LC_Appearance::loadAvatarConfig(const nlohmann::json &data) {
         for (const auto &node : data) {
-            AvatarData cfg;
+            AvatarData cfg{};
 
             cfg.id = node["id"];
             cfg.level = node["level"];

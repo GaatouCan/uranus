@@ -5,9 +5,12 @@
 #include <cassert>
 
 namespace uranus::config {
+
+    static constexpr auto kServerConfigFile = "config/server.yaml";
+
     ConfigModule::ConfigModule() {
-        SPDLOG_INFO("Using configuration file: config/server.yaml");
-        config_ = YAML::LoadFile("config/server.yaml");
+        SPDLOG_INFO("Using configuration file: {}", kServerConfigFile);
+        config_ = YAML::LoadFile(kServerConfigFile);
 
         assert(!config_["server"].IsNull());
 
