@@ -2,7 +2,7 @@
 
 #pragma region LogicConfig include here
 
-#include "logic/LC_Avatar.h"
+#include "logic/LC_Appearance.h"
 
 #pragma endregion
 
@@ -15,7 +15,7 @@ namespace uranus::config {
 }
 
     void ConfigModule::registerLogicConfig() {
-        REGISTER_LOGIC(kAvatar, "config/avatar", LC_Avatar)
+        REGISTER_LOGIC(kAvatar, "config/json/appear", LC_Appearance)
     }
 
 #undef REGISTER_LOGIC
