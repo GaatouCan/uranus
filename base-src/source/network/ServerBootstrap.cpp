@@ -15,11 +15,24 @@ namespace uranus::network {
 
     ServerBootstrap::ServerBootstrap()
         : guard_(asio::make_work_guard(ctx_)),
-          acceptor_(ctx_)
 #ifdef URANUS_SSL
-          , sslContext_(asio::ssl::context::tlsv13_server)
+          sslContext_(asio::ssl::context::tlsv13_server),
 #endif
-    {
+          acceptor_(ctx_) {
+    }
+
+    ServerBootstrap::ServerBootstrap(const unsigned int threads)
+        : ctx_(threads),
+          guard_(asio::make_work_guard(ctx_)),
+#ifdef URANUS_SSL
+          sslContext_(asio::ssl::context::tlsv13_server),
+#endif
+          acceptor_(ctx_) {
+        for (int i = 0; i < threads; i++) {
+            pool_.emplace_back([this] {
+                ctx_.run();
+            });
+        }
     }
 
     ServerBootstrap::~ServerBootstrap() {
@@ -42,7 +55,7 @@ namespace uranus::network {
     }
 #endif
 
-    void ServerBootstrap::runInBlock(const int num, const uint16_t port) {
+    void ServerBootstrap::runInBlock(const uint16_t port, const unsigned int threads) {
 #ifdef URANUS_SSL
         sslContext_.set_options(
             asio::ssl::context::no_sslv2 |
@@ -52,11 +65,12 @@ namespace uranus::network {
         );
 #endif
 
-        pool_ = vector<thread>(num);
-        for (auto &val : pool_) {
-            val = std::thread([this] {
-                ctx_.run();
-            });
+        if (pool_.empty()) {
+            for (auto i = 0; i < threads; i++) {
+                pool_.emplace_back([this] {
+                    ctx_.run();
+                });
+            }
         }
 
         co_spawn(ctx_, waitForClient(port), detached);
@@ -69,7 +83,7 @@ namespace uranus::network {
         ctx_.run();
     }
 
-    void ServerBootstrap::run(const int num, const uint16_t port) {
+    void ServerBootstrap::run(const uint16_t port, const unsigned int threads) {
 #ifdef URANUS_SSL
         sslContext_.set_options(
             asio::ssl::context::no_sslv2 |
@@ -79,13 +93,13 @@ namespace uranus::network {
         );
 #endif
 
-        for (int i = 0; i < num; i++) {
-            pool_.emplace_back([this]{ ctx_.run(); });
+        if (pool_.empty()) {
+            for (auto i = 0; i < threads; i++) {
+                pool_.emplace_back([this] {
+                    ctx_.run();
+                });
+            }
         }
-
-        // thread_ = thread([this] {
-        //     ctx_.run();
-        // });
 
         co_spawn(ctx_, waitForClient(port), detached);
     }

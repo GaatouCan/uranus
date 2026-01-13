@@ -32,7 +32,7 @@ namespace uranus {
         const auto port = cfg["server"]["network"]["port"].as<uint16_t>();
         const auto threads = cfg["server"]["network"]["threads"].as<int>();
 
-        bootstrap_ = std::make_unique<ServerBootstrap>();
+        bootstrap_ = std::make_unique<ServerBootstrap>(threads);
 
 #ifdef URANUS_SSL
         SPDLOG_INFO("Use certificate chain file: {}", "config/server.crt");
@@ -64,7 +64,7 @@ namespace uranus {
         SPDLOG_INFO("Use IO Threads: {}", threads);
         SPDLOG_INFO("Listening on port: {}", port);
 
-        bootstrap_->run(threads, port);
+        bootstrap_->run(port);
     }
 
     void Gateway::stop() {

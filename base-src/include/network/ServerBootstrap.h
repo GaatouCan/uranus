@@ -25,6 +25,8 @@ namespace uranus::network {
 
     public:
         ServerBootstrap();
+
+        explicit ServerBootstrap(unsigned int threads);
         ~ServerBootstrap();
 
         DISABLE_COPY_MOVE(ServerBootstrap)
@@ -34,10 +36,10 @@ namespace uranus::network {
         void usePrivateKeyFile(const std::string &filename);
 #endif
 
-        void runInBlock(int num, uint16_t port);
+        void runInBlock(uint16_t port, unsigned int threads = std::thread::hardware_concurrency());
 
         /// The internal io_context not run in the called thread
-        void run(int num, uint16_t port);
+        void run(uint16_t port, unsigned int threads = std::thread::hardware_concurrency());
 
         void terminate();
 
@@ -52,11 +54,11 @@ namespace uranus::network {
         asio::io_context ctx_;
         asio::executor_work_guard<asio::io_context::executor_type> guard_;
 
-        TcpAcceptor acceptor_;
-
 #ifdef URANUS_SSL
         asio::ssl::context sslContext_;
 #endif
+
+        TcpAcceptor acceptor_;
 
         vector<thread> pool_;
 
