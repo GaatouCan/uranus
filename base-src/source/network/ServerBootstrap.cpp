@@ -25,10 +25,6 @@ namespace uranus::network {
     ServerBootstrap::~ServerBootstrap() {
         terminate();
 
-        if (thread_ != nullptr && thread_->joinable()) {
-            thread_->join();
-        }
-
         for (auto &val: pool_) {
             if (val.joinable()) {
                 val.join();
@@ -46,7 +42,7 @@ namespace uranus::network {
     }
 #endif
 
-    void ServerBootstrap::run(const int num, const uint16_t port) {
+    void ServerBootstrap::runInBlock(const int num, const uint16_t port) {
 #ifdef URANUS_SSL
         sslContext_.set_options(
             asio::ssl::context::no_sslv2 |
@@ -56,8 +52,9 @@ namespace uranus::network {
         );
 #endif
 
-        for (auto i = 0; i < num; i++) {
-            pool_.emplace_back([this] {
+        pool_ = vector<thread>(num);
+        for (auto &val : pool_) {
+            val = std::thread([this] {
                 ctx_.run();
             });
         }
@@ -72,7 +69,7 @@ namespace uranus::network {
         ctx_.run();
     }
 
-    void ServerBootstrap::runInThread(const int num, const uint16_t port) {
+    void ServerBootstrap::run(const int num, const uint16_t port) {
 #ifdef URANUS_SSL
         sslContext_.set_options(
             asio::ssl::context::no_sslv2 |
@@ -82,15 +79,13 @@ namespace uranus::network {
         );
 #endif
 
-        for (auto i = 0; i < num; i++) {
-            pool_.emplace_back([this] {
-                ctx_.run();
-            });
+        for (int i = 0; i < num; i++) {
+            pool_.emplace_back([this]{ ctx_.run(); });
         }
 
-        thread_ = make_unique<thread>([this] {
-            ctx_.run();
-        });
+        // thread_ = thread([this] {
+        //     ctx_.run();
+        // });
 
         co_spawn(ctx_, waitForClient(port), detached);
     }

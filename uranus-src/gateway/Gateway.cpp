@@ -64,7 +64,7 @@ namespace uranus {
         SPDLOG_INFO("Use IO Threads: {}", threads);
         SPDLOG_INFO("Listening on port: {}", port);
 
-        bootstrap_->runInThread(threads, port);
+        bootstrap_->run(threads, port);
     }
 
     void Gateway::stop() {

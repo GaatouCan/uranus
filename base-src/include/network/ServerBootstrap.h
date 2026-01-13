@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <functional>
-#include <memory>
 
 namespace uranus::network {
 
@@ -17,8 +16,6 @@ namespace uranus::network {
     using std::unordered_map;
     using std::thread;
     using std::vector;
-    using std::unique_ptr;
-    using std::make_unique;
 
     class BASE_API ServerBootstrap final {
 
@@ -37,8 +34,10 @@ namespace uranus::network {
         void usePrivateKeyFile(const std::string &filename);
 #endif
 
+        void runInBlock(int num, uint16_t port);
+
+        /// The internal io_context not run in the called thread
         void run(int num, uint16_t port);
-        void runInThread(int num, uint16_t port);
 
         void terminate();
 
@@ -59,7 +58,6 @@ namespace uranus::network {
         asio::ssl::context sslContext_;
 #endif
 
-        unique_ptr<thread> thread_;
         vector<thread> pool_;
 
         AcceptCallback onAccept_;
