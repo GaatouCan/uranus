@@ -1,4 +1,7 @@
 #include "ServerBootstrap.h"
+
+#include <iostream>
+
 #include "Connection.h"
 
 #include <asio/co_spawn.hpp>
@@ -20,13 +23,15 @@ namespace uranus::network {
     }
 
     ServerBootstrap::~ServerBootstrap() {
-        if (thread_ != nullptr & thread_->joinable()) {
+        terminate();
+
+        if (thread_ != nullptr && thread_->joinable()) {
             thread_->join();
         }
 
         for (auto &val: pool_) {
-            if (val != nullptr && val->joinable()) {
-                val->join();
+            if (val.joinable()) {
+                val.join();
             }
         }
     }
@@ -52,9 +57,9 @@ namespace uranus::network {
 #endif
 
         for (auto i = 0; i < num; i++) {
-            pool_.emplace_back(make_unique<thread>([this] {
+            pool_.emplace_back([this] {
                 ctx_.run();
-            }));
+            });
         }
 
         co_spawn(ctx_, waitForClient(port), detached);
@@ -78,15 +83,16 @@ namespace uranus::network {
 #endif
 
         for (auto i = 0; i < num; i++) {
-            pool_.emplace_back(make_unique<thread>([this] {
+            pool_.emplace_back([this] {
                 ctx_.run();
-            }));
+            });
         }
 
-        thread_ = make_unique<thread>([this, port] {
-            co_spawn(ctx_, waitForClient(port), detached);
+        thread_ = make_unique<thread>([this] {
             ctx_.run();
         });
+
+        co_spawn(ctx_, waitForClient(port), detached);
     }
 
     void ServerBootstrap::terminate() {

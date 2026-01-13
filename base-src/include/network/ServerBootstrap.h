@@ -60,7 +60,7 @@ namespace uranus::network {
 #endif
 
         unique_ptr<thread> thread_;
-        vector<unique_ptr<thread>> pool_;
+        vector<thread> pool_;
 
         AcceptCallback onAccept_;
         RemoveCallback onRemove_;
