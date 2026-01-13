@@ -88,7 +88,7 @@ namespace uranus::network {
             return;
 
         auto del = msg.get_deleter();
-        auto *ptr = msg.get();
+        auto *ptr = msg.release();
 
         if (auto *temp = dynamic_cast<MessageType *>(ptr)) {
             MessageHandleType handle{ temp, del };

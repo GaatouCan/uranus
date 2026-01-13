@@ -27,7 +27,7 @@ namespace uranus::actor {
         explicit PackageCodec(BaseConnection &conn);
         ~PackageCodec() override;
 
-        awaitable<error_code> encode(Package *msg) override;
+        awaitable<error_code> encode(Package *pkg) override;
         awaitable<tuple<error_code, PackageHandle>> decode() override;
     };
 
