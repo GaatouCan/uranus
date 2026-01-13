@@ -68,7 +68,9 @@ namespace uranus {
     }
 
     void Gateway::stop() {
-
+        if (bootstrap_ != nullptr) {
+            bootstrap_->terminate();
+        }
     }
 
     GameWorld &Gateway::getWorld() const {

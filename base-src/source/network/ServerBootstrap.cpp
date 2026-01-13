@@ -5,6 +5,7 @@
 #include <asio/detached.hpp>
 #include <asio/signal_set.hpp>
 
+
 namespace uranus::network {
 
     using asio::detached;
@@ -82,15 +83,9 @@ namespace uranus::network {
             }));
         }
 
-        co_spawn(ctx_, waitForClient(port), detached);
-
-        thread_ = make_unique<thread>([this] {
+        thread_ = make_unique<thread>([this, port] {
+            co_spawn(ctx_, waitForClient(port), detached);
             ctx_.run();
-        });
-
-        asio::signal_set signals(ctx_, SIGINT, SIGTERM);
-        signals.async_wait([this](auto, auto) {
-            terminate();
         });
     }
 
@@ -120,7 +115,11 @@ namespace uranus::network {
             acceptor_.bind({asio::ip::tcp::v4(), port});
             acceptor_.listen(port);
 
+            //std::cerr << "io_context is running? : " << ((!ctx_.stopped()) ? "true" : "false") << std::endl;
+
             while (!ctx_.stopped()) {
+                //std::cerr << "Waiting for connection..." << std::endl;
+
                 auto [ec, socket] = co_await acceptor_.async_accept();
 
                 if (ec) {
@@ -142,6 +141,8 @@ namespace uranus::network {
 
                 conn->connect();
             }
+
+            // std::cerr << "end of waiting connection" << std::endl;
         } catch (std::exception &e) {
             if (onException_) {
                 std::invoke(onException_, e);
