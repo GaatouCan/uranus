@@ -34,6 +34,13 @@ namespace uranus::login {
 
         if (pid <= 0) {
             if (onFailure_) {
+                std::invoke(onFailure_, conn, pid, "Player ID is invalid");
+            }
+            return;
+        }
+
+        if (token == "LOGIN FAILURE TEST") {
+            if (onFailure_) {
                 std::invoke(onFailure_, conn, pid, "Token is invalid");
             }
             return;

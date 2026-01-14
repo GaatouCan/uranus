@@ -36,6 +36,8 @@ namespace uranus {
     }
 
     void ClientConnection::onDisconnect() {
+        SPDLOG_INFO("Client disconnected");
+
         const auto op = attr().get<int64_t>("PLAYER_ID");
         if (!op.has_value()) {
             return;
@@ -86,7 +88,14 @@ namespace uranus {
             return;
 
         // Fail to login or request to logout
-        if (pkg->getId() == login::kLoginFailure || pkg->getId() == login::kLogoutResponse) {
+        if (pkg->getId() == login::kLoginFailure) {
+            SPDLOG_WARN("Client from [{}] login failed", remoteAddress().to_string());
+            disconnect();
+            return;
+        }
+
+        if (pkg->getId() == login::kLogoutResponse) {
+            SPDLOG_INFO("Client from [{}] request to logout", remoteAddress().to_string());
             disconnect();
             return;
         }
