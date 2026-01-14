@@ -5,11 +5,11 @@
 
 namespace gameplay {
 
-#define HANDLE_PACKAGE(proto, func) \
-    case ProtocolID::proto: func(this, std::move(pkg)); break;
+#define HANDLE_PACKAGE(proto) \
+    case ProtocolID::k##proto: Route_##proto(this, std::move(pkg)); break;
 
-#define HANDLE_REQUEST(proto, func) \
-    case ProtocolID::proto: return func(this, std::move(req));
+#define HANDLE_REQUEST(proto) \
+    case ProtocolID::k##proto: return Request_##proto(this, std::move(req));
 
     void GamePlayer::onPackage(PackageHandle &&pkg) {
 
@@ -17,7 +17,7 @@ namespace gameplay {
 
         switch (static_cast<ProtocolID>(pkg->id_)) {
 
-            HANDLE_PACKAGE(kGreetingRequest, OnGreetingRequest)
+            HANDLE_PACKAGE(GreetingRequest)
 
             default: break;
         }

@@ -8,7 +8,7 @@ namespace gameplay::protocol {
 
     using uranus::actor::Package;
 
-    void OnGreetingRequest(GamePlayer *plr, PackageHandle &&pkg) {
+    void Route_GreetingRequest(GamePlayer *plr, PackageHandle &&pkg) {
 
         greeting::GreetingRequest req;
         req.ParseFromArray(pkg->payload_.data(), pkg->payload_.size());

@@ -8,5 +8,5 @@ namespace gameplay::protocol {
 
     using uranus::actor::PackageHandle;
 
-    void OnGreetingRequest(GamePlayer *plr, PackageHandle &&pkg);
+    void Route_GreetingRequest(GamePlayer *plr, PackageHandle &&pkg);
 }
