@@ -19,7 +19,8 @@ namespace gameplay::protocol {
         res.set_data(fmt::format("Echo: {}", data));
 
         auto rPkg = Package::getHandle();
-        rPkg->setId(protocol::kGreetingResponse);
+
+        rPkg->setId(static_cast<int64_t>(ProtocolID::kGreetingRequest));
         rPkg->setData(res.SerializeAsString());
 
         plr->sendToClient(std::move(rPkg));
