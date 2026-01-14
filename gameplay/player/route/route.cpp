@@ -4,17 +4,35 @@
 #include "greeting/GreetingController.h"
 
 namespace gameplay {
+
+#define HANDLE_PACKAGE(proto, func) \
+    case ProtocolID::proto: func(this, std::move(pkg)); break;
+
+#define HANDLE_REQUEST(proto, func) \
+    case ProtocolID::proto: return func(this, std::move(req));
+
     void GamePlayer::onPackage(PackageHandle &&pkg) {
+
         using namespace gameplay::protocol;
 
-        switch (pkg->id_) {
-            case kGreetingRequest: OnGreetingRequest(this, std::move(pkg)); break;
+        switch (static_cast<ProtocolID>(pkg->id_)) {
+
+            HANDLE_PACKAGE(kGreetingRequest, OnGreetingRequest)
+
             default: break;
         }
     }
 
-    PackageHandle GamePlayer::onRequest(PackageHandle &&pkg) {
-        // TODO
-        return nullptr;
+    PackageHandle GamePlayer::onRequest(PackageHandle &&req) {
+
+        using namespace gameplay::protocol;
+
+        switch (static_cast<ProtocolID>(req->id_)) {
+
+            default: return nullptr;
+        }
     }
+
+#undef HANDLE_PACKAGE
+#undef HANDLE_REQUEST
 }

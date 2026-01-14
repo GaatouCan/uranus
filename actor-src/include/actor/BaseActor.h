@@ -21,7 +21,7 @@ namespace uranus::actor {
         virtual void onTerminate();
 
         virtual void onPackage(PackageHandle &&pkg) = 0;
-        virtual PackageHandle onRequest(PackageHandle &&pkg) = 0;
+        virtual PackageHandle onRequest(PackageHandle &&req) = 0;
 
     private:
         ActorContext *ctx_;
