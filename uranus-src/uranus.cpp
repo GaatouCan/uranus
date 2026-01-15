@@ -7,6 +7,7 @@
 #include "service/ServiceManager.h"
 
 #include <config/ConfigModule.h>
+#include <logger/LoggerModule.h>
 #include <login/LoginAuth.h>
 
 using uranus::network::Connection;
@@ -15,6 +16,7 @@ using uranus::GameWorld;
 
 using uranus::config::ConfigModule;
 using uranus::login::LoginAuth;
+using uranus::logger::LoggerModule;
 using uranus::PlayerManager;
 using uranus::ServiceManager;
 using uranus::Gateway;
@@ -26,6 +28,7 @@ int main() {
     auto *world = new GameWorld();
 
     world->pushModule(new ConfigModule());
+    world->pushModule(new LoggerModule());
     world->pushModule(new LoginAuth());
     world->pushModule(new PlayerManager(*world));
     world->pushModule(new ServiceManager(*world));
