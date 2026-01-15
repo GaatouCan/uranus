@@ -84,9 +84,9 @@ with open(os.path.join(TARGET_DIR, 'ProtocolID.h'), 'w', encoding='utf-8') as fi
         file.write(f"\t\t// Source File: {package['src']}\n")
 
         for proto in package['list']:
-            id = package_index * 100 + proto_index
+            _id = package_index * 100 + proto_index
             # file.write(f"\t{pascal_to_upper_snake(proto)}({id}),\n")
-            file.write(f"\t\tk{proto} = {id},\n")
+            file.write(f"\t\tk{proto} = {_id},\n")
 
             proto_index += 1
 
