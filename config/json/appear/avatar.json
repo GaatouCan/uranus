@@ -1,16 +1,16 @@
 [
-    {
-        "id": 1,
-        "level": 2,
-        "name": "测试项1",
-        "desc": {
-            "name": "测试",
-            "auther": "Gaatou"
-        }
-    },
-    {
-        "id": 2,
-        "level": 3,
-        "name": "测试项2"
+  {
+    "id": 1,
+    "level": 2,
+    "name": "测试项1",
+    "desc": {
+      "name": "测试",
+      "auther": "Gaatou"
     }
+  },
+  {
+    "id": 2,
+    "level": 3,
+    "name": "测试项2"
+  }
 ]

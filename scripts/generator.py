@@ -73,7 +73,7 @@ with open(os.path.join(TARGET_DIR, 'ProtocolID.h'), 'w', encoding='utf-8') as fi
 
     file.write("namespace gameplay::protocol {\n")
 
-    file.write('\tenum ProtocolID {\n')
+    file.write('\tenum class ProtocolID {\n')
 
     package_index = 11
     proto_index = 1
