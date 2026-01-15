@@ -26,7 +26,7 @@ namespace uranus {
             return;
 
         if ((ty & Package::kToService) != 0) {
-            if (const auto *serviceMgr = GetModule(ServiceManager)) {
+            if (const auto *serviceMgr = GET_MODULE(getWorld(), ServiceManager)) {
                 if (const auto ser = serviceMgr->find(target)) {
                     Envelope envelope;
 
@@ -38,7 +38,7 @@ namespace uranus {
                 }
             }
         } else if ((ty & Package::kToClient) != 0) {
-            if (const auto *gateway = GetModule(Gateway)) {
+            if (const auto *gateway = GET_MODULE(getWorld(), Gateway)) {
                 if (const auto client = gateway->find(pid)) {
                     client->send(std::move(pkg));
                     return;
@@ -93,7 +93,7 @@ namespace uranus {
             return;
 
         if ((ty & Package::kToService) != 0) {
-            if (const auto *mgr = GetModule(ServiceManager)) {
+            if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
                 if (const auto ctx = mgr->find(target)) {
                     Envelope envelope;
 
@@ -114,7 +114,7 @@ namespace uranus {
             return;
 
         if ((ty & Package::kToService) != 0) {
-            if (const auto *mgr = GetModule(ServiceManager)) {
+            if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
                 if (const auto ctx = mgr->find(target)) {
                     Envelope envelope;
 

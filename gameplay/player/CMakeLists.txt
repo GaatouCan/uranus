@@ -16,6 +16,7 @@ add_library(player SHARED ${GAME_PLAYER_FILES} ../ProtocolID.h)
 
 target_link_libraries(player PUBLIC actor)
 target_link_libraries(player PUBLIC config)
+target_link_libraries(player PUBLIC logger)
 target_link_libraries(player PUBLIC proto_static)
 
 set_target_properties(player PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output/player)

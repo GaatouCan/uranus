@@ -1,9 +1,12 @@
 #include "GamePlayer.h"
 #include "actor/ActorContext.h"
 
+#include <logger/LoggerModule.h>
+
 namespace gameplay {
 
     using uranus::actor::Package;
+    using uranus::logger::LoggerModule;
 
     GamePlayer::GamePlayer() {
     }
@@ -13,6 +16,13 @@ namespace gameplay {
 
     void GamePlayer::onInitial(ActorContext *ctx) {
         super::onInitial(ctx);
+
+        if (auto *module = ACTOR_GET_MODULE(LoggerModule); module != nullptr) {
+            module->createLogger("game_player", "player");
+        }
+
+        const auto logger = spdlog::get("game_player");
+        logger->info("Player[{}] login success", getPlayerId());
     }
 
     void GamePlayer::onTerminate() {
@@ -21,6 +31,18 @@ namespace gameplay {
 
     void GamePlayer::sendToClient(PackageHandle &&pkg) const {
         getContext()->send(Package::kToClient, 0, std::move(pkg));
+    }
+
+    int64_t GamePlayer::getPlayerId() const {
+        auto *ctx = getContext();
+        if (ctx == nullptr)
+            return -1;
+
+        if (const auto op = ctx->attr().get<int64_t>("PLAYER_ID"); op.has_value()) {
+            return op.value();
+        }
+
+        return -1;
     }
 }
 

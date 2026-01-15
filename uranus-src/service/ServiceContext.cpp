@@ -44,7 +44,7 @@ namespace uranus {
                 dest->pushEnvelope(std::move(envelope));
             }
         } else if ((ty & Package::kToPlayer) != 0) {
-            if (const auto *playerManager = GetModule(PlayerManager)) {
+            if (const auto *playerManager = GET_MODULE(getWorld(), PlayerManager)) {
                 if (const auto plr = playerManager->find(target)) {
                     Envelope envelope;
 
@@ -56,7 +56,7 @@ namespace uranus {
                 }
             }
         } else if ((ty & Package::kToClient) != 0) {
-            if (const auto *gateway = GetModule(Gateway)) {
+            if (const auto *gateway = GET_MODULE(getWorld(), Gateway)) {
                 if (const auto client = gateway->find(target)) {
                     client->send(std::move(pkg));
                 }
@@ -120,7 +120,7 @@ namespace uranus {
         }
 
         if ((ty & Package::kToPlayer) != 0) {
-            if (const auto *mgr = GetModule(PlayerManager)) {
+            if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
                 if (const auto plr = mgr->find(target)) {
                     Envelope envelope;
 
@@ -158,7 +158,7 @@ namespace uranus {
         }
 
         if ((ty & Package::kToPlayer) != 0) {
-            if (const auto *mgr = GetModule(PlayerManager)) {
+            if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
                 if (const auto plr = mgr->find(target)) {
                     Envelope envelope;
 

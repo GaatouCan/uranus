@@ -75,7 +75,7 @@ namespace uranus {
         ctx->setPlayerManager(this);
         ctx->setPlayerId(pid);
 
-        SPDLOG_INFO("Player[{}] login in success.", pid);
+        SPDLOG_INFO("Add player[{}]", pid);
 
         ctx->run();
     }
@@ -96,7 +96,7 @@ namespace uranus {
         }
 
         if (ctx) {
-            SPDLOG_INFO("Player[{}] logout", pid);
+            SPDLOG_INFO("Remove player[{}]", pid);
             ctx->terminate();
         }
     }

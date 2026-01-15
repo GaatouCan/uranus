@@ -55,7 +55,7 @@ namespace uranus {
 
         // Not login
         if (!op.has_value()) {
-            if (auto *auth = GetModule(LoginAuth)) {
+            if (auto *auth = GET_MODULE(getWorld(), LoginAuth)) {
                 auth->onLoginRequest(std::move(pkg), shared_from_this());
             }
             return;
@@ -63,7 +63,7 @@ namespace uranus {
 
         const auto pid = op.value();
 
-        const auto *mgr = GetModule(PlayerManager);
+        const auto *mgr = GET_MODULE(getWorld(), PlayerManager);
         if (!mgr)
             return;
 

@@ -28,6 +28,9 @@ namespace uranus::actor {
     };
 }
 
+#define ACTOR_GET_MODULE(module) \
+    dynamic_cast<module *>(getContext()->getModule(#module))
+
 
 # if defined(_WIN32) || defined(_WIN64)
 #   define ACTOR_EXPORT extern "C" __declspec(dllexport)
