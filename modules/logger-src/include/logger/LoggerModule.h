@@ -3,7 +3,9 @@
 #include "logger.export.h"
 
 #include <actor/ServerModule.h>
+
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace uranus::logger {
 
@@ -23,5 +25,8 @@ namespace uranus::logger {
         void stop() override;
 
         shared_ptr<spdlog::logger> createLogger(std::string_view name, std::string_view path);
+
+    private:
+        shared_ptr<spdlog::sinks::stdout_color_sink_mt> console_;
     };
 }

@@ -5,6 +5,8 @@
 
 namespace uranus::logger {
     LoggerModule::LoggerModule() {
+        console_ = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        console_->set_level(spdlog::level::info);
     }
 
     LoggerModule::~LoggerModule() {
@@ -21,13 +23,10 @@ namespace uranus::logger {
             return logger;
         }
 
-        static auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-        consoleSink->set_level(spdlog::level::info);
-
         auto fileSink = std::make_shared<spdlog::sinks::daily_file_sink_mt>(std::string("logs/") + path.data() + ".txt", 2, 3);
         fileSink->set_level(spdlog::level::info);
 
-        auto logger = std::make_shared<spdlog::logger>(name.data(), spdlog::sinks_init_list{consoleSink, fileSink});
+        auto logger = std::make_shared<spdlog::logger>(name.data(), spdlog::sinks_init_list{console_, fileSink});
         logger->set_level(spdlog::level::debug);
 
         spdlog::register_logger(logger);
