@@ -36,7 +36,7 @@ namespace uranus {
     }
 
     void ClientConnection::onDisconnect() {
-        SPDLOG_INFO("Client disconnected");
+        SPDLOG_INFO("Client[{}] disconnected", attr().get<std::string>("CONNECTION_KEY").value());
 
         const auto op = attr().get<int64_t>("PLAYER_ID");
         if (!op.has_value()) {
