@@ -51,8 +51,9 @@ namespace uranus {
         SPDLOG_INFO("Use player library: {}", filename);
     }
 
-    BasePlayer *PlayerFactory::create() const {
-        return std::invoke(creator_);
+    PlayerFactory::InstanceResult PlayerFactory::create() const {
+        auto *inst = std::invoke(creator_);
+        return std::make_tuple(inst, lib_.path());
     }
 
     void PlayerFactory::destroy(BasePlayer *plr) {

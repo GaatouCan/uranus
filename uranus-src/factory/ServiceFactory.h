@@ -2,7 +2,7 @@
 
 #include <base/Singleton.h>
 #include <base/SharedLibrary.h>
-
+#include <tuple>
 #include <unordered_map>
 
 namespace uranus {
@@ -23,9 +23,11 @@ namespace uranus {
         ~ServiceFactory() override;
 
     public:
+        using InstanceResult = std::tuple<BaseService *, std::filesystem::path>;
+
         void initial();
 
-        BaseService *create(const std::string &path);
+        [[nodiscard]] InstanceResult create(const std::string &path) const;
         void destroy(BaseService *ptr, const std::string &path);
 
         // template<typename Fn>

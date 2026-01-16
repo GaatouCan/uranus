@@ -33,21 +33,21 @@ namespace uranus {
         const auto &cfg = config->getServerConfig();
 
         for (const auto &item : cfg["server"]["service"]["core"]) {
-            const auto path = item.as<std::string>();
+            const auto filename = item.as<std::string>();
             const auto sid = idAlloc_.allocate();
 
-            auto *ser = ServiceFactory::instance().create(path);
+            auto [ser, path] = ServiceFactory::instance().create(filename);
             if (!ser) {
-                SPDLOG_ERROR("Create service instance failed: {}", path);
+                SPDLOG_ERROR("Create service instance failed: {}", filename);
                 exit(-1);
             }
 
-            auto handle = ActorHandle(ser, [path](BaseActor *ptr) {
+            auto handle = ActorHandle(ser, [filename](BaseActor *ptr) {
                 if (!ptr)
                     return;
 
                 if (auto *temp = dynamic_cast<BaseService *>(ptr)) {
-                    ServiceFactory::instance().destroy(temp, path);
+                    ServiceFactory::instance().destroy(temp, filename);
                     return;
                 }
 
@@ -58,9 +58,10 @@ namespace uranus {
 
             ctx->setServiceManager(this);
             ctx->setServiceId(sid);
+            ctx->attr().set("LIBRARY_PATH", path.string());
 
             services_.insert_or_assign(sid, ctx);
-            SPDLOG_INFO("Created service[{} - {}]", sid, path);
+            SPDLOG_INFO("Created service[{} - {}]", sid, filename);
         }
 
         for (const auto &[sid, ctx] : services_) {

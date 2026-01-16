@@ -124,7 +124,7 @@ namespace uranus {
         }
     }
 
-    BaseService *ServiceFactory::create(const std::string &path) {
+    ServiceFactory::InstanceResult ServiceFactory::create(const std::string &path) const {
         bool isCore = false;
         std::string filename;
 
@@ -139,21 +139,23 @@ namespace uranus {
         });
 
         if (filename.empty()) {
-            return nullptr;
+            return std::make_tuple(nullptr, std::filesystem::path{});
         }
 
         if (isCore) {
             if (const auto iter = coreServices_.find(filename); iter != coreServices_.end()) {
-                return std::invoke(iter->second.ctor);
+                auto *inst = std::invoke(iter->second.ctor);
+                return std::make_tuple(inst, iter->second.lib.path());
             }
 
         } else {
             if (const auto iter = extendServices_.find(filename); iter != extendServices_.end()) {
-                return std::invoke(iter->second.ctor);
+                auto *inst = std::invoke(iter->second.ctor);
+                return std::make_tuple(inst, iter->second.lib.path());
             }
         }
 
-        return nullptr;
+        return std::make_tuple(nullptr, std::filesystem::path{});
     }
 
     void ServiceFactory::destroy(BaseService *ptr, const std::string &path) {

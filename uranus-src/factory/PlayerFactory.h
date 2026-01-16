@@ -1,5 +1,6 @@
 #pragma once
 
+#include <tuple>
 #include <base/Singleton.h>
 #include <base/SharedLibrary.h>
 
@@ -22,9 +23,11 @@ namespace uranus {
         ~PlayerFactory() override;
 
     public:
+        using InstanceResult = std::tuple<BasePlayer *, std::filesystem::path>;
+
         void initial();
 
-        [[nodiscard]] BasePlayer* create() const;
+        [[nodiscard]] InstanceResult create() const;
         void destroy(BasePlayer *plr);
 
         // [[nodiscard]] const SharedLibrary &getPlayerLibrary() const;

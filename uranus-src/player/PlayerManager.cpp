@@ -34,7 +34,7 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        auto *plr = PlayerFactory::instance().create();
+        auto [plr, path] = PlayerFactory::instance().create();
 
         if (!plr)
             return;
@@ -74,6 +74,7 @@ namespace uranus {
 
         ctx->setPlayerManager(this);
         ctx->setPlayerId(pid);
+        ctx->attr().set("LIBRARY_PATH", path.string());
 
         SPDLOG_INFO("Add player[{}]", pid);
 
