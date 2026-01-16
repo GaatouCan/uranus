@@ -92,7 +92,7 @@ namespace uranus::network {
 
         if (auto *temp = dynamic_cast<MessageType *>(ptr)) {
             MessageHandleType handle{ temp, del };
-            send(std::move(handle));
+            this->send(std::move(handle));
             return;
         }
 
@@ -105,7 +105,7 @@ namespace uranus::network {
             return;
 
         if (auto *temp = dynamic_cast<MessageType *>(msg)) {
-            send(temp);
+            this->send(temp);
             return;
         }
 
@@ -128,7 +128,7 @@ namespace uranus::network {
             return;
 
         MessageHandleType handle{ msg, Message::Deleter::make() };
-        send(std::move(handle));
+        this->send(std::move(handle));
     }
 
     template<kCodecType Codec>
@@ -138,12 +138,12 @@ namespace uranus::network {
                 auto [ec, msg] = co_await codec_.decode();
 
                 if (ec) {
-                    onErrorCode(ec);
+                    this->onErrorCode(ec);
                     disconnect();
                     break;
                 }
 
-                onReadMessage(std::move(msg));
+                this->onReadMessage(std::move(msg));
             }
         } catch (std::exception &e) {
             onException(e);
@@ -163,7 +163,7 @@ namespace uranus::network {
                 }
 
                 if (ec) {
-                    onErrorCode(ec);
+                    this->onErrorCode(ec);
                     disconnect();
                     break;
                 }
@@ -171,14 +171,14 @@ namespace uranus::network {
                 if (msg == nullptr)
                     continue;
 
-                beforeWrite(msg.get());
+                this->beforeWrite(msg.get());
 
                 if (const auto writeEc = co_await codec_.encode(msg.get())) {
                     onErrorCode(writeEc);
                     disconnect();
                 }
 
-                afterWrite(std::move(msg));
+                this->afterWrite(std::move(msg));
             }
         } catch (std::exception &e) {
             onException(e);
