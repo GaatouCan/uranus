@@ -10,25 +10,32 @@ namespace uranus {
         release();
     }
 
-    SharedLibrary::SharedLibrary(const std::string_view sv) {
+    SharedLibrary::SharedLibrary(const std::string_view sv)
+        : SharedLibrary(std::filesystem::path(sv)) {
+
+    }
+
+    SharedLibrary::SharedLibrary(const std::filesystem::path &path) {
         ctrl_ = new SharedControl();
-        ctrl_->refCount = 1;
 
 #if defined(_WIN32) || defined(_WIN64)
-        ctrl_->handle = LoadLibrary(sv.data());
+        ctrl_->handle = LoadLibrary(path.string().c_str());
 #else
-        ctrl_->handle = dlopen(sv.data(), RTLD_LAZY);
+        ctrl_->handle = dlopen(path.string().c_str(), RTLD_LAZY);
 #endif
 
         if (!ctrl_->handle) {
             throw std::runtime_error("dlopen failed");
         }
 
+        ctrl_->refCount.store(1, std::memory_order_relaxed);
+        ctrl_->path_ = path;
+
         handle_ = ctrl_->handle;
     }
 
-    SharedLibrary::SharedLibrary(const std::filesystem::path &path)
-        : SharedLibrary(std::string_view(path.string())) {
+    SharedLibrary::SharedLibrary(const std::string &str)
+        : SharedLibrary(std::filesystem::path(str)) {
     }
 
     SharedLibrary::SharedLibrary(const SharedLibrary &rhs) {
@@ -79,6 +86,13 @@ namespace uranus {
 
     size_t SharedLibrary::refCount() const {
         return ctrl_ ? ctrl_->refCount.load() : 0;
+    }
+
+    std::filesystem::path SharedLibrary::path() const {
+        if (ctrl_ != nullptr) {
+            return ctrl_->path_;
+        }
+        return {};
     }
 
     bool SharedLibrary::available() const {

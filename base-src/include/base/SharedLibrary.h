@@ -24,14 +24,17 @@ namespace uranus {
         struct SharedControl {
             ModuleHandle handle = nullptr;
             atomic<size_t> refCount = 0;
+            std::filesystem::path path_;
         };
 
     public:
         SharedLibrary();
         ~SharedLibrary();
 
-        explicit SharedLibrary(std::string_view sv);
         explicit SharedLibrary(const std::filesystem::path &path);
+
+        explicit SharedLibrary(const std::string &str);
+        explicit SharedLibrary(std::string_view sv);
 
         SharedLibrary(const SharedLibrary &rhs);
         SharedLibrary &operator=(const SharedLibrary &rhs);
@@ -43,6 +46,7 @@ namespace uranus {
         Func getSymbol(std::string_view sv);
 
         [[nodiscard]] size_t refCount() const;
+        [[nodiscard]] std::filesystem::path path() const;
 
         void swap(SharedLibrary &rhs) noexcept;
         void reset();
