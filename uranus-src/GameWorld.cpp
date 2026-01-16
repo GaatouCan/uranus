@@ -27,7 +27,7 @@ namespace uranus {
             val->start();
         }
 
-        const auto *config = dynamic_cast<ConfigModule *>(getModule("ConfigModule"));
+        const auto *config = GET_MODULE(this, ConfigModule);
         if (!config) {
             SPDLOG_ERROR("Config module not found!");
             exit(-1);

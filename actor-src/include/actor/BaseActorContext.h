@@ -98,8 +98,9 @@ namespace uranus::actor {
     template<class T>
     requires std::derived_from<T, BaseActor>
     T &BaseActorContext::getActor() const {
-        if (handle_ == nullptr)
-            std::abort();
+#ifndef NDEBUG
+        assert(handle_ != nullptr);
+#endif
         return dynamic_cast<T &>(*handle_.get());
     }
 }

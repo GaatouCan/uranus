@@ -72,6 +72,8 @@ namespace uranus::actor {
 
         void recycle();
 
+        void copy(Message &other) const override;
+
     private:
         PackageRecyclerHandle handle_;
 

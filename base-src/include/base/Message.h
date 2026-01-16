@@ -47,6 +47,8 @@ namespace uranus {
 
         Message();
         virtual ~Message();
+
+        virtual void copy(Message &other) const = 0;
     };
 
     using MessageHandle = Message::Pointer<Message>;

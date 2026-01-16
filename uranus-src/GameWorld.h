@@ -33,6 +33,7 @@ namespace uranus {
         asio::io_context &getWorkerIOContext();
 
         void pushModule(ServerModule *module);
+
         [[nodiscard]] ServerModule *getModule(const std::string &name) const;
 
     private:

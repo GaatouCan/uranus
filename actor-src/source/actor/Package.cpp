@@ -60,6 +60,16 @@ namespace uranus::actor {
         handle_.recycle(this);
     }
 
+    void Package::copy(Message &other) const {
+#ifndef NDEBUG
+        assert(typeid(other) == typeid(*this));
+#endif
+
+        auto &rhs = dynamic_cast<Package &>(other);
+        rhs.id_ = id_;
+        rhs.payload_ = payload_;
+    }
+
     IMPLEMENT_RECYCLER_GET(Package)
 
     IMPLEMENT_RECYCLER(Package)

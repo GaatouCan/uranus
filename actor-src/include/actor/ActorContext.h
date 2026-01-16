@@ -1,15 +1,13 @@
 #pragma once
 
 #include "Package.h"
+#include "ServerModule.h"
 
-#include <base/noncopy.h>
 #include <base/AttributeMap.h>
 #include <asio/any_completion_handler.hpp>
 #include <asio/use_awaitable.hpp>
 
 namespace uranus::actor {
-
-    class ServerModule;
 
     class ActorContext {
 
@@ -27,6 +25,10 @@ namespace uranus::actor {
 
         [[nodiscard]] virtual ServerModule *getModule(const std::string &name) const = 0;
 
+        template<class T>
+        requires std::derived_from<T, ServerModule>
+        [[nodiscard]] T *getModuleT(const std::string &name) const;
+
         virtual void send(int ty, int64_t target, PackageHandle &&pkg) = 0;
 
         template<asio::completion_token_for<void(PackageHandle)> CompletionToken>
@@ -36,6 +38,15 @@ namespace uranus::actor {
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) = 0;
 
     };
+
+    template<class T>
+    requires std::derived_from<T, ServerModule>
+    T *ActorContext::getModuleT(const std::string &name) const {
+        if (auto *module = this->getModule(name); module != nullptr) {
+            return dynamic_cast<T *>(module);
+        }
+        return nullptr;
+    }
 
     template<asio::completion_token_for<void(PackageHandle)> CompletionToken>
     auto ActorContext::call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token) {

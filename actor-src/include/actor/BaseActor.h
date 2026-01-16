@@ -29,7 +29,7 @@ namespace uranus::actor {
 }
 
 #define ACTOR_GET_MODULE(module) \
-    dynamic_cast<module *>(getContext()->getModule(#module))
+    getContext()->getModuleT<module>(#module)
 
 
 # if defined(_WIN32) || defined(_WIN64)

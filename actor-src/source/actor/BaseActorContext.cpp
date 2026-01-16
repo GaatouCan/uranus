@@ -54,9 +54,9 @@ namespace uranus::actor {
           strand_(asio::make_strand(ctx_)),
           handle_(std::move(handle)),
           mailbox_(ctx_, 1024) {
-        if (handle_ == nullptr)
-            std::abort();
-
+#ifndef NDEBUG
+        assert(handle_ != nullptr);
+#endif
         handle_->onInitial(this);
     }
 
