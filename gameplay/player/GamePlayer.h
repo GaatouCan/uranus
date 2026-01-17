@@ -17,7 +17,7 @@ namespace gameplay {
         ~GamePlayer() override;
 
         void onInitial(ActorContext *ctx) override;
-
+        void onStart() override;
         void onTerminate() override;
 
         void onPackage(PackageHandle &&pkg) override;

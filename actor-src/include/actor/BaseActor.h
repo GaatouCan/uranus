@@ -18,6 +18,8 @@ namespace uranus::actor {
         [[nodiscard]] ActorContext *getContext() const;
 
         virtual void onInitial(ActorContext *ctx);
+
+        virtual void onStart();
         virtual void onTerminate();
 
         virtual void onPackage(PackageHandle &&pkg) = 0;

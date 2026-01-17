@@ -72,6 +72,7 @@ namespace uranus::actor {
     }
 
     void BaseActorContext::run() {
+        handle_->onStart();
         co_spawn(ctx_, [self = shared_from_this()]() mutable -> awaitable<void> {
             co_await self->process();
         }, asio::detached);

@@ -16,6 +16,9 @@ namespace uranus::actor {
         ctx_ = ctx;
     }
 
+    void BaseActor::onStart() {
+    }
+
     void BaseActor::onTerminate() {
     }
 }

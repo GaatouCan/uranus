@@ -20,9 +20,11 @@ namespace gameplay {
         if (auto *module = ACTOR_GET_MODULE(LoggerModule); module != nullptr) {
             module->createLogger("game_player", "player");
         }
+    }
 
+    void GamePlayer::onStart() {
         const auto logger = spdlog::get("game_player");
-        logger->info("Player[{}] login success", getPlayerId());
+        logger->info("Player[{}] login", getPlayerId());
     }
 
     void GamePlayer::onTerminate() {
