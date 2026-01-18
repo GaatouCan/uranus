@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/ComponentModule.h"
 #include <actor/BasePlayer.h>
 
 namespace gameplay {
@@ -26,6 +27,11 @@ namespace gameplay {
         void sendToClient(PackageHandle &&pkg) const;
 
         [[nodiscard]] int64_t getPlayerId() const;
+
+        ComponentModule &getComponentModule();
+
+    private:
+        ComponentModule component_;
     };
 
 }

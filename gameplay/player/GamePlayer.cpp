@@ -4,11 +4,11 @@
 #include <logger/LoggerModule.h>
 
 namespace gameplay {
-
     using uranus::actor::Package;
     using uranus::logger::LoggerModule;
 
-    GamePlayer::GamePlayer() {
+    GamePlayer::GamePlayer()
+        : component_(*this) {
     }
 
     GamePlayer::~GamePlayer() {
@@ -28,7 +28,6 @@ namespace gameplay {
     }
 
     void GamePlayer::onTerminate() {
-
     }
 
     void GamePlayer::sendToClient(PackageHandle &&pkg) const {
@@ -45,6 +44,10 @@ namespace gameplay {
         }
 
         return -1;
+    }
+
+    ComponentModule &GamePlayer::getComponentModule() {
+        return component_;
     }
 }
 
