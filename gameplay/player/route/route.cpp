@@ -1,4 +1,4 @@
-#include "../GamePlayer.h"
+#include "GamePlayer.h"
 #include "../../ProtocolID.h"
 
 #include "greeting/GreetingController.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../GamePlayer.h"
+#include "GamePlayer.h"
 
 #include <actor/Package.h>
 
