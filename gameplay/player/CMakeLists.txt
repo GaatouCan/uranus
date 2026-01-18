@@ -14,6 +14,8 @@ endif ()
 
 add_library(player SHARED ${GAME_PLAYER_FILES} ../ProtocolID.h)
 
+target_include_directories(player PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(player PUBLIC actor)
 target_link_libraries(player PUBLIC config)
 target_link_libraries(player PUBLIC logger)

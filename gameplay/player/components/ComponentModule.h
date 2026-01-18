@@ -1,7 +1,13 @@
 #pragma once
 
-#include "PlayerComponent.h"
+#include <vector>
 
+
+#pragma region Components Header
+
+#include "components/appear/AppearanceComponent.h"
+
+#pragma endregion
 
 namespace gameplay {
 
@@ -21,7 +27,23 @@ namespace gameplay {
 
         [[nodiscard]] GamePlayer &getPlayer() const;
 
+        void onLogin() const;
+        void onLogout() const;
+
+#pragma region Getter
+        AppearanceComponent &getAppearance() { return appearance_; }
+#pragma endregion
+
+    private:
+        void registerComponent(PlayerComponent *comp);
+
     private:
         GamePlayer &owner_;
+
+        std::vector<PlayerComponent *> components_;
+
+#pragma region
+        AppearanceComponent appearance_;
+#pragma endregion
     };
 }
