@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option optimize_for = LITE_RUNTIME;
+
+package appearance;
+
+message AppearanceRequest {
+  enum OperateType {
+    INFO_REQUEST = 0;
+    CHANGE_AVATAR = 1;
+  }
+
+  OperateType op = 1;
+  repeated int32 param = 2;
+}
+
+message AppearanceInfo {
+
+}
