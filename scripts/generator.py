@@ -6,7 +6,8 @@ VERSION = '0.1'
 TARGET_DIR = '../gameplay'
 PROTOBUF_DIR = '../protobuf/def'
 PROTO_FILE = [
-    'greeting'
+    'greeting',
+    'appearance'
 ]
 
 def pascal_case_to_camel_case(name):

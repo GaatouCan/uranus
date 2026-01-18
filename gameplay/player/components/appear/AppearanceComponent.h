@@ -15,5 +15,7 @@ namespace gameplay {
         [[nodiscard]] constexpr const char *getComponentName() const override {
             return "Appearance";
         }
+
+
     };
 }
