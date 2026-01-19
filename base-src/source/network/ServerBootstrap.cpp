@@ -1,7 +1,4 @@
 #include "ServerBootstrap.h"
-
-#include <iostream>
-
 #include "Connection.h"
 
 #include <asio/co_spawn.hpp>
