@@ -1,7 +1,7 @@
 #pragma once
 
 #include <base/noncopy.h>
-#include <stdint.h>
+#include <cstdint>
 
 namespace gameplay {
 

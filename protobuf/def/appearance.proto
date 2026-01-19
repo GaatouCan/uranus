@@ -15,5 +15,7 @@ message AppearanceRequest {
 }
 
 message AppearanceInfo {
-
+  int32 current_avatar = 1;
+  int32 current_frame = 2;
+  int32 current_background = 3;
 }

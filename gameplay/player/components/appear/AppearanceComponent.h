@@ -16,6 +16,11 @@ namespace gameplay {
             return "Appearance";
         }
 
+        void sendInfo() const;
 
+    private:
+        int curAvatar_;
+        int curFrame_;
+        int curBackground_;
     };
 }

@@ -25,6 +25,7 @@ namespace gameplay {
         PackageHandle onRequest(PackageHandle &&req) override;
 
         void sendToClient(PackageHandle &&pkg) const;
+        void sendToClient(int64_t id, const std::string &data) const;
 
         [[nodiscard]] int64_t getPlayerId() const;
 
