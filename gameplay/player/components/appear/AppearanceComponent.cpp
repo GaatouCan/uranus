@@ -15,6 +15,10 @@ namespace gameplay {
     AppearanceComponent::~AppearanceComponent() {
     }
 
+    void AppearanceComponent::onLogin() {
+        sendInfo();
+    }
+
     void AppearanceComponent::sendInfo() const {
         ::appearance::AppearanceInfo info;
 

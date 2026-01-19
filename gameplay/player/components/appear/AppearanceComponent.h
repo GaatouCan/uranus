@@ -16,6 +16,8 @@ namespace gameplay {
             return "Appearance";
         }
 
+        void onLogin() override;
+
         void sendInfo() const;
 
     private:
