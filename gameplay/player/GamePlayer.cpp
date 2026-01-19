@@ -34,15 +34,6 @@ namespace gameplay {
         getContext()->send(Package::kToClient, 0, std::move(pkg));
     }
 
-    void GamePlayer::sendToClient(const int64_t id, const std::string &data) const {
-        auto pkg = Package::getHandle();
-
-        pkg->setId(id);
-        pkg->setData(data);
-
-        this->sendToClient(std::move(pkg));
-    }
-
     int64_t GamePlayer::getPlayerId() const {
         auto *ctx = getContext();
         if (ctx == nullptr)

@@ -21,7 +21,11 @@ namespace gameplay::protocol {
         auto rPkg = Package::getHandle();
 
         rPkg->setId(static_cast<int64_t>(ProtocolID::kGreetingRequest));
-        rPkg->setData(res.SerializeAsString());
+
+        const auto len = res.ByteSizeLong();
+        rPkg->payload_.resize(len);
+
+        res.SerializeToArray(rPkg->payload_.data(), len);
 
         plr->sendToClient(std::move(rPkg));
     }

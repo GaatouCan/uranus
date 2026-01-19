@@ -11,7 +11,7 @@ namespace gameplay::protocol {
 
         switch (req.op()) {
             case appearance::AppearanceRequest::INFO_REQUEST: {
-                // TODO
+                comp.sendInfo();
             }
             break;
             case appearance::AppearanceRequest::CHANGE_AVATAR: {
