@@ -34,15 +34,15 @@ namespace gameplay {
         ComponentModule component_;
     };
 
-#define SEND_TO_CLIENT(plr, id, msg)                                    \
-{                                                                       \
-    auto pkg = uranus::actor::Package::getHandle();                     \
-    pkg->setId(static_cast<int64_t>(protocol::ProtocolID::id));         \
-                                                                        \
-    pkg->payload_.resize((msg).ByteSizeLong());                         \
-    (msg).SerializeToArray(pkg->payload_.data(), pkg->payload_.size()); \
-                                                                        \
-    (plr).sendToClient(std::move(pkg));                                 \
+#define SEND_TO_CLIENT(plr, id, msg)                                        \
+{                                                                           \
+    auto _pkg = uranus::actor::Package::getHandle();                        \
+    _pkg->setId(static_cast<int64_t>(protocol::ProtocolID::id));            \
+                                                                            \
+    _pkg->payload_.resize((msg).ByteSizeLong());                            \
+    (msg).SerializeToArray(_pkg->payload_.data(), _pkg->payload_.size());   \
+                                                                            \
+    (plr).sendToClient(std::move(_pkg));                                    \
 }
 
 }
