@@ -1,13 +1,16 @@
 #pragma once
 
 #include "components/ComponentModule.h"
+
 #include <actor/BasePlayer.h>
+#include <google/protobuf/message_lite.h>
 
 namespace gameplay {
 
     using uranus::actor::BasePlayer;
     using uranus::actor::PackageHandle;
     using uranus::actor::ActorContext;
+    using google::protobuf::MessageLite;
 
     class GamePlayer final : public BasePlayer {
 
@@ -26,6 +29,10 @@ namespace gameplay {
 
         void sendToClient(PackageHandle &&pkg) const;
 
+        template<class T>
+        requires std::derived_from<T, MessageLite>
+        void sendToClient(int64_t id, const T &msg) const;
+
         [[nodiscard]] int64_t getPlayerId() const;
 
         ComponentModule &getComponentModule();
@@ -33,6 +40,19 @@ namespace gameplay {
     private:
         ComponentModule component_;
     };
+
+    template<class T>
+    requires std::derived_from<T, MessageLite>
+    void GamePlayer::sendToClient(const int64_t id, const T &msg) const {
+        auto pkg = uranus::actor::Package::getHandle();
+
+        pkg->setId(id);
+
+        pkg->payload_.resize(msg.ByteSizeLong());
+        msg.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
+
+        this->sendToClient(std::move(pkg));
+    }
 
 #define SEND_TO_CLIENT(plr, id, msg)                                        \
 {                                                                           \

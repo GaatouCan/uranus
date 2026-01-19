@@ -22,6 +22,6 @@ namespace gameplay {
         info.set_current_frame(curFrame_);
         info.set_current_background(curBackground_);
 
-        SEND_TO_CLIENT(getPlayer(), kAppearanceInfo, info)
+        getPlayer().sendToClient(static_cast<int64_t>(protocol::ProtocolID::kAppearanceInfo), info);
     }
 }
