@@ -17,10 +17,10 @@ namespace gameplay {
     INTERNAL_COMPONENT_TABLE(__temp, table, func)
 
 #define REGISTER_COMPONENT(comp, ...)               \
-    {                                               \
+    do {                                            \
         auto __temp = (comp);                       \
         registerComponent(__temp, {__VA_ARGS__});   \
-    }
+    } while(false);
 
     ComponentModule::ComponentModule(GamePlayer &plr)
         : owner_(plr),
@@ -33,6 +33,10 @@ namespace gameplay {
             COMPONENT_TABLE("appearance", Appearance)
         )
     }
+
+#undef REGISTER_COMPONENT
+#undef COMPONENT_TABLE
+#undef INTERNAL_COMPONENT_TABLE
 
     ComponentModule::~ComponentModule() {
     }
