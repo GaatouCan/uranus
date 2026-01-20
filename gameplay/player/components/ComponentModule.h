@@ -51,7 +51,6 @@ namespace gameplay {
 
     private:
         GamePlayer &owner_;
-
         vector<PlayerComponent *> components_;
 
 #pragma region

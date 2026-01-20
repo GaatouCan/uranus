@@ -2,6 +2,8 @@
 
 #include "components/PlayerComponent.h"
 
+#include <nlohmann/json.hpp>
+
 namespace gameplay {
 
     class AppearanceComponent final : public PlayerComponent {
@@ -16,7 +18,7 @@ namespace gameplay {
             return "Appearance";
         }
 
-        void serialize_Appearance();
+        void serialize_Appearance(nlohmann::json &data);
         void deserialize_Appearance(const EntityList &list);
 
         void onLogin() override;

@@ -15,8 +15,10 @@ namespace gameplay {
     AppearanceComponent::~AppearanceComponent() {
     }
 
-    void AppearanceComponent::serialize_Appearance() {
-        // TODO
+    void AppearanceComponent::serialize_Appearance(nlohmann::json &data) {
+        data["current_avatar"] = curAvatar_;
+        data["current_frame"] = curFrame_;
+        data["current_background"] = curBackground_;
     }
 
     void AppearanceComponent::deserialize_Appearance(const EntityList &list) {

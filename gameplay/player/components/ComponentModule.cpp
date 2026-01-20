@@ -3,6 +3,12 @@
 
 namespace gameplay {
 
+#define SERIALIZE_COMPONENT(comp, table, func)  \
+do {                                            \
+    auto &data = j[table];                      \
+    (comp).serialize_##func(data);              \
+} while (false);
+
 #define DESERIALIZE_COMPONENT(comp, table, func) \
     case table##_t : (comp).deserialize_##func(list); break;
 
@@ -23,6 +29,11 @@ namespace gameplay {
     }
 
     void ComponentModule::serialize() {
+        nlohmann::json j;
+
+        SERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
+
+        // TODO: Deal with the json object
     }
 
     void ComponentModule::deserialize(const EntitiesMap &entities) {
