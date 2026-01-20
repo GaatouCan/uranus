@@ -1,6 +1,7 @@
 #include "GamePlayer.h"
 #include "../../ProtocolID.h"
 
+#include "login/LoginController.h"
 #include "greeting/GreetingController.h"
 #include "appearance/AppearanceController.h"
 
@@ -17,6 +18,7 @@ namespace gameplay {
         using namespace gameplay::protocol;
 
         switch (static_cast<ProtocolID>(pkg->id_)) {
+            HANDLE_PACKAGE(LoginDataResult)
             HANDLE_PACKAGE(GreetingRequest)
             HANDLE_PACKAGE(AppearanceRequest)
             default: break;
