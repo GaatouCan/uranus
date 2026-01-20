@@ -60,7 +60,7 @@ namespace gameplay {
 #pragma endregion
 
     private:
-        void registerComponent(PlayerComponent *comp, const vector<RegisterData> &list);
+        void registerComponent(PlayerComponent *comp, const vector<RegisterData> &list = {});
 
     private:
         GamePlayer &owner_;

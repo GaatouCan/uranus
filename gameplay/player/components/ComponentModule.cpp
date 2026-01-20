@@ -2,7 +2,24 @@
 
 namespace gameplay {
 
-#define REGISTER_COMPONENT(comp)
+#define INTERNAL_COMPONENT_TABLE(comp, table, func) \
+    {                                               \
+        table,                                      \
+        [_self = comp]() {                          \
+            _self->serialize_##func();              \
+        },                                          \
+        [_self = comp](const EntityList &val) {     \
+            _self->deserialize_##func(val);         \
+        }                                           \
+    },
+
+#define COMPONENT_TABLE(table, func) INTERNAL_COMPONENT_TABLE(_comp, table, func)
+
+#define REGISTER_COMPONENT(comp, ...)           \
+    {                                           \
+        auto _comp = (comp);                    \
+        registerComponent(comp, {__VA_ARGS__}); \
+    }
 
     ComponentModule::ComponentModule(GamePlayer &plr)
         : owner_(plr),
@@ -10,15 +27,10 @@ namespace gameplay {
           appearance_(*this)
 #pragma endregion
     {
-        registerComponent(&appearance_, {
-            {"appearance",
-                [comp = &appearance_]() {
-                    comp->serialize_Appearance();
-                },
-                [comp = &appearance_](const EntityList &val) {
-                    comp->deserialize_Appearance(val);
-            }}
-        });
+        REGISTER_COMPONENT(
+            &appearance_,
+            COMPONENT_TABLE("appearance", Appearance)
+        )
     }
 
     ComponentModule::~ComponentModule() {
