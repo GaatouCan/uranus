@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <nlohmann/json.hpp>
 
 #pragma region Components Header
 
@@ -31,7 +32,7 @@ namespace gameplay {
         [[nodiscard]] GamePlayer &getPlayer() const;
 
         void serialize();
-        void deserialize();
+        void deserialize(const nlohmann::json &data);
 
         void onLogin() const;
         void onLogout() const;

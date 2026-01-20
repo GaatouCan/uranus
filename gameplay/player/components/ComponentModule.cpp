@@ -10,7 +10,7 @@ do {                                            \
 } while (false);
 
 #define DESERIALIZE_COMPONENT(comp, table, func) \
-    case table##_t : (comp).deserialize_##func(list); break;
+    case table##_t : (comp).deserialize_##func(val["data"]); break;
 
     ComponentModule::ComponentModule(GamePlayer &plr)
         : owner_(plr),
@@ -36,16 +36,16 @@ do {                                            \
         // TODO: Deal with the json object
     }
 
-    void ComponentModule::deserialize() {
+    void ComponentModule::deserialize(const nlohmann::json &data) {
         using uranus::utils::StringToTag;
         using uranus::utils::udl::operator ""_t;
 
-        // for (const auto &[table, list] : entities) {
-        //     switch (StringToTag(table)) {
-        //         DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
-        //         default: break;
-        //     }
-        // }
+        for (const auto &val : data) {
+            switch (StringToTag(val["table"].get<std::string>())) {
+                DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
+                default: break;
+            }
+        }
     }
 
     void ComponentModule::onLogin() const {
