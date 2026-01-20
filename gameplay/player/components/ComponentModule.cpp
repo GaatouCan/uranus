@@ -5,19 +5,19 @@ namespace gameplay {
 #define INTERNAL_COMPONENT_TABLE(comp, table, func) \
     {                                               \
         table,                                      \
-        [_self = comp]() {                          \
-            _self->serialize_##func();              \
+        [comp]() {                                  \
+            comp->serialize_##func();               \
         },                                          \
-        [_self = comp](const EntityList &val) {     \
-            _self->deserialize_##func(val);         \
+        [comp](const EntityList &val) {             \
+            comp->deserialize_##func(val);          \
         }                                           \
     },
 
-#define COMPONENT_TABLE(table, func) INTERNAL_COMPONENT_TABLE(_comp, table, func)
+#define COMPONENT_TABLE(table, func) INTERNAL_COMPONENT_TABLE(__comp, table, func)
 
 #define REGISTER_COMPONENT(comp, ...)           \
     {                                           \
-        auto _comp = (comp);                    \
+        auto __comp = (comp);                   \
         registerComponent(comp, {__VA_ARGS__}); \
     }
 
