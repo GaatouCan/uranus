@@ -1,5 +1,6 @@
 #include "DatabaseModule.h"
 
+
 namespace uranus::database {
     DatabaseModule::DatabaseModule() {
     }
@@ -8,6 +9,7 @@ namespace uranus::database {
     }
 
     void DatabaseModule::start() {
+
     }
 
     void DatabaseModule::stop() {

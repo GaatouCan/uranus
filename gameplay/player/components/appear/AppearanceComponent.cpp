@@ -2,6 +2,7 @@
 #include "GamePlayer.h"
 #include "../../../ProtocolID.h"
 
+#include <database/entity/Entity_Appearance.h>
 #include <appearance.pb.h>
 
 namespace gameplay {
@@ -22,7 +23,15 @@ namespace gameplay {
     }
 
     void AppearanceComponent::deserialize_Appearance(const EntityList &list) {
-        // TODO
+        if (list.empty())
+            return;
+
+        using uranus::database::entity::Entity_Appearance;
+        if (const auto data = std::dynamic_pointer_cast<Entity_Appearance>(list[0]); data != nullptr) {
+            curAvatar_ = data->current_avatar;
+            curFrame_ = data->current_frame;
+            curBackground_ = data->current_background;
+        }
     }
 
     void AppearanceComponent::onLogin() {
