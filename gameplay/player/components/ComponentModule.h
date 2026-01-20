@@ -1,8 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <memory>
-#include <string>
 #include <unordered_map>
 
 #pragma region Components Header
@@ -13,12 +11,8 @@
 
 namespace gameplay {
 
-    using uranus::database::Entity;
-    using std::shared_ptr;
     using std::vector;
     using std::unordered_map;
-
-    using EntitiesMap = unordered_map<std::string, EntityList>;
 
     class GamePlayer;
 
@@ -37,7 +31,7 @@ namespace gameplay {
         [[nodiscard]] GamePlayer &getPlayer() const;
 
         void serialize();
-        void deserialize(const EntitiesMap& entities);
+        void deserialize();
 
         void onLogin() const;
         void onLogout() const;

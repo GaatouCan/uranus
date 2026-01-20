@@ -18,8 +18,8 @@ namespace gameplay {
             return "Appearance";
         }
 
-        void serialize_Appearance(nlohmann::json &data);
-        void deserialize_Appearance(const EntityList &list);
+        void serialize_Appearance(nlohmann::json &data) const;
+        void deserialize_Appearance(const nlohmann::json &data);
 
         void onLogin() override;
 

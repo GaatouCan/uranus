@@ -1,5 +1,3 @@
-find_package(mysql-concpp CONFIG REQUIRED)
-
 file(GLOB_RECURSE DATABASE_MODULE_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/*.h
         ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
@@ -29,8 +27,6 @@ target_include_directories(database
 
 target_link_libraries(database PUBLIC actor)
 target_link_libraries(database PUBLIC nlohmann_json::nlohmann_json)
-target_link_libraries(database PUBLIC mysql::concpp)
-target_link_libraries(database PUBLIC mysql::concpp-xdevapi)
 
 set_target_properties(database PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(database PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

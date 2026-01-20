@@ -36,16 +36,16 @@ do {                                            \
         // TODO: Deal with the json object
     }
 
-    void ComponentModule::deserialize(const EntitiesMap &entities) {
+    void ComponentModule::deserialize() {
         using uranus::utils::StringToTag;
         using uranus::utils::udl::operator ""_t;
 
-        for (const auto &[table, list] : entities) {
-            switch (StringToTag(table)) {
-                DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
-                default: break;
-            }
-        }
+        // for (const auto &[table, list] : entities) {
+        //     switch (StringToTag(table)) {
+        //         DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
+        //         default: break;
+        //     }
+        // }
     }
 
     void ComponentModule::onLogin() const {
