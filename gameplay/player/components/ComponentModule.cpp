@@ -63,4 +63,7 @@ do {                                            \
     void ComponentModule::registerComponent(PlayerComponent *comp) {
         components_.emplace_back(comp);
     }
+
+#undef SERIALIZE_COMPONENT
+#undef DESERIALIZE_COMPONENT
 }
