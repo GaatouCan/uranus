@@ -1,9 +1,19 @@
 #pragma once
 
 #include <base/noncopy.h>
-#include <cstdint>
+#include <memory>
+#include <vector>
+
+namespace uranus::database {
+    class Entity;
+}
 
 namespace gameplay {
+
+    using uranus::database::Entity;
+    using std::shared_ptr;
+    using std::vector;
+    using EntityList = vector<shared_ptr<Entity>>;
 
     class ComponentModule;
     class GamePlayer;

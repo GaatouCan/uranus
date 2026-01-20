@@ -16,6 +16,9 @@ namespace gameplay {
             return "Appearance";
         }
 
+        void serialize_Appearance();
+        void deserialize_Appearance(const EntityList &list);
+
         void onLogin() override;
 
         void sendInfo() const;

@@ -15,6 +15,14 @@ namespace gameplay {
     AppearanceComponent::~AppearanceComponent() {
     }
 
+    void AppearanceComponent::serialize_Appearance() {
+        // TODO
+    }
+
+    void AppearanceComponent::deserialize_Appearance(const EntityList &list) {
+        // TODO
+    }
+
     void AppearanceComponent::onLogin() {
         sendInfo();
     }
