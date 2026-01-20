@@ -1,26 +1,10 @@
 #include "ComponentModule.h"
+#include <base/utils.h>
 
 namespace gameplay {
 
-#define INTERNAL_COMPONENT_TABLE(comp, table, func) \
-    {                                               \
-        table,                                      \
-        [comp]() {                                  \
-            comp->serialize_##func();               \
-        },                                          \
-        [comp](const EntityList &val) {             \
-            comp->deserialize_##func(val);          \
-        }                                           \
-    },
-
-#define COMPONENT_TABLE(table, func) \
-    INTERNAL_COMPONENT_TABLE(__temp, table, func)
-
-#define REGISTER_COMPONENT(comp, ...)               \
-    do {                                            \
-        auto __temp = (comp);                       \
-        registerComponent(__temp, {__VA_ARGS__});   \
-    } while(false);
+#define DESERIALIZE_COMPONENT(comp, table, func) \
+    case table##_t : (comp).deserialize_##func(list); break;
 
     ComponentModule::ComponentModule(GamePlayer &plr)
         : owner_(plr),
@@ -28,15 +12,8 @@ namespace gameplay {
           appearance_(*this)
 #pragma endregion
     {
-        REGISTER_COMPONENT(
-            &appearance_,
-            COMPONENT_TABLE("appearance", Appearance)
-        )
+        registerComponent(&appearance_);
     }
-
-#undef REGISTER_COMPONENT
-#undef COMPONENT_TABLE
-#undef INTERNAL_COMPONENT_TABLE
 
     ComponentModule::~ComponentModule() {
     }
@@ -49,29 +26,30 @@ namespace gameplay {
     }
 
     void ComponentModule::deserialize(const EntitiesMap &entities) {
-        for (const auto &[table, val] : entities) {
-            if (const auto it = deserFuncs_.find(table); it != deserFuncs_.end()) {
-                std::invoke(it->second, val);
+        using uranus::utils::StringToTag;
+        using uranus::utils::udl::operator ""_t;
+
+        for (const auto &[table, list] : entities) {
+            switch (StringToTag(table)) {
+                DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
+                default: break;
             }
         }
     }
 
     void ComponentModule::onLogin() const {
-        for (const auto &val : components_) {
-            val->onLogin();
+        for (const auto comp : components_) {
+            comp->onLogin();
         }
     }
 
     void ComponentModule::onLogout() const {
-        for (const auto &val : components_) {
-            val->onLogout();
+        for (const auto comp : components_) {
+            comp->onLogout();
         }
     }
 
-    void ComponentModule::registerComponent(PlayerComponent *comp, const vector<RegisterData> &list) {
+    void ComponentModule::registerComponent(PlayerComponent *comp) {
         components_.emplace_back(comp);
-        for (const auto &val : list) {
-            deserFuncs_.insert_or_assign(val.table, val.deser);
-        }
     }
 }

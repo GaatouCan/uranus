@@ -295,4 +295,23 @@ namespace uranus::utils {
             fn(sv, std::string_view{});
         }
     }
+
+    constexpr unsigned int StringToTag_Internal(const char *s, const size_t l, const unsigned int h) {
+        // Unsets the 6 high bits of h, therefore no overflow happens
+        return (l == 0) ? h : StringToTag_Internal(s + 1, l - 1,(((std::numeric_limits<unsigned int>::max)() >> 6) & h * 33) ^ static_cast<unsigned char>(*s));
+    }
+
+    inline unsigned int StringToTag(const std::string &str) {
+        return StringToTag_Internal(str.data(), str.size(), 0);
+    }
+
+    inline unsigned int StringToTag(const std::string_view sv) {
+        return StringToTag_Internal(sv.data(), sv.size(), 0);
+    }
+
+    namespace udl {
+        constexpr unsigned int operator""_t(const char *s, const size_t l) {
+            return StringToTag_Internal(s, l, 0);
+        }
+    }
 }
