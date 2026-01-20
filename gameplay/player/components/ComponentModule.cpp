@@ -13,12 +13,13 @@ namespace gameplay {
         }                                           \
     },
 
-#define COMPONENT_TABLE(table, func) INTERNAL_COMPONENT_TABLE(__comp, table, func)
+#define COMPONENT_TABLE(table, func) \
+    INTERNAL_COMPONENT_TABLE(__temp, table, func)
 
-#define REGISTER_COMPONENT(comp, ...)           \
-    {                                           \
-        auto __comp = (comp);                   \
-        registerComponent(comp, {__VA_ARGS__}); \
+#define REGISTER_COMPONENT(comp, ...)               \
+    {                                               \
+        auto __temp = (comp);                       \
+        registerComponent(__temp, {__VA_ARGS__});   \
     }
 
     ComponentModule::ComponentModule(GamePlayer &plr)
