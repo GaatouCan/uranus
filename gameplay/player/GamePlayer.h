@@ -24,6 +24,9 @@ namespace gameplay {
         void onStart() override;
         void onTerminate() override;
 
+        void onLogin();
+        void onLogout();
+
         void onPackage(PackageHandle &&pkg) override;
         PackageHandle onRequest(PackageHandle &&req) override;
 

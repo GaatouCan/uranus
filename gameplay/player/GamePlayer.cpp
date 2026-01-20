@@ -30,6 +30,14 @@ namespace gameplay {
     void GamePlayer::onTerminate() {
     }
 
+    void GamePlayer::onLogin() {
+        component_.onLogin();
+    }
+
+    void GamePlayer::onLogout() {
+        component_.onLogout();
+    }
+
     void GamePlayer::sendToClient(PackageHandle &&pkg) const {
         getContext()->send(Package::kToClient, 0, std::move(pkg));
     }

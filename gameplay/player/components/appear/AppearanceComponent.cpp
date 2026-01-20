@@ -16,13 +16,15 @@ namespace gameplay {
     }
 
     void AppearanceComponent::serialize_Appearance(nlohmann::json &data) const {
-        data["current_avatar"] = curAvatar_;
-        data["current_frame"] = curFrame_;
-        data["current_background"] = curBackground_;
+        data["current_avatar"]      = curAvatar_;
+        data["current_frame"]       = curFrame_;
+        data["current_background"]  = curBackground_;
     }
 
     void AppearanceComponent::deserialize_Appearance(const nlohmann::json &data) {
-
+        curAvatar_      = data["current_avatar"];
+        curFrame_       = data["current_frame"];
+        curBackground_  = data["current_background"];
     }
 
     void AppearanceComponent::onLogin() {

@@ -4,7 +4,8 @@
 
 namespace gameplay::protocol {
     void Route_LoginDataResult(GamePlayer *plr, PackageHandle &&pkg) {
-        auto data = nlohmann::json::parse(pkg->payload_.begin(), pkg->payload_.end());
-        // TODO
+        const auto data = nlohmann::json::parse(pkg->payload_.begin(), pkg->payload_.end());
+        plr->getComponentModule().deserialize(data);
+        plr->onLogin();
     }
 }
