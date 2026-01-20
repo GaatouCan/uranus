@@ -33,6 +33,7 @@ do {                                            \
 
         SERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
 
+        auto bytes = nlohmann::json::to_bson(j);
         // TODO: Deal with the json object
     }
 
