@@ -8,6 +8,5 @@ namespace uranus::login {
         kLogoutRequest = 1004,
         kLogoutResponse = 1005,
         kHeartbeat = 1006,
-        kLoginDataResult = 1051,
     };
 }

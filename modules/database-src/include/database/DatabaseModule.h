@@ -3,8 +3,8 @@
 #include "database.export.h"
 
 #include <actor/ServerModule.h>
-#include <nlohmann/json.hpp>
 #include <functional>
+#include <vector>
 #include <string>
 
 namespace uranus::database {
@@ -13,7 +13,7 @@ namespace uranus::database {
 
     class DATABASE_API DatabaseModule final : public ServerModule {
 
-        using ResultCallback = std::function<void(int64_t, const std::string &, const nlohmann::json &)>;
+        using ResultCallback = std::function<void(int64_t, const std::string &, const std::vector<uint8_t> &)>;
 
     public:
         DatabaseModule();
