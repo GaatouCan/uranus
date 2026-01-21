@@ -12,6 +12,9 @@
 #include <login/LoginAuth.h>
 #include <database/DatabaseModule.h>
 
+#include "login/LoginProtocol.h"
+#include "player/PlayerContext.h"
+
 using uranus::network::Connection;
 
 using uranus::GameWorld;
@@ -52,27 +55,43 @@ int main() {
             }
         });
 
-        login->onLoginFailure([](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
-            LoginAuth::sendLoginFailure(conn, pid, reason);
-        });
+        login->onLoginFailure(
+            [](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
+                LoginAuth::sendLoginFailure(conn, pid, reason);
+            });
 
-        login->onPlayerLogout([](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
-            LoginAuth::sendLogoutResponse(conn, reason);
-        });
+        login->onPlayerLogout(
+            [](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
+                LoginAuth::sendLogoutResponse(conn, reason);
+            });
     }
 
     // Setup Database module
     {
         auto *module = GET_MODULE(world, DatabaseModule);
 
-        module->onQueryResult([](int64_t id, const std::string &reason, const nlohmann::json &data) {
+        module->onQueryResult([world](int64_t id, const std::string &reason, const nlohmann::json &data) {
             using uranus::utils::udl::operator ""_t;
             using uranus::utils::StringToTag;
+            using uranus::actor::Package;
+            using uranus::actor::Envelope;
 
-            switch (StringToTag(reason)) {
-
-                default: break;
-            }
+            // switch (StringToTag(reason)) {
+            //     case "QueryPlayerData"_t : {
+            //         // if (const auto *mgr = GET_MODULE(world, PlayerManager)) {
+            //         //     if (const auto ctx = mgr->find(id)) {
+            //         //         auto pkg = Package::getHandle();
+            //         //         pkg->setId(uranus::login::kLoginDataResult);
+            //         //         // FIXME: set data
+            //         //
+            //         //         Envelope ev(Package::kResponse, -1, std::move(pkg));
+            //         //         ctx->pushEnvelope(std::move(ev));
+            //         //     }
+            //         // }
+            //     }
+            //     break;
+            //     default: break;
+            // }
         });
     }
 
