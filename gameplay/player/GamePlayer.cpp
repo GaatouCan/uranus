@@ -2,10 +2,12 @@
 #include "actor/ActorContext.h"
 
 #include <logger/LoggerModule.h>
+#include <database/DatabaseModule.h>
 
 namespace gameplay {
     using uranus::actor::Package;
     using uranus::logger::LoggerModule;
+    using uranus::database::DatabaseModule;
 
     GamePlayer::GamePlayer()
         : component_(*this) {
@@ -23,8 +25,11 @@ namespace gameplay {
     }
 
     void GamePlayer::onStart() {
-        const auto logger = spdlog::get("game_player");
-        logger->info("Player[{}] login", getPlayerId());
+        if (auto *db = ACTOR_GET_MODULE(DatabaseModule)) {
+            db->query("player", "WHERE player_id = ", [](bool ret, const std::vector<uint8_t> &data) {
+
+            });
+        }
     }
 
     void GamePlayer::onTerminate() {

@@ -13,7 +13,8 @@ namespace uranus::database {
 
     class DATABASE_API DatabaseModule final : public ServerModule {
 
-        using ResultCallback = std::function<void(int64_t, const std::string &, const std::vector<uint8_t> &)>;
+        // Use bson
+        using ResultCallback = std::function<void(bool, const std::vector<uint8_t> &)>;
 
     public:
         DatabaseModule();
@@ -25,9 +26,6 @@ namespace uranus::database {
         void start() override;
         void stop() override;
 
-        void onQueryResult(const ResultCallback &cb);
-
-    private:
-        ResultCallback onResult_;
+        void query(const std::string &table, const std::string &cond, const ResultCallback &cb);
     };
 }

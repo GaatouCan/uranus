@@ -15,7 +15,7 @@ namespace uranus::database {
     void DatabaseModule::stop() {
     }
 
-    void DatabaseModule::onQueryResult(const ResultCallback &cb) {
-        onResult_ = cb;
+    void DatabaseModule::query(const std::string &table, const std::string &cond, const ResultCallback &cb) {
+        // TODO
     }
 }
