@@ -23,6 +23,7 @@ target_link_libraries(uranus PUBLIC actor)
 target_link_libraries(uranus PUBLIC config)
 target_link_libraries(uranus PUBLIC login)
 target_link_libraries(uranus PUBLIC logger)
+target_link_libraries(uranus PUBLIC database)
 
 set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

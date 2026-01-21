@@ -6,9 +6,11 @@
 #include "player/PlayerManager.h"
 #include "service/ServiceManager.h"
 
+#include <base/utils.h>
 #include <config/ConfigModule.h>
 #include <logger/LoggerModule.h>
 #include <login/LoginAuth.h>
+#include <database/DatabaseModule.h>
 
 using uranus::network::Connection;
 
@@ -17,6 +19,7 @@ using uranus::GameWorld;
 using uranus::config::ConfigModule;
 using uranus::login::LoginAuth;
 using uranus::logger::LoggerModule;
+using uranus::database::DatabaseModule;
 using uranus::PlayerManager;
 using uranus::ServiceManager;
 using uranus::Gateway;
@@ -30,6 +33,7 @@ int main() {
     world->pushModule(new ConfigModule());
     world->pushModule(new LoggerModule());
     world->pushModule(new LoginAuth());
+    world->pushModule(new DatabaseModule());
     world->pushModule(new PlayerManager(*world));
     world->pushModule(new ServiceManager(*world));
     world->pushModule(new Gateway(*world));
@@ -54,6 +58,21 @@ int main() {
 
         login->onPlayerLogout([](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
             LoginAuth::sendLogoutResponse(conn, reason);
+        });
+    }
+
+    // Setup Database module
+    {
+        auto *module = GET_MODULE(world, DatabaseModule);
+
+        module->onQueryResult([](int64_t id, const std::string &reason, const nlohmann::json &data) {
+            using uranus::utils::udl::operator ""_t;
+            using uranus::utils::StringToTag;
+
+            switch (StringToTag(reason)) {
+
+                default: break;
+            }
         });
     }
 

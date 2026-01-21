@@ -14,4 +14,8 @@ namespace uranus::database {
 
     void DatabaseModule::stop() {
     }
+
+    void DatabaseModule::onQueryResult(const ResultCallback &cb) {
+        onResult_ = cb;
+    }
 }
