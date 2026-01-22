@@ -1,10 +1,8 @@
 #include "GamePlayer.h"
 #include "actor/ActorContext.h"
-#include "actor/BaseActorContext.h"
 
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
-
 
 namespace gameplay {
 
@@ -33,17 +31,8 @@ namespace gameplay {
             db->query(
                 "player",
                 "WHERE player_id = ",
-                [ctx = getContext()](const std::string &str) mutable {
-                    auto pkg = Package::getHandle();
-                    pkg->setId(1051);
-                    pkg->setData(str);
-
-                    Envelope ev;
-                    ev.type = Package::kToPlayer;
-                    ev.package = std::move(pkg);
-
-                    const auto temp = dynamic_cast<uranus::actor::BaseActorContext *>(ctx);
-                    temp->pushEnvelope(std::move(ev));
+                [ctx = getContext()](const std::string &str) {
+                    ctx->onEvent(str);
             });
         }
     }

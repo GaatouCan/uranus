@@ -104,6 +104,16 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
+    void BaseActorContext::onEvent(const std::string &data) {
+        Envelope ev;
+
+        ev.type = Package::kEvent;
+        ev.package = Package::getHandle();
+        ev.package->setData(data);
+
+        this->pushEnvelope(std::move(ev));
+    }
+
     void BaseActorContext::createSession(int ty, const int64_t target, PackageHandle &&req, SessionHandle &&handle) {
         if (!isRunning()) {
             const auto work = asio::make_work_guard(handle);
@@ -150,7 +160,7 @@ namespace uranus::actor {
         try {
             while (isRunning()) {
                 // 从邮箱中读取一条信息
-                auto [ec, envelope] = co_await mailbox_.async_receive();
+                auto [ec, evl] = co_await mailbox_.async_receive();
 
                 if (ec == asio::error::operation_aborted ||
                     ec == asio::experimental::error::channel_closed) {
@@ -163,29 +173,29 @@ namespace uranus::actor {
                 }
 
                 // 异步请求处理
-                if ((envelope.type & Package::kRequest) != 0) {
-                    const auto sess = envelope.session;
-                    const auto from = envelope.source;
+                if ((evl.type & Package::kRequest) != 0) {
+                    const auto sess = evl.session;
+                    const auto from = evl.source;
                     int type = Package::kResponse;
 
-                    if ((envelope.type & Package::kFromPlayer) != 0) {
+                    if ((evl.type & Package::kFromPlayer) != 0) {
                         type |= Package::kToPlayer;
                     }
-                    if ((envelope.type & Package::kFromService) != 0) {
+                    if ((evl.type & Package::kFromService) != 0) {
                         type |= Package::kToService;
                     }
 
-                    auto res = handle_->onRequest(std::move(envelope.package));
+                    auto res = handle_->onRequest(std::move(evl.package));
                     sendResponse(type, sess, from, std::move(res));
                 }
                 // 异步请求返回
-                else if ((envelope.type & Package::kResponse) != 0) {
+                else if ((evl.type & Package::kResponse) != 0) {
                     shared_ptr<SessionNode> node = nullptr;
 
                     // 查找会话节点
                     {
                         unique_lock lock(sessMutex_);
-                        if (const auto it = sessions_.find(envelope.session); it != sessions_.end()) {
+                        if (const auto it = sessions_.find(evl.session); it != sessions_.end()) {
                             node = it->second;
                             sessions_.erase(it);
                         }
@@ -202,7 +212,7 @@ namespace uranus::actor {
                                 work.get_executor(),
                                 asio::bind_allocator(
                                     alloc,
-                                    [handler = std::move(node->handle_), res = std::move(envelope.package)]() mutable {
+                                    [handler = std::move(node->handle_), res = std::move(evl.package)]() mutable {
                                         std::move(handler)(std::move(res));
                                     }
                                 )
@@ -212,9 +222,13 @@ namespace uranus::actor {
                         sessAlloc_.recycle(node->sess_);
                     }
                 }
+                // 事件数据
+                else if ((evl.type & Package::kEvent) != 0) {
+                    handle_->onEvent(std::move(evl.package));
+                }
                 // 普通信息
                 else {
-                    handle_->onPackage(std::move(envelope.package));
+                    handle_->onPackage(std::move(evl.package));
                 }
             }
 
