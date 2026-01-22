@@ -32,7 +32,8 @@ namespace gameplay {
                 "player",
                 "WHERE player_id = ",
                 [ctx = getContext()](const std::string &str) {
-                    ctx->onEvent(str);
+                    const auto temp = std::string("PlayerData: ") + str;
+                    ctx->onEvent(temp);
             });
         }
     }

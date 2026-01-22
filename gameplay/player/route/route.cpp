@@ -1,7 +1,6 @@
 #include "GamePlayer.h"
 #include "../../ProtocolID.h"
 
-#include "login/LoginController.h"
 #include "greeting/GreetingController.h"
 #include "appearance/AppearanceController.h"
 
@@ -18,10 +17,21 @@ namespace gameplay {
         using namespace gameplay::protocol;
 
         switch (static_cast<ProtocolID>(pkg->id_)) {
-            HANDLE_PACKAGE(LoginDataResult)
             HANDLE_PACKAGE(GreetingRequest)
             HANDLE_PACKAGE(AppearanceRequest)
             default: break;
+        }
+    }
+
+    void GamePlayer::onEvent(PackageHandle &&evt) {
+        const auto data = evt->toString();
+
+        constexpr std::string_view prefix = "PlayerData: ";
+
+        if (data.starts_with(prefix)) {
+            const auto sv = data.substr(prefix.size());
+            const auto j = nlohmann::json::parse(sv);
+            component_.deserialize(j);
         }
     }
 

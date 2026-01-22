@@ -28,6 +28,7 @@ namespace gameplay {
         void onLogout();
 
         void onPackage(PackageHandle &&pkg) override;
+        void onEvent(PackageHandle &&evt) override;
         PackageHandle onRequest(PackageHandle &&req) override;
 
         void sendToClient(PackageHandle &&pkg) const;
