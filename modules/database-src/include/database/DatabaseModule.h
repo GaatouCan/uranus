@@ -13,8 +13,7 @@ namespace uranus::database {
 
     class DATABASE_API DatabaseModule final : public ServerModule {
 
-        // Use bson
-        using ResultCallback = std::function<void(bool, const std::vector<uint8_t> &)>;
+        using ResultCallback = std::function<void(const std::string &)>;
 
     public:
         DatabaseModule();

@@ -1,11 +1,15 @@
 #include "GamePlayer.h"
 #include "actor/ActorContext.h"
+#include "actor/BaseActorContext.h"
 
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
 
+
 namespace gameplay {
+
     using uranus::actor::Package;
+    using uranus::actor::Envelope;
     using uranus::logger::LoggerModule;
     using uranus::database::DatabaseModule;
 
@@ -26,8 +30,20 @@ namespace gameplay {
 
     void GamePlayer::onStart() {
         if (auto *db = ACTOR_GET_MODULE(DatabaseModule)) {
-            db->query("player", "WHERE player_id = ", [](bool ret, const std::vector<uint8_t> &data) {
+            db->query(
+                "player",
+                "WHERE player_id = ",
+                [ctx = getContext()](const std::string &str) mutable {
+                    auto pkg = Package::getHandle();
+                    pkg->setId(1051);
+                    pkg->setData(str);
 
+                    Envelope ev;
+                    ev.type = Package::kToPlayer;
+                    ev.package = std::move(pkg);
+
+                    const auto temp = dynamic_cast<uranus::actor::BaseActorContext *>(ctx);
+                    temp->pushEnvelope(std::move(ev));
             });
         }
     }
