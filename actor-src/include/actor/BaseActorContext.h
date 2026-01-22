@@ -70,8 +70,6 @@ namespace uranus::actor {
 
         void pushEnvelope(Envelope &&envelope);
 
-        void onEvent(const std::string &data) override;
-
     protected:
         void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) override;
 

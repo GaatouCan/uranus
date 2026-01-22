@@ -57,7 +57,6 @@ namespace uranus::actor {
             kToService      = 1 << 5,
             kRequest        = 1 << 6,
             kResponse       = 1 << 7,
-            kEvent          = 1 << 8,
         };
 
         Package() = delete;

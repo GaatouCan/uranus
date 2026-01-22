@@ -104,16 +104,6 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
-    void BaseActorContext::onEvent(const std::string &data) {
-        Envelope ev;
-
-        ev.type = Package::kEvent;
-        ev.package = Package::getHandle();
-        ev.package->setData(data);
-
-        this->pushEnvelope(std::move(ev));
-    }
-
     void BaseActorContext::createSession(int ty, const int64_t target, PackageHandle &&req, SessionHandle &&handle) {
         if (!isRunning()) {
             const auto work = asio::make_work_guard(handle);
@@ -221,10 +211,6 @@ namespace uranus::actor {
 
                         sessAlloc_.recycle(node->sess_);
                     }
-                }
-                // 事件数据
-                else if ((evl.type & Package::kEvent) != 0) {
-                    handle_->onEvent(std::move(evl.package));
                 }
                 // 普通信息
                 else {

@@ -12,6 +12,8 @@ namespace gameplay {
     using uranus::actor::ActorContext;
     using google::protobuf::MessageLite;
 
+    inline constexpr int kPlayerQueryResult = 1051;
+
     class GamePlayer final : public BasePlayer {
 
         using super = BasePlayer;

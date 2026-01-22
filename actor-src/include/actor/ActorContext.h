@@ -34,9 +34,6 @@ namespace uranus::actor {
         template<asio::completion_token_for<void(PackageHandle)> CompletionToken>
         auto call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token = asio::use_awaitable);
 
-        /// Allow dispatch event to self
-        virtual void onEvent(const std::string &data) = 0;
-
     protected:
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) = 0;
 

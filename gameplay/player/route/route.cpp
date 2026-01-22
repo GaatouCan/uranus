@@ -7,16 +7,20 @@
 namespace gameplay {
 
 #define HANDLE_PACKAGE(proto) \
-    case ProtocolID::k##proto: Route_##proto(this, std::move(pkg)); break;
+    case k##proto: Route_##proto(this, std::move(pkg)); break;
 
 #define HANDLE_REQUEST(proto) \
-    case ProtocolID::k##proto: return Request_##proto(this, std::move(req));
+    case k##proto: return Request_##proto(this, std::move(req));
 
     void GamePlayer::onPackage(PackageHandle &&pkg) {
-
         using namespace gameplay::protocol;
 
-        switch (static_cast<ProtocolID>(pkg->id_)) {
+        switch (pkg->id_) {
+            case kPlayerQueryResult: {
+                const auto data = nlohmann::json::parse(pkg->payload_.begin(), pkg->payload_.end());
+                component_.deserialize(data);
+            }
+            break;
             HANDLE_PACKAGE(GreetingRequest)
             HANDLE_PACKAGE(AppearanceRequest)
             default: break;
