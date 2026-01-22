@@ -11,16 +11,27 @@
 #include <condition_variable>
 #include <atomic>
 
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/json.hpp>
+#include <mongocxx/pool.hpp>
+
 namespace uranus::database {
 
     using actor::ServerModule;
+    using bsoncxx::document::value;
 
     class DATABASE_API DatabaseModule final : public ServerModule {
 
-        using Task = std::function<void()>;
-        using TaskQueue = std::queue<Task>;
-
         using ResultCallback = std::function<void(const std::string &)>;
+
+        struct TaskNode {
+            std::string collection;
+            value query;
+            ResultCallback cb;
+        };
+
+        using Task = std::function<void()>;
+        using TaskQueue = std::queue<TaskNode>;
 
     public:
         DatabaseModule();
@@ -40,5 +51,7 @@ namespace uranus::database {
         std::mutex mtx_;
         std::condition_variable cv_;
         std::atomic_flag stopped_;
+
+        mongocxx::pool pool_;
     };
 }

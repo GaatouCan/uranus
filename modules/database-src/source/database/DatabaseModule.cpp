@@ -2,6 +2,11 @@
 
 
 namespace uranus::database {
+
+    using bsoncxx::builder::basic::kvp;
+    using bsoncxx::builder::basic::make_document;
+    using bsoncxx::document::value;
+
     DatabaseModule::DatabaseModule() {
         th_ = std::thread([this]() {
             while (true) {
@@ -16,7 +21,15 @@ namespace uranus::database {
                 auto task = std::move(queue_.front());
                 queue_.pop();
 
-                // TODO: Handle task;
+                auto client = pool_.acquire();
+                auto db = (*client)["admin"];
+
+                auto collection = db[task.collection];
+                auto res = collection.find_one(task.query.view());
+
+                if (res.has_value()) {
+                    std::invoke(task.cb, bsoncxx::to_json(res.value()));
+                }
             }
         });
     }
