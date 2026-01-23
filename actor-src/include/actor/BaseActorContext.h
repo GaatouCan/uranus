@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "ActorContext.h"
+#include "Envelope.h"
 
 #include <base/types.h>
 #include <base/IdentAllocator.h>
