@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Package.h"
+#include "DataAsset.h"
 #include "ServerModule.h"
 
 #include <base/AttributeMap.h>
@@ -35,6 +36,7 @@ namespace uranus::actor {
         auto call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token = asio::use_awaitable);
 
     protected:
+        virtual void dispatchEvent(int ty, int64_t target, int64_t evt, std::unique_ptr<DataAsset> &&data) = 0;
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) = 0;
 
     };

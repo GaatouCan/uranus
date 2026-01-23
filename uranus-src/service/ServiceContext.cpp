@@ -139,6 +139,36 @@ namespace uranus {
         }
     }
 
+    void ServiceContext::dispatchEvent(const int ty, const int64_t target, int64_t evt, DataAssetHandle &&data) {
+        const auto sid = getServiceId();
+        if (sid < 0)
+            return;
+
+        if ((ty & Envelope::kEvent) == 0)
+            return;
+
+        if ((ty & Envelope::kToService) != 0) {
+            if (target == sid)
+                return;
+
+            if (const auto dest = manager_->find(target)) {
+                Envelope evl((Envelope::kFromService | ty), sid, evt, std::move(data));
+                dest->pushEnvelope(std::move(evl));
+                return;
+            }
+        }
+
+        if ((ty & Envelope::kToPlayer) != 0) {
+            if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
+                if (const auto plr = mgr->find(target)) {
+                    Envelope evl((Envelope::kFromService | ty), sid, evt, std::move(data));
+                    plr->pushEnvelope(std::move(evl));
+                    return;
+                }
+            }
+        }
+    }
+
     void ServiceContext::setServiceManager(ServiceManager *mgr) {
         manager_ = mgr;
     }

@@ -112,6 +112,20 @@ namespace uranus {
         }
     }
 
+    void PlayerContext::dispatchEvent(const int ty, const int64_t target, const int64_t evt, DataAssetHandle &&data) {
+        const auto pid = getPlayerId();
+        if (pid < 0)
+            return;
+
+        if ((ty & Envelope::kToService) != 0 && (ty & Envelope::kEvent) != 0) {
+            if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
+                if (const auto ctx = mgr->find(target)) {
+                    Envelope evl((Envelope::kFromPlayer | ty), pid, evt, std::move(data));
+                    ctx->pushEnvelope(std::move(evl));
+                }
+            }
+        }
+    }
 
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {
         manager_ = mgr;

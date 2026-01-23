@@ -69,6 +69,8 @@ namespace uranus::actor {
         requires std::derived_from<T, BaseActor>
         T &getActor() const;
 
+        void pushEvent(int64_t evt, unique_ptr<DataAsset> &&data);
+
         void pushEnvelope(Envelope &&envelope);
 
     protected:

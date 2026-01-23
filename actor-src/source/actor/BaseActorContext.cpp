@@ -97,6 +97,11 @@ namespace uranus::actor {
         return nullptr;
     }
 
+    void BaseActorContext::pushEvent(const int64_t evt, unique_ptr<DataAsset> &&data) {
+        Envelope evl(Envelope::kEvent, 0, evt, std::move(data));
+        this->pushEnvelope(std::move(evl));
+    }
+
     void BaseActorContext::pushEnvelope(Envelope &&envelope) {
         if (!isRunning())
             return;

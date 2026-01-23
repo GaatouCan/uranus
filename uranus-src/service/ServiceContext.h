@@ -13,6 +13,7 @@ namespace uranus {
     using actor::BaseActorContext;
     using actor::ActorHandle;
     using actor::PackageHandle;
+    using actor::DataAssetHandle;
     using actor::ServerModule;
 
     class ServiceManager;
@@ -42,6 +43,8 @@ namespace uranus {
     protected:
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
         void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
+
+        void dispatchEvent(int ty, int64_t target, int64_t evt, DataAssetHandle &&data) override;
 
     private:
         void setServiceManager(ServiceManager *mgr);
