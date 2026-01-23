@@ -25,19 +25,19 @@ namespace uranus {
         if (pid < 0)
             return;
 
-        if ((ty & Package::kToService) != 0) {
+        if ((ty & Envelope::kToService) != 0) {
             if (const auto *serviceMgr = GET_MODULE(getWorld(), ServiceManager)) {
                 if (const auto ser = serviceMgr->find(target)) {
-                    Envelope envelope;
+                    Envelope evl;
 
-                    envelope.type = (Package::kFromPlayer | ty);
-                    envelope.source = pid;
-                    envelope.package = std::move(pkg);
+                    evl.type = (Envelope::kFromPlayer | ty);
+                    evl.source = pid;
+                    evl.package = std::move(pkg);
 
-                    ser->pushEnvelope(std::move(envelope));
+                    ser->pushEnvelope(std::move(evl));
                 }
             }
-        } else if ((ty & Package::kToClient) != 0) {
+        } else if ((ty & Envelope::kToClient) != 0) {
             if (const auto *gateway = GET_MODULE(getWorld(), Gateway)) {
                 if (const auto client = gateway->find(pid)) {
                     client->send(std::move(pkg));
@@ -92,17 +92,17 @@ namespace uranus {
         if (pid < 0)
             return;
 
-        if ((ty & Package::kToService) != 0) {
+        if ((ty & Envelope::kToService) != 0) {
             if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
                 if (const auto ctx = mgr->find(target)) {
-                    Envelope envelope;
+                    Envelope evl;
 
-                    envelope.type = (Package::kFromPlayer | ty);
-                    envelope.source = pid;
-                    envelope.session = sess;
-                    envelope.package = std::move(pkg);
+                    evl.type = (Envelope::kFromPlayer | ty);
+                    evl.source = pid;
+                    evl.session = sess;
+                    evl.package = std::move(pkg);
 
-                    ctx->pushEnvelope(std::move(envelope));
+                    ctx->pushEnvelope(std::move(evl));
                 }
             }
         }
@@ -113,17 +113,17 @@ namespace uranus {
         if (pid < 0)
             return;
 
-        if ((ty & Package::kToService) != 0) {
+        if ((ty & Envelope::kToService) != 0) {
             if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
                 if (const auto ctx = mgr->find(target)) {
-                    Envelope envelope;
+                    Envelope evl;
 
-                    envelope.type = (Package::kFromPlayer | ty);
-                    envelope.source = pid;
-                    envelope.session = sess;
-                    envelope.package = std::move(pkg);
+                    evl.type = (Envelope::kFromPlayer | ty);
+                    evl.source = pid;
+                    evl.session = sess;
+                    evl.package = std::move(pkg);
 
-                    ctx->pushEnvelope(std::move(envelope));
+                    ctx->pushEnvelope(std::move(evl));
                 }
             }
         }

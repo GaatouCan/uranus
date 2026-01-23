@@ -71,13 +71,13 @@ namespace uranus {
         if (!ctx)
             return;
 
-        Envelope envelope;
+        Envelope evl;
 
-        envelope.type = (Package::kFromClient | Package::kToPlayer);
-        envelope.source = pid;
-        envelope.package = std::move(pkg);
+        evl.type = (Envelope::kFromClient | Envelope::kToPlayer);
+        evl.source = pid;
+        evl.package = std::move(pkg);
 
-        ctx->pushEnvelope(std::move(envelope));
+        ctx->pushEnvelope(std::move(evl));
     }
 
     void ClientConnection::beforeWrite(Package *pkg) {
