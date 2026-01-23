@@ -175,8 +175,10 @@ namespace uranus::actor {
                         type |= Envelope::kToService;
                     }
 
-                    auto res = handle_->onRequest(std::move(evl.package));
-                    sendResponse(type, sess, from, std::move(res));
+                    if (auto *req = std::get_if<PackageHandle>(&evl.variant)) {
+                        auto res = handle_->onRequest(std::move(*req));
+                        sendResponse(type, sess, from, std::move(res));
+                    }
                 }
                 // 异步请求返回
                 else if ((evl.type & Envelope::kResponse) != 0) {

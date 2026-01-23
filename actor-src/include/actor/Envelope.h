@@ -1,8 +1,14 @@
 #pragma once
 
 #include "Package.h"
+#include "DataAsset.h"
+
+#include <variant>
 
 namespace uranus::actor {
+
+    using DataAssetHandle = std::unique_ptr<DataAsset>;
+
     struct ACTOR_API Envelope final {
 
         enum EnvelopeType {
@@ -17,17 +23,24 @@ namespace uranus::actor {
             kEvent          = 1 << 8,
         };
 
+        using VariantHandle = std::variant<PackageHandle, DataAssetHandle>;
+
         int32_t type;
-
         int64_t source;
-        int64_t session;
 
-        PackageHandle package;
+        union {
+            int64_t session;
+            int64_t event;
+        };
+
+        VariantHandle variant;
 
         Envelope();
 
         Envelope(int32_t ty, int64_t src, PackageHandle &&pkg);
         Envelope(int32_t ty, int64_t src, int64_t sess, PackageHandle &&pkg);
+
+        Envelope(int32_t ty, int64_t src, int64_t evt, DataAssetHandle &&data);
 
         Envelope(const Envelope &) = delete;
         Envelope &operator=(const Envelope &) = delete;
