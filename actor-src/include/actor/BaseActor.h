@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Package.h"
+#include "DataAsset.h"
 #include "base/noncopy.h"
 
 namespace uranus::actor {
@@ -23,7 +24,7 @@ namespace uranus::actor {
         virtual void onTerminate();
 
         virtual void onPackage(PackageHandle &&pkg) = 0;
-        virtual void onEvent(PackageHandle &&evt) = 0;
+        virtual void onEvent(int64_t evt, std::unique_ptr<DataAsset> data) = 0;
 
         virtual PackageHandle onRequest(PackageHandle &&req) = 0;
 

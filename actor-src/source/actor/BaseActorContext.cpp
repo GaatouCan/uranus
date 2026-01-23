@@ -162,8 +162,13 @@ namespace uranus::actor {
                     break;
                 }
 
+                if ((evl.type & Envelope::kEvent) != 0) {
+                    if (auto *da = std::get_if<DataAssetHandle>(&evl.variant)) {
+                        handle_->onEvent(evl.event, std::move(*da));
+                    }
+                }
                 // 异步请求处理
-                if ((evl.type & Envelope::kRequest) != 0) {
+                else if ((evl.type & Envelope::kRequest) != 0) {
                     const auto sess = evl.session;
                     const auto from = evl.source;
                     int type = Envelope::kResponse;
