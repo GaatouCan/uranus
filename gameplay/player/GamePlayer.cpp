@@ -1,6 +1,7 @@
 #include "GamePlayer.h"
 #include "actor/ActorContext.h"
 #include "actor/BaseActorContext.h"
+#include "actor/Envelope.h"
 
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
@@ -38,14 +39,7 @@ namespace gameplay {
                     if (temp == nullptr)
                         return;
 
-                    Envelope evl;
-
-                    evl.type = Package::kToPlayer;
-                    evl.package = Package::getHandle();
-                    evl.package->setData(str);
-                    evl.package->setId(kPlayerQueryResult);
-
-                    temp->pushEnvelope(std::move(evl));
+                    // TODO
             });
         }
     }
@@ -62,7 +56,7 @@ namespace gameplay {
     }
 
     void GamePlayer::sendToClient(PackageHandle &&pkg) const {
-        getContext()->send(Package::kToClient, 0, std::move(pkg));
+        getContext()->send(Envelope::kToClient, 0, std::move(pkg));
     }
 
     int64_t GamePlayer::getPlayerId() const {

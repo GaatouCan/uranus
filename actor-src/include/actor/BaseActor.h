@@ -24,7 +24,7 @@ namespace uranus::actor {
         virtual void onTerminate();
 
         virtual void onPackage(PackageHandle &&pkg) = 0;
-        virtual void onEvent(int64_t evt, std::unique_ptr<DataAsset> data) = 0;
+        virtual void onEvent(int64_t evt, std::unique_ptr<DataAsset> &&data) = 0;
 
         virtual PackageHandle onRequest(PackageHandle &&req) = 0;
 

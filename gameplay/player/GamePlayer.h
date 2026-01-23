@@ -9,6 +9,7 @@ namespace gameplay {
 
     using uranus::actor::BasePlayer;
     using uranus::actor::PackageHandle;
+    using uranus::actor::DataAsset;
     using uranus::actor::ActorContext;
     using google::protobuf::MessageLite;
 
@@ -30,7 +31,7 @@ namespace gameplay {
         void onLogout();
 
         void onPackage(PackageHandle &&pkg) override;
-        void onEvent(PackageHandle &&evt) override;
+        void onEvent(int64_t evt, std::unique_ptr<DataAsset> &&data) override;
         PackageHandle onRequest(PackageHandle &&req) override;
 
         void sendToClient(PackageHandle &&pkg) const;

@@ -27,16 +27,8 @@ namespace gameplay {
         }
     }
 
-    void GamePlayer::onEvent(PackageHandle &&evt) {
-        const auto data = evt->toString();
-
-        constexpr std::string_view prefix = "PlayerData: ";
-
-        if (data.starts_with(prefix)) {
-            const auto sv = data.substr(prefix.size());
-            const auto j = nlohmann::json::parse(sv);
-            component_.deserialize(j);
-        }
+    void GamePlayer::onEvent(int64_t evt, std::unique_ptr<DataAsset> &&data) {
+        // TODO
     }
 
     PackageHandle GamePlayer::onRequest(PackageHandle &&req) {
