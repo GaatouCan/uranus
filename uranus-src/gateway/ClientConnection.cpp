@@ -75,7 +75,7 @@ namespace uranus {
 
         evl.type = (Envelope::kFromClient | Envelope::kToPlayer);
         evl.source = pid;
-        evl.package = std::move(pkg);
+        evl.variant = std::move(pkg);
 
         ctx->pushEnvelope(std::move(evl));
     }

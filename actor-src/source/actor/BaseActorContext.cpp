@@ -200,12 +200,18 @@ namespace uranus::actor {
                             const auto work = asio::make_work_guard(node->handle_);
                             const auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
 
+                            PackageHandle res = nullptr;
+
+                            if (auto *temp = std::get_if<PackageHandle>(&evl.variant)) {
+                                res = std::move(*temp);
+                            }
+
                             asio::dispatch(
                                 work.get_executor(),
                                 asio::bind_allocator(
                                     alloc,
-                                    [handler = std::move(node->handle_), res = std::move(evl.package)]() mutable {
-                                        std::move(handler)(std::move(res));
+                                    [handler = std::move(node->handle_), response = std::move(res)]() mutable {
+                                        std::move(handler)(std::move(response));
                                     }
                                 )
                             );
@@ -216,7 +222,9 @@ namespace uranus::actor {
                 }
                 // 普通信息
                 else {
-                    handle_->onPackage(std::move(evl.package));
+                    if (auto *pkg = std::get_if<PackageHandle>(&evl.variant)) {
+                        handle_->onRequest(std::move(*pkg));
+                    }
                 }
             }
 

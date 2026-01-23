@@ -32,7 +32,7 @@ namespace uranus {
 
                     evl.type = (Envelope::kFromPlayer | ty);
                     evl.source = pid;
-                    evl.package = std::move(pkg);
+                    evl.variant = std::move(pkg);
 
                     ser->pushEnvelope(std::move(evl));
                 }
@@ -100,7 +100,7 @@ namespace uranus {
                     evl.type = (Envelope::kFromPlayer | ty);
                     evl.source = pid;
                     evl.session = sess;
-                    evl.package = std::move(pkg);
+                    evl.variant = std::move(pkg);
 
                     ctx->pushEnvelope(std::move(evl));
                 }
@@ -121,7 +121,7 @@ namespace uranus {
                     evl.type = (Envelope::kFromPlayer | ty);
                     evl.source = pid;
                     evl.session = sess;
-                    evl.package = std::move(pkg);
+                    evl.variant = std::move(pkg);
 
                     ctx->pushEnvelope(std::move(evl));
                 }

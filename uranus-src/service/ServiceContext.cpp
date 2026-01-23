@@ -39,7 +39,7 @@ namespace uranus {
 
                 envelope.type = (Envelope::kFromService | ty);
                 envelope.source = sid;
-                envelope.package = std::move(pkg);
+                envelope.variant = std::move(pkg);
 
                 dest->pushEnvelope(std::move(envelope));
             }
@@ -50,7 +50,7 @@ namespace uranus {
 
                     envelope.type = (Envelope::kFromService | ty);
                     envelope.source = sid;
-                    envelope.package = std::move(pkg);
+                    envelope.variant = std::move(pkg);
 
                     plr->pushEnvelope(std::move(envelope));
                 }
@@ -112,7 +112,7 @@ namespace uranus {
                 evl.type = (Envelope::kFromService | ty);
                 evl.source = sid;
                 evl.session = sess;
-                evl.package = std::move(pkg);
+                evl.variant = std::move(pkg);
 
                 dest->pushEnvelope(std::move(evl));
                 return;
@@ -127,7 +127,7 @@ namespace uranus {
                     evl.type = (Envelope::kFromService | ty);
                     evl.source = sid;
                     evl.session = sess;
-                    evl.package = std::move(pkg);
+                    evl.variant = std::move(pkg);
 
                     plr->pushEnvelope(std::move(evl));
                     return;
@@ -151,7 +151,7 @@ namespace uranus {
                 evl.type = (Envelope::kFromService | ty);
                 evl.source = sid;
                 evl.session = sess;
-                evl.package = std::move(pkg);
+                evl.variant = std::move(pkg);
 
                 dest->pushEnvelope(std::move(evl));
             }
@@ -165,7 +165,7 @@ namespace uranus {
                     evl.type = (Envelope::kFromService | ty);
                     evl.source = sid;
                     evl.session = sess;
-                    evl.package = std::move(pkg);
+                    evl.variant = std::move(pkg);
 
                     plr->pushEnvelope(std::move(evl));
                 }
