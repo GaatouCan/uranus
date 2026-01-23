@@ -39,8 +39,8 @@ namespace uranus {
                 dest->pushEnvelope(std::move(evl));
             }
         } else if ((ty & Envelope::kToPlayer) != 0) {
-            if (const auto *playerManager = GET_MODULE(getWorld(), PlayerManager)) {
-                if (const auto plr = playerManager->find(target)) {
+            if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
+                if (const auto plr = mgr->find(target)) {
                     Envelope evl((Envelope::kFromService | ty), sid, std::move(pkg));
                     plr->pushEnvelope(std::move(evl));
                 }
