@@ -142,7 +142,7 @@ namespace uranus::actor {
             sessions_.emplace(sess, make_shared<SessionNode>(ctx_, std::move(handle), sess));
         }
 
-        ty |= Package::kRequest;
+        ty |= Envelope::kRequest;
         sendRequest(ty, sess, target, std::move(req));
     }
 
@@ -163,23 +163,23 @@ namespace uranus::actor {
                 }
 
                 // 异步请求处理
-                if ((evl.type & Package::kRequest) != 0) {
+                if ((evl.type & Envelope::kRequest) != 0) {
                     const auto sess = evl.session;
                     const auto from = evl.source;
-                    int type = Package::kResponse;
+                    int type = Envelope::kResponse;
 
-                    if ((evl.type & Package::kFromPlayer) != 0) {
-                        type |= Package::kToPlayer;
+                    if ((evl.type & Envelope::kFromPlayer) != 0) {
+                        type |= Envelope::kToPlayer;
                     }
-                    if ((evl.type & Package::kFromService) != 0) {
-                        type |= Package::kToService;
+                    if ((evl.type & Envelope::kFromService) != 0) {
+                        type |= Envelope::kToService;
                     }
 
                     auto res = handle_->onRequest(std::move(evl.package));
                     sendResponse(type, sess, from, std::move(res));
                 }
                 // 异步请求返回
-                else if ((evl.type & Package::kResponse) != 0) {
+                else if ((evl.type & Envelope::kResponse) != 0) {
                     shared_ptr<SessionNode> node = nullptr;
 
                     // 查找会话节点

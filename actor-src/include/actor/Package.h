@@ -48,17 +48,6 @@ namespace uranus::actor {
         ~Package() override;
 
     public:
-        enum PackageType {
-            kFromClient     = 1,
-            kFromPlayer     = 1 << 1,
-            kFromService    = 1 << 2,
-            kToClient       = 1 << 3,
-            kToPlayer       = 1 << 4,
-            kToService      = 1 << 5,
-            kRequest        = 1 << 6,
-            kResponse       = 1 << 7,
-        };
-
         Package() = delete;
 
         void setId(int64_t id);
