@@ -35,24 +35,14 @@ namespace uranus {
                 return;
 
             if (const auto dest = manager_->find(target)) {
-                Envelope envelope;
-
-                envelope.type = (Envelope::kFromService | ty);
-                envelope.source = sid;
-                envelope.variant = std::move(pkg);
-
-                dest->pushEnvelope(std::move(envelope));
+                Envelope evl((Envelope::kFromService | ty), sid, std::move(pkg));
+                dest->pushEnvelope(std::move(evl));
             }
         } else if ((ty & Envelope::kToPlayer) != 0) {
             if (const auto *playerManager = GET_MODULE(getWorld(), PlayerManager)) {
                 if (const auto plr = playerManager->find(target)) {
-                    Envelope envelope;
-
-                    envelope.type = (Envelope::kFromService | ty);
-                    envelope.source = sid;
-                    envelope.variant = std::move(pkg);
-
-                    plr->pushEnvelope(std::move(envelope));
+                    Envelope evl((Envelope::kFromService | ty), sid, std::move(pkg));
+                    plr->pushEnvelope(std::move(evl));
                 }
             }
         } else if ((ty & Envelope::kToClient) != 0) {
@@ -107,13 +97,7 @@ namespace uranus {
                 return;
 
             if (const auto dest = manager_->find(target)) {
-                Envelope evl;
-
-                evl.type = (Envelope::kFromService | ty);
-                evl.source = sid;
-                evl.session = sess;
-                evl.variant = std::move(pkg);
-
+                Envelope evl((Envelope::kFromService | ty), sid, sess, std::move(pkg));
                 dest->pushEnvelope(std::move(evl));
                 return;
             }
@@ -122,13 +106,7 @@ namespace uranus {
         if ((ty & Envelope::kToPlayer) != 0) {
             if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
                 if (const auto plr = mgr->find(target)) {
-                    Envelope evl;
-
-                    evl.type = (Envelope::kFromService | ty);
-                    evl.source = sid;
-                    evl.session = sess;
-                    evl.variant = std::move(pkg);
-
+                    Envelope evl((Envelope::kFromService | ty), sid, sess, std::move(pkg));
                     plr->pushEnvelope(std::move(evl));
                     return;
                 }
@@ -146,13 +124,7 @@ namespace uranus {
                 return;
 
             if (const auto dest = manager_->find(target)) {
-                Envelope evl;
-
-                evl.type = (Envelope::kFromService | ty);
-                evl.source = sid;
-                evl.session = sess;
-                evl.variant = std::move(pkg);
-
+                Envelope evl((Envelope::kFromService | ty), sid, sess, std::move(pkg));
                 dest->pushEnvelope(std::move(evl));
             }
         }
@@ -160,13 +132,7 @@ namespace uranus {
         if ((ty & Envelope::kToPlayer) != 0) {
             if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
                 if (const auto plr = mgr->find(target)) {
-                    Envelope evl;
-
-                    evl.type = (Envelope::kFromService | ty);
-                    evl.source = sid;
-                    evl.session = sess;
-                    evl.variant = std::move(pkg);
-
+                    Envelope evl((Envelope::kFromService | ty), sid, sess, std::move(pkg));
                     plr->pushEnvelope(std::move(evl));
                 }
             }
