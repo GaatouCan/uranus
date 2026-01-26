@@ -45,6 +45,12 @@ namespace gameplay {
 
     void GamePlayer::save() {
 
+        nlohmann::json data;
+        data["_id"] = getPlayerId();
+
+        component_.serialize(data);
+
+        // TODO: Send to database
     }
 
     void GamePlayer::onLogin() {
