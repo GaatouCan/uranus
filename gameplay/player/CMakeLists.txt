@@ -12,7 +12,10 @@ if (MSVC)
     endforeach()
 endif ()
 
-add_library(player SHARED ${GAME_PLAYER_FILES} ../ProtocolID.h)
+add_library(player SHARED ${GAME_PLAYER_FILES}
+        ../common/ProtocolID.h
+        ../common/EventType.h
+)
 
 target_include_directories(player PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 

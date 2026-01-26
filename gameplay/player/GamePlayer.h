@@ -24,14 +24,14 @@ namespace gameplay {
         ~GamePlayer() override;
 
         void onInitial(ActorContext *ctx) override;
-        void onStart() override;
+        void onStart(DataAsset *data) override;
         void onTerminate() override;
 
         void onLogin();
         void onLogout();
 
         void onPackage(PackageHandle &&pkg) override;
-        void onEvent(int64_t evt, std::unique_ptr<DataAsset> &&data) override;
+        void onEvent(int64_t evt, DataAsset *data) override;
         PackageHandle onRequest(PackageHandle &&req) override;
 
         void sendToClient(PackageHandle &&pkg) const;

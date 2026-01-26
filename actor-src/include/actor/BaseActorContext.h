@@ -58,7 +58,7 @@ namespace uranus::actor {
         AttributeMap &attr() override;
         [[nodiscard]] const AttributeMap &attr() const override;
 
-        virtual void run();
+        virtual void run(DataAssetHandle &&data);
         virtual void terminate();
 
         [[nodiscard]] virtual bool isRunning() const;

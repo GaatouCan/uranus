@@ -16,7 +16,7 @@ namespace uranus::actor {
         ctx_ = ctx;
     }
 
-    void BaseActor::onStart() {
+    void BaseActor::onStart(DataAsset *data) {
     }
 
     void BaseActor::onTerminate() {

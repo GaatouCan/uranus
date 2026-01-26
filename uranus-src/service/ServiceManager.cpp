@@ -65,7 +65,7 @@ namespace uranus {
         }
 
         for (const auto &[sid, ctx] : services_) {
-            ctx->run();
+            ctx->run(nullptr);
             SPDLOG_INFO("Started service [{} - {}]", sid, ctx->getService()->getName());
         }
     }

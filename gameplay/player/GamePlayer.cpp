@@ -29,7 +29,7 @@ namespace gameplay {
         }
     }
 
-    void GamePlayer::onStart() {
+    void GamePlayer::onStart(DataAsset *data) {
         if (auto *db = ACTOR_GET_MODULE(DatabaseModule)) {
             db->query(
                 "player",

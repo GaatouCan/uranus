@@ -71,8 +71,8 @@ namespace uranus::actor {
         return attr_;
     }
 
-    void BaseActorContext::run() {
-        handle_->onStart();
+    void BaseActorContext::run(DataAssetHandle &&data) {
+        handle_->onStart(data.get());
         co_spawn(ctx_, [self = shared_from_this()]() mutable -> awaitable<void> {
             co_await self->process();
         }, asio::detached);
@@ -168,8 +168,8 @@ namespace uranus::actor {
                 }
 
                 if ((evl.type & Envelope::kEvent) != 0) {
-                    if (auto *da = std::get_if<DataAssetHandle>(&evl.variant)) {
-                        handle_->onEvent(evl.event, std::move(*da));
+                    if (const auto *da = std::get_if<DataAssetHandle>(&evl.variant)) {
+                        handle_->onEvent(evl.event, da->get());
                     }
                 }
                 // 异步请求处理

@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Package.h"
-#include "DataAsset.h"
 #include "base/noncopy.h"
 
 namespace uranus::actor {
 
     class ActorContext;
+    class DataAsset;
 
     class ACTOR_API BaseActor {
 
@@ -20,11 +20,11 @@ namespace uranus::actor {
 
         virtual void onInitial(ActorContext *ctx);
 
-        virtual void onStart();
+        virtual void onStart(DataAsset *data);
         virtual void onTerminate();
 
         virtual void onPackage(PackageHandle &&pkg) = 0;
-        virtual void onEvent(int64_t evt, std::unique_ptr<DataAsset> &&data) = 0;
+        virtual void onEvent(int64_t evt, DataAsset *data) = 0;
 
         virtual PackageHandle onRequest(PackageHandle &&req) = 0;
 

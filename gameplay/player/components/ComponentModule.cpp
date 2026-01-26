@@ -33,19 +33,16 @@ do {                                            \
 
         SERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
 
-        auto bytes = nlohmann::json::to_bson(j);
+        // auto bytes = nlohmann::json::to_bson(j);
         // TODO: Deal with the json object
     }
 
     void ComponentModule::deserialize(const nlohmann::json &data) {
-        using uranus::utils::StringToTag;
-        using uranus::utils::udl::operator ""_t;
-
         for (const auto &val : data) {
-            switch (StringToTag(val["table"].get<std::string>())) {
-                DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
-                default: break;
+            if (val["table"].get<std::string>() == "appearance") {
+                appearance_.deserialize_Appearance(val["data"]);
             }
+            // Other components
         }
     }
 

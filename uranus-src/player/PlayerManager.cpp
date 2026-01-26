@@ -78,7 +78,7 @@ namespace uranus {
 
         SPDLOG_INFO("Add player[{}]", pid);
 
-        ctx->run();
+        ctx->run(nullptr);
     }
 
     void PlayerManager::onPlayerLogout(const int64_t pid) {

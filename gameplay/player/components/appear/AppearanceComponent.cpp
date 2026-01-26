@@ -1,6 +1,6 @@
 #include "AppearanceComponent.h"
 #include "GamePlayer.h"
-#include "../../../ProtocolID.h"
+#include "../../../common/ProtocolID.h"
 
 #include <appearance.pb.h>
 

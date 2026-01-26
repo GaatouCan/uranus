@@ -1,5 +1,8 @@
 #include "GamePlayer.h"
-#include "../../ProtocolID.h"
+#include "DA_PlayerResult.h"
+
+#include "../../common/ProtocolID.h"
+#include "../../common/EventType.h"
 
 #include "greeting/GreetingController.h"
 #include "appearance/AppearanceController.h"
@@ -27,8 +30,19 @@ namespace gameplay {
         }
     }
 
-    void GamePlayer::onEvent(int64_t evt, std::unique_ptr<DataAsset> &&data) {
-        // TODO
+    void GamePlayer::onEvent(const int64_t evt, DataAsset *data) {
+        using event::EventType;
+
+        switch (evt) {
+            case kPlayerQueryResult: {
+                if (const auto *temp = dynamic_cast<DA_PlayerResult *>(data)) {
+                    component_.deserialize(*temp->data);
+                    this->onLogin();
+                }
+            }
+            break;
+            default: break;
+        }
     }
 
     PackageHandle GamePlayer::onRequest(PackageHandle &&req) {
