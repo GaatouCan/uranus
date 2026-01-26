@@ -1,5 +1,4 @@
 #include "GamePlayer.h"
-#include "../../../uranus-src/player/DA_PlayerResult.h"
 
 #include "../../common/ProtocolID.h"
 #include "../../common/EventType.h"
@@ -34,13 +33,7 @@ namespace gameplay {
         using event::EventType;
 
         switch (evt) {
-            case kPlayerQueryResult: {
-                if (const auto *temp = dynamic_cast<DA_PlayerResult *>(data)) {
-                    component_.deserialize(temp->data);
-                    this->onLogin();
-                }
-            }
-            break;
+
             default: break;
         }
     }

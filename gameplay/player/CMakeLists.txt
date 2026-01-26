@@ -21,6 +21,7 @@ target_include_directories(player PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(player PUBLIC actor)
 target_link_libraries(player PUBLIC config)
+target_link_libraries(player PUBLIC login)
 target_link_libraries(player PUBLIC logger)
 target_link_libraries(player PUBLIC database)
 target_link_libraries(player PUBLIC proto_static)

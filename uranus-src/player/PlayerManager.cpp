@@ -1,10 +1,10 @@
 #include "PlayerManager.h"
 #include "PlayerContext.h"
-#include "DA_PlayerResult.h"
 #include "GameWorld.h"
 #include "factory/PlayerFactory.h"
 
 #include <actor/BasePlayer.h>
+#include <login/DA_PlayerResult.h>
 #include <spdlog/spdlog.h>
 
 namespace uranus {
@@ -92,7 +92,7 @@ namespace uranus {
 
             SPDLOG_INFO("Player database result: {}", pid);
 
-            auto result = std::make_unique<DA_PlayerResult>();
+            auto result = std::make_unique<login::DA_PlayerResult>();
             result->data = nlohmann::json::parse(res);
 
             plr->run(std::move(result));

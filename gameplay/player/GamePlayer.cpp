@@ -3,6 +3,7 @@
 #include "actor/BaseActorContext.h"
 #include "actor/Envelope.h"
 
+#include <login/DA_PlayerResult.h>
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
 
@@ -30,18 +31,13 @@ namespace gameplay {
     }
 
     void GamePlayer::onStart(DataAsset *data) {
-        if (auto *db = ACTOR_GET_MODULE(DatabaseModule)) {
-            db->query(
-                "player",
-                "WHERE player_id = ",
-                [ctx = getContext()](const std::string &str) {
-                    auto *temp = dynamic_cast<BaseActorContext *>(ctx);
-                    if (temp == nullptr)
-                        return;
-
-                    // TODO
-            });
+        if (data != nullptr) {
+            if (const auto *temp = dynamic_cast<uranus::login::DA_PlayerResult *>(data)) {
+                component_.deserialize(temp->data);
+            }
         }
+
+        this->onLogin();
     }
 
     void GamePlayer::onTerminate() {
