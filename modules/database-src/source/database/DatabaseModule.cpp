@@ -1,5 +1,7 @@
 #include "DatabaseModule.h"
 
+#include <nlohmann/json.hpp>
+
 
 namespace uranus::database {
 
@@ -55,5 +57,23 @@ namespace uranus::database {
 
     void DatabaseModule::queryPlayer(int64_t pid, const ResultCallback &cb) {
         // TODO
+        using namespace nlohmann::literals;
+
+        nlohmann::json data;
+        data["player_id"] = pid;
+        data["components"] = R"(
+            [
+                {
+                    "table": "appearance",
+                    "data": {
+                        "current_avatar": 1,
+                        "current_frame": 1,
+                        "current_background": 1,
+                    }
+                }
+            ]
+        )"_json;
+
+        std::invoke(cb, data.dump());
     }
 }
