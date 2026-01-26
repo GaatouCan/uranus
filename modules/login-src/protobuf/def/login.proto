@@ -5,8 +5,10 @@ option optimize_for = LITE_RUNTIME;
 package login;
 
 message LoginRequest {
-  int64 player_id = 1;
-  string token = 2;
+  bool developer_mode = 1;
+  bool allocate_id = 2;
+  int64 player_id = 3;
+  string token = 4;
 }
 
 message LoginSuccess {

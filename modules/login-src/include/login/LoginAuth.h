@@ -6,6 +6,10 @@
 #include <actor/Package.h>
 #include <functional>
 
+#ifdef LOGIN_DEVELOPER
+#include <atomic>
+#endif
+
 
 namespace uranus::network {
     class Connection;
@@ -42,10 +46,6 @@ namespace uranus::login {
         void onLoginFailure(const FailureCallback &cb);
         void onPlayerLogout(const LogoutCallback &cb);
 
-        // static PackageHandle PackLoginSuccess(int64_t pid);
-        // static PackageHandle PackLoginFailure(int64_t pid, const std::string &reason);
-        // static PackageHandle PackLogoutResponse(const std::string &reason);
-
         static void sendLoginSuccess(const shared_ptr<Connection> &conn, int64_t pid);
         static void sendLoginFailure(const shared_ptr<Connection> &conn, int64_t pid, const std::string &reason);
         static void sendLogoutResponse(const shared_ptr<Connection> &conn, const std::string &reason);
@@ -54,5 +54,9 @@ namespace uranus::login {
         SuccessCallback onSuccess_;
         FailureCallback onFailure_;
         LogoutCallback onLogout_;
+
+#ifdef LOGIN_DEVELOPER
+        std::atomic_int64_t incPlayerId_;
+#endif
     };
 }

@@ -44,7 +44,11 @@ generate_export_header(login
 )
 
 target_compile_definitions(login PRIVATE login_EXPORTS)
-target_compile_definitions(login PRIVATE ABSL_USES_STD_STRING_VIEW)
+
+target_compile_definitions(login PRIVATE
+        $<$<CONFIG:Debug>:LOGIN_DEVELOPER>
+)
+
 target_include_directories(login
         PRIVATE include/login
         PRIVATE protobuf/gen

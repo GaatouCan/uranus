@@ -9,7 +9,11 @@ namespace uranus::login {
 
     using actor::Package;
 
-    LoginAuth::LoginAuth() {
+    LoginAuth::LoginAuth()
+#ifdef LOGIN_DEVELOPER
+        : incPlayerId_(1000000)
+#endif
+    {
     }
 
     LoginAuth::~LoginAuth() {
@@ -29,7 +33,19 @@ namespace uranus::login {
 
         request.ParseFromArray(pkg->payload_.data(), pkg->payload_.size());
 
+#ifdef LOGIN_DEVELOPER
+        int64_t pid = -1;
+
+        // If use developer mode, alloc an increase player_id for the first time login
+        if (request.developer_mode() && request.allocate_id()) {
+            pid = incPlayerId_.fetch_add(1, std::memory_order_relaxed);
+        } else {
+            pid = request.player_id();
+        }
+#else
         const auto pid = request.player_id();
+#endif
+
         const auto token = request.token();
 
         if (pid <= 0) {
@@ -77,43 +93,6 @@ namespace uranus::login {
     void LoginAuth::onPlayerLogout(const LogoutCallback &cb) {
         onLogout_ = cb;
     }
-
-    // PackageHandle LoginAuth::PackLoginSuccess(const int64_t pid) {
-    //     auto pkg = Package::getHandle();
-    //
-    //     ::login::LoginSuccess res;
-    //     res.set_player_id(pid);
-    //
-    //     pkg->setId(kLoginSuccess);
-    //     pkg->setData(res.SerializeAsString());
-    //
-    //     return pkg;
-    // }
-    //
-    // PackageHandle LoginAuth::PackLoginFailure(const int64_t pid, const std::string &reason) {
-    //     auto pkg = Package::getHandle();
-    //
-    //     ::login::LoginFailure res;
-    //     res.set_player_id(pid);
-    //     res.set_reason(reason);
-    //
-    //     pkg->setId(kLoginFailure);
-    //     pkg->setData(res.SerializeAsString());
-    //
-    //     return pkg;
-    // }
-    //
-    // PackageHandle LoginAuth::PackLogoutResponse(const std::string &reason) {
-    //     auto pkg = Package::getHandle();
-    //
-    //     ::login::LogoutResponse res;
-    //     res.set_data(reason);
-    //
-    //     pkg->setId(kLogoutResponse);
-    //     pkg->setData(res.SerializeAsString());
-    //
-    //     return pkg;
-    // }
 
     void LoginAuth::sendLoginSuccess(const shared_ptr<Connection> &conn, const int64_t pid) {
         if (conn == nullptr)
