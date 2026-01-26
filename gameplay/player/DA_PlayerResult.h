@@ -1,7 +1,6 @@
 #pragma once
 
 #include <actor/DataAsset.h>
-#include <memory>
 #include <nlohmann/json.hpp>
 
 namespace gameplay {
@@ -11,6 +10,6 @@ namespace gameplay {
     class DA_PlayerResult final : public DataAsset {
 
     public:
-        std::shared_ptr<nlohmann::json> data;
+        nlohmann::json data;
     };
 }

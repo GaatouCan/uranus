@@ -36,7 +36,7 @@ namespace gameplay {
         switch (evt) {
             case kPlayerQueryResult: {
                 if (const auto *temp = dynamic_cast<DA_PlayerResult *>(data)) {
-                    component_.deserialize(*temp->data);
+                    component_.deserialize(temp->data);
                     this->onLogin();
                 }
             }
