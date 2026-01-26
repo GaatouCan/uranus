@@ -88,6 +88,7 @@ namespace uranus::actor {
 
         ActorHandle handle_;
 
+        std::atomic_flag running_;
         ConcurrentChannel<Envelope> mailbox_;
 
         IdentAllocator<int64_t, true> sessAlloc_;

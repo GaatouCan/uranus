@@ -1,5 +1,6 @@
 #include "PlayerManager.h"
 #include "PlayerContext.h"
+#include "DA_PlayerResult.h"
 #include "GameWorld.h"
 #include "factory/PlayerFactory.h"
 
@@ -79,6 +80,23 @@ namespace uranus {
         SPDLOG_INFO("Add player[{}]", pid);
 
         ctx->run(nullptr);
+    }
+
+    void PlayerManager::onPlayerResult(int64_t pid, const std::string &res) const {
+        if (!world_.isRunning())
+            return;
+
+        if (auto plr = this->find(pid)) {
+            if (!plr->isRunning())
+                return;
+
+            SPDLOG_INFO("Player database result: {}", pid);
+
+            auto result = std::make_unique<DA_PlayerResult>();
+            result->data = nlohmann::json::parse(res);
+
+            plr->run(std::move(result));
+        }
     }
 
     void PlayerManager::onPlayerLogout(const int64_t pid) {

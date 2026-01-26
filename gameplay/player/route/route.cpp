@@ -1,5 +1,5 @@
 #include "GamePlayer.h"
-#include "DA_PlayerResult.h"
+#include "../../../uranus-src/player/DA_PlayerResult.h"
 
 #include "../../common/ProtocolID.h"
 #include "../../common/EventType.h"

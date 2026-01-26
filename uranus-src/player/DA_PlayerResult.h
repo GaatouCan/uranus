@@ -3,9 +3,9 @@
 #include <actor/DataAsset.h>
 #include <nlohmann/json.hpp>
 
-namespace gameplay {
+namespace uranus {
 
-    using uranus::actor::DataAsset;
+    using actor::DataAsset;
 
     class DA_PlayerResult final : public DataAsset {
 

@@ -125,6 +125,22 @@ namespace uranus::login {
         conn->sendMessage(std::move(pkg));
     }
 
+    void LoginAuth::sendLoginPlayerResult(const shared_ptr<Connection> &conn, const int64_t pid, const std::string &message) {
+        if (conn == nullptr)
+            return;
+
+        auto pkg = Package::getHandle();
+
+        ::login::LoginPlayerResult res;
+        res.set_player_id(pid);
+        res.set_data(message);
+
+        pkg->setId(kLoginPlayerResult);
+        pkg->setData(res.SerializeAsString());
+
+        conn->sendMessage(std::move(pkg));
+    }
+
     void LoginAuth::sendLogoutResponse(const shared_ptr<Connection> &conn, const std::string &reason) {
         if (conn == nullptr)
             return;

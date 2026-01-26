@@ -45,6 +45,8 @@ namespace uranus::database {
 
         void query(const std::string &table, const std::string &cond, const ResultCallback &cb);
 
+        void queryPlayer(int64_t pid, const ResultCallback &cb);
+
     private:
         std::thread th_;
         TaskQueue queue_;

@@ -87,7 +87,7 @@ namespace uranus::actor {
     }
 
     bool BaseActorContext::isRunning() const {
-        return mailbox_.is_open();
+        return mailbox_.is_open() && running_.test();
     }
 
     BaseActor *BaseActorContext::getActor() const {
@@ -152,6 +152,7 @@ namespace uranus::actor {
     }
 
     awaitable<void> BaseActorContext::process() {
+        running_.test_and_set();
         try {
             while (isRunning()) {
                 // 从邮箱中读取一条信息
@@ -258,6 +259,7 @@ namespace uranus::actor {
                 it = sessions_.erase(it);
             }
 
+            running_.clear();
             sessions_.clear();
 
             // Call actor terminate

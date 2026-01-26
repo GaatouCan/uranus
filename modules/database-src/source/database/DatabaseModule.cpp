@@ -52,4 +52,8 @@ namespace uranus::database {
     void DatabaseModule::query(const std::string &table, const std::string &cond, const ResultCallback &cb) {
         // TODO
     }
+
+    void DatabaseModule::queryPlayer(int64_t pid, const ResultCallback &cb) {
+        // TODO
+    }
 }

@@ -5,12 +5,14 @@
 
 #include <config/ConfigModule.h>
 #include <login/LoginAuth.h>
+#include <database/DatabaseModule.h>
 #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
 namespace uranus {
 
     using config::ConfigModule;
+    using database::DatabaseModule;
 
     Gateway::Gateway(GameWorld &world)
         : world_(world) {
@@ -110,9 +112,14 @@ namespace uranus {
 
         login::LoginAuth::sendLoginSuccess(conn, pid);
 
-        if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
-            // Create the player actor
-            mgr->onPlayerLogin(pid);
+        if (auto *db = GET_MODULE(&world_, DatabaseModule)) {
+            db->queryPlayer(pid, [conn, pid, world = &world_](const std::string &res) {
+                login::LoginAuth::sendLoginPlayerResult(conn, pid, "Query from database success");
+
+                if (const auto *mgr = GET_MODULE(world, PlayerManager)) {
+                    mgr->onPlayerResult(pid, res);
+                }
+            });
         }
     }
 

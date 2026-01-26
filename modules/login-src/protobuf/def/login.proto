@@ -20,6 +20,11 @@ message LoginFailure {
   string reason = 2;
 }
 
+message LoginPlayerResult {
+  int64 player_id = 1;
+  string data = 2;
+}
+
 message LogoutRequest {
   int64 player_id = 1;
   string reason = 2;
