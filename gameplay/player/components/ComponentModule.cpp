@@ -35,12 +35,12 @@ if (val["table"].get<std::string>() == #table) {    \
     void ComponentModule::serialize(nlohmann::json &data) const {
         auto &temp = data["component"];
 
-        SERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
+        SERIALIZE_COMPONENT(appearance_, appearance, Appearance)
     }
 
     void ComponentModule::deserialize(const nlohmann::json &data) {
         for (const auto &val : data) {
-            DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
+            DESERIALIZE_COMPONENT(appearance_, appearance, Appearance)
             // Other components
         }
     }
