@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "base.export.h"
 
@@ -19,6 +19,9 @@ namespace uranus {
     using std::atomic;
     using std::string;
 
+    /**
+     * 动态库句柄封装
+     */
     class BASE_API SharedLibrary final {
 
         struct SharedControl {
@@ -45,7 +48,9 @@ namespace uranus {
         template<typename Func>
         Func getSymbol(std::string_view sv);
 
+        /// 获取当前引用计数
         [[nodiscard]] size_t refCount() const;
+
         [[nodiscard]] std::filesystem::path path() const;
 
         void swap(SharedLibrary &rhs) noexcept;
@@ -60,7 +65,10 @@ namespace uranus {
         void release();
 
     private:
+        /** 引用计数控制块 **/
         SharedControl *ctrl_;
+
+        /** 内部句柄指针 **/
         ModuleHandle handle_;
     };
 

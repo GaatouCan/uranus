@@ -1,4 +1,4 @@
-#include "ServiceContext.h"
+﻿#include "ServiceContext.h"
 #include "ServiceManager.h"
 #include "player/PlayerManager.h"
 #include "player/PlayerContext.h"
@@ -30,6 +30,7 @@ namespace uranus {
         if (sid < 0)
             return;
 
+        // 发送至其它Service
         if ((ty & Envelope::kToService) != 0) {
             if (target == sid)
                 return;
@@ -38,14 +39,18 @@ namespace uranus {
                 Envelope evl((Envelope::kFromService | ty), sid, std::move(pkg));
                 dest->pushEnvelope(std::move(evl));
             }
-        } else if ((ty & Envelope::kToPlayer) != 0) {
+        }
+        // 发送至Player
+        else if ((ty & Envelope::kToPlayer) != 0) {
             if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
                 if (const auto plr = mgr->find(target)) {
                     Envelope evl((Envelope::kFromService | ty), sid, std::move(pkg));
                     plr->pushEnvelope(std::move(evl));
                 }
             }
-        } else if ((ty & Envelope::kToClient) != 0) {
+        }
+        // 直接发送给客户端
+        else if ((ty & Envelope::kToClient) != 0) {
             if (const auto *gateway = GET_MODULE(getWorld(), Gateway)) {
                 if (const auto client = gateway->find(target)) {
                     client->send(std::move(pkg));

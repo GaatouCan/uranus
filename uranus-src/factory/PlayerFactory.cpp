@@ -61,8 +61,4 @@ namespace uranus {
             std::invoke(deleter_, plr);
         }
     }
-
-    // const SharedLibrary &PlayerFactory::getPlayerLibrary() const {
-    //     return lib_;
-    // }
 }
