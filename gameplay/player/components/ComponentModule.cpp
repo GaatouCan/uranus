@@ -5,12 +5,16 @@ namespace gameplay {
 
 #define SERIALIZE_COMPONENT(comp, table, func)  \
 do {                                            \
-    auto &data = j[table];                      \
-    (comp).serialize_##func(data);              \
+    nlohmann::json val;                         \
+    val["table"] = #table;                      \
+    (comp).serialize_##func(val["data"]);       \
+    temp.push_back(val);                        \
 } while (false);
 
-#define DESERIALIZE_COMPONENT(comp, table, func) \
-    case table##_t : (comp).deserialize_##func(val["data"]); break;
+#define DESERIALIZE_COMPONENT(comp, table, func)    \
+if (val["table"].get<std::string>() == #table) {    \
+    (comp).deserialize_##func(val["data"]);         \
+}
 
     ComponentModule::ComponentModule(GamePlayer &plr)
         : owner_(plr),
@@ -28,20 +32,15 @@ do {                                            \
         return owner_;
     }
 
-    void ComponentModule::serialize() {
-        nlohmann::json j;
+    void ComponentModule::serialize(nlohmann::json &data) const {
+        auto &temp = data["component"];
 
         SERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
-
-        // auto bytes = nlohmann::json::to_bson(j);
-        // TODO: Deal with the json object
     }
 
     void ComponentModule::deserialize(const nlohmann::json &data) {
         for (const auto &val : data) {
-            if (val["table"].get<std::string>() == "appearance") {
-                appearance_.deserialize_Appearance(val["data"]);
-            }
+            DESERIALIZE_COMPONENT(appearance_, "appearance", Appearance)
             // Other components
         }
     }

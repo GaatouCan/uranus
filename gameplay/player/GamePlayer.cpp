@@ -43,6 +43,10 @@ namespace gameplay {
     void GamePlayer::onTerminate() {
     }
 
+    void GamePlayer::save() {
+
+    }
+
     void GamePlayer::onLogin() {
         component_.onLogin();
     }

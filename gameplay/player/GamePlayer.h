@@ -27,6 +27,8 @@ namespace gameplay {
         void onStart(DataAsset *data) override;
         void onTerminate() override;
 
+        void save();
+
         void onLogin();
         void onLogout();
 

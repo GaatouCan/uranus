@@ -31,7 +31,7 @@ namespace gameplay {
 
         [[nodiscard]] GamePlayer &getPlayer() const;
 
-        void serialize();
+        void serialize(nlohmann::json &data) const;
         void deserialize(const nlohmann::json &data);
 
         void onLogin() const;
