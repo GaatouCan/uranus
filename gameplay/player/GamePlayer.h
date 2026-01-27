@@ -58,6 +58,6 @@ namespace gameplay {
         pkg->payload_.resize(msg.ByteSizeLong());
         msg.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
 
-        this->sendToClient(std::move(pkg));
+        super::sendToClient(std::move(pkg));
     }
 }
