@@ -144,7 +144,7 @@ namespace uranus {
         }
     }
 
-    void ServiceContext::dispatchEvent(const int ty, const int64_t target, int64_t evt, DataAssetHandle &&data) {
+    void ServiceContext::dispatch(const int ty, const int64_t target, int64_t evt, DataAssetHandle &&data) {
         const auto sid = getServiceId();
         if (sid < 0)
             return;

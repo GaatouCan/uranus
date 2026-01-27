@@ -32,16 +32,15 @@ namespace uranus::actor {
         PackageHeader header;
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
-        header.id = static_cast<int64_t>(htonll(pkg->id_));
-        header.length = static_cast<int64_t>(htonll(pkg->payload_.size()));
+        header.id       = static_cast<int64_t>(htonll(pkg->id_));
+        header.length   = static_cast<int64_t>(htonll(pkg->payload_.size()));
 #else
-        header.id = static_cast<int64_t>(htobe64(pkg->id_));
-        header.length = static_cast<int64_t>(htobe64(pkg->payload_.size()));
+        header.id       = static_cast<int64_t>(htobe64(pkg->id_));
+        header.length   = static_cast<int64_t>(htobe64(pkg->payload_.size()));
 #endif
 
         if (pkg->payload_.empty()) {
-            const auto [ec, len] = co_await
-                    asio::async_write(socket(), asio::buffer(&header, sizeof(PackageHeader)));
+            const auto [ec, len] = co_await asio::async_write(socket(), asio::buffer(&header, sizeof(PackageHeader)));
 
             if (ec)
                 co_return ec;
@@ -77,17 +76,16 @@ namespace uranus::actor {
 
         // Read header
         {
-            const auto [ec, len] = co_await asio::async_read(socket(), asio::buffer(&header, sizeof(PackageHeader)));
-            if (ec) {
+            if (const auto [ec, len] = co_await asio::async_read(socket(), asio::buffer(&header, sizeof(PackageHeader))); ec) {
                 co_return make_tuple(ec, nullptr);
             }
 
 #if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__)
-            header.id = static_cast<int64_t>(ntohll(header.id));
-            header.length = static_cast<int64_t>(ntohll(header.length));
+            header.id       = static_cast<int64_t>(ntohll(header.id));
+            header.length   = static_cast<int64_t>(ntohll(header.length));
 #else
-            header.id = static_cast<int64_t>(be64toh(header.id));
-            header.length = static_cast<int64_t>(be64toh(header.length));
+            header.id       = static_cast<int64_t>(be64toh(header.id));
+            header.length   = static_cast<int64_t>(be64toh(header.length));
 #endif
         }
 

@@ -19,7 +19,7 @@ namespace uranus::network {
     }
 
     ServerBootstrap::ServerBootstrap(const unsigned int threads)
-        : ctx_(threads),
+        : ctx_(static_cast<int>(threads)),
           guard_(asio::make_work_guard(ctx_)),
 #ifdef URANUS_SSL
           sslContext_(asio::ssl::context::tlsv13_server),
@@ -33,7 +33,7 @@ namespace uranus::network {
     }
 
     ServerBootstrap::~ServerBootstrap() {
-        terminate();
+        this->terminate();
 
         for (auto &val: pool_) {
             if (val.joinable()) {
@@ -74,7 +74,7 @@ namespace uranus::network {
 
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
-            terminate();
+            this->terminate();
         });
 
         ctx_.run();
@@ -113,8 +113,8 @@ namespace uranus::network {
         onAccept_ = cb;
     }
 
-    void ServerBootstrap::onRemove(const RemoveCallback &cb) {
-        onRemove_ = cb;
+    void ServerBootstrap::onErrorCode(const ErrorCodeCallback &cb) {
+        onErrorCode_ = cb;
     }
 
     void ServerBootstrap::onException(const ExceptionCallback &cb) {
@@ -127,14 +127,14 @@ namespace uranus::network {
             acceptor_.bind({asio::ip::tcp::v4(), port});
             acceptor_.listen(port);
 
-            //std::cerr << "io_context is running? : " << ((!ctx_.stopped()) ? "true" : "false") << std::endl;
 
             while (!ctx_.stopped()) {
-                //std::cerr << "Waiting for connection..." << std::endl;
-
                 auto [ec, socket] = co_await acceptor_.async_accept();
 
                 if (ec) {
+                    if (onErrorCode_) {
+                        std::invoke(onErrorCode_, ec);
+                    }
                     continue;
                 }
 
@@ -153,8 +153,6 @@ namespace uranus::network {
 
                 conn->connect();
             }
-
-            // std::cerr << "end of waiting connection" << std::endl;
         } catch (std::exception &e) {
             if (onException_) {
                 std::invoke(onException_, e);

@@ -4,7 +4,7 @@
 #include "factory/PlayerFactory.h"
 
 #include <actor/BasePlayer.h>
-#include <login/DA_PlayerResult.h>
+#include <database/DA_PlayerResult.h>
 #include <spdlog/spdlog.h>
 
 namespace uranus {
@@ -86,13 +86,13 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        if (auto plr = this->find(pid)) {
+        if (const auto plr = this->find(pid)) {
             if (!plr->isRunning())
                 return;
 
             SPDLOG_INFO("Player database result: {}", pid);
 
-            auto result = std::make_unique<login::DA_PlayerResult>();
+            auto result = std::make_unique<database::DA_PlayerResult>();
             result->data = nlohmann::json::parse(res);
 
             plr->run(std::move(result));

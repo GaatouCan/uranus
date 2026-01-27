@@ -3,7 +3,7 @@
 #include <actor/DataAsset.h>
 #include <nlohmann/json.hpp>
 
-namespace uranus::login {
+namespace uranus::database {
 
     using actor::DataAsset;
 

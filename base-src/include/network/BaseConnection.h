@@ -25,7 +25,6 @@ namespace uranus::network {
 
         [[nodiscard]] bool isConnected() const override;
 
-        // [[nodiscard]] const std::string &getKey() const override;
         [[nodiscard]] asio::ip::address remoteAddress() const;
 
         AttributeMap &attr() override;
@@ -50,11 +49,10 @@ namespace uranus::network {
         TcpSocket socket_;
         ExecutorStrand strand_;
 
-        // std::string key_;
         AttributeMap attr_;
 
-        SteadyTimer watchdog_;
-        SteadyDuration expiration_;
+        SteadyTimer     watchdog_;
+        SteadyDuration  expiration_;
         SteadyTimePoint received_;
     };
 }

@@ -5,22 +5,23 @@
 #include <asio/bind_allocator.hpp>
 #include <ranges>
 
-namespace uranus::actor {
 
+namespace uranus::actor {
     BaseActorContext::SessionNode::SessionNode(asio::io_context &ctx, SessionHandle &&h, const int64_t s)
         : handle_(std::move(h)),
-          work_(asio::make_work_guard(handle_)),
+          guard_(asio::make_work_guard(handle_)),
           timer_(ctx),
           sess_(s) {
 
+        // 发起超时等待
         co_spawn(ctx, [self = shared_from_this()]() mutable -> awaitable<void> {
             try {
                 self->timer_.expires_after(std::chrono::seconds(5));
-                const auto [ec] = co_await self->timer_.async_wait();
 
-                if (ec)
-                    co_return;
+                // 即使返回error_code也需要唤醒协程 所以直接无论如何都唤醒
+                co_await self->timer_.async_wait();
 
+                // 超时返回空指针
                 if (!self->completed_.test_and_set(std::memory_order_acquire)) {
                     const auto work = asio::make_work_guard(self->handle_);
                     const auto alloc = asio::get_associated_allocator(self->handle_, asio::recycling_allocator<void>());
@@ -49,6 +50,10 @@ namespace uranus::actor {
         }
     }
 
+    void BaseActorContext::SessionNode::cancel() {
+        timer_.cancel();
+    }
+
     BaseActorContext::BaseActorContext(asio::io_context &ctx, ActorHandle &&handle)
         : ctx_(ctx),
           strand_(asio::make_strand(ctx_)),
@@ -61,6 +66,7 @@ namespace uranus::actor {
     }
 
     BaseActorContext::~BaseActorContext() {
+
     }
 
     AttributeMap &BaseActorContext::attr() {
@@ -97,7 +103,10 @@ namespace uranus::actor {
         return nullptr;
     }
 
-    void BaseActorContext::pushEvent(const int64_t evt, unique_ptr<DataAsset> &&data) {
+    void BaseActorContext::pushEvent(
+        const int64_t evt,
+        unique_ptr<DataAsset> &&data
+    ) {
         Envelope evl(Envelope::kEvent, 0, evt, std::move(data));
         this->pushEnvelope(std::move(evl));
     }
@@ -109,7 +118,12 @@ namespace uranus::actor {
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
     }
 
-    void BaseActorContext::createSession(int ty, const int64_t target, PackageHandle &&req, SessionHandle &&handle) {
+    void BaseActorContext::createSession(
+        int ty,
+        const int64_t target,
+        PackageHandle &&req,
+        SessionHandle &&handle
+    ) {
         if (!isRunning()) {
             const auto work = asio::make_work_guard(handle);
             const auto alloc = asio::get_associated_allocator(handle, asio::recycling_allocator<void>());
@@ -240,23 +254,27 @@ namespace uranus::actor {
             }
 
             // 释放所有会话
-            for (auto it = sessions_.begin(); it != sessions_.end();) {
-                if (it->second == nullptr) {
-                    ++it;
-                    continue;
-                }
+            // for (auto it = sessions_.begin(); it != sessions_.end();) {
+            //     if (it->second == nullptr) {
+            //         ++it;
+            //         continue;
+            //     }
+            //
+            //     const auto node = it->second;
+            //
+            //     auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
+            //     asio::dispatch(
+            //         node->guard_.get_executor(),
+            //         asio::bind_allocator(alloc, [handler = std::move(node->handle_)]() mutable {
+            //             std::move(handler)(nullptr);
+            //         })
+            //     );
+            //
+            //     it = sessions_.erase(it);
+            // }
 
-                const auto node = it->second;
-
-                auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
-                asio::dispatch(
-                    node->work_.get_executor(),
-                    asio::bind_allocator(alloc, [handler = std::move(node->handle_)]() mutable {
-                        std::move(handler)(nullptr);
-                    })
-                );
-
-                it = sessions_.erase(it);
+            for (const auto &node: sessions_ | std::views::values) {
+                node->cancel();
             }
 
             running_.clear();

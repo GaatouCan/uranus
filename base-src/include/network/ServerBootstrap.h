@@ -20,8 +20,8 @@ namespace uranus::network {
     class BASE_API ServerBootstrap final {
 
         using AcceptCallback    = std::function<shared_ptr<Connection>(TcpSocket &&)>;
-        using RemoveCallback    = std::function<void(const std::string &)>;
         using ExceptionCallback = std::function<void(std::exception &e)>;
+        using ErrorCodeCallback = std::function<void(std::error_code)>;
 
     public:
         ServerBootstrap();
@@ -44,7 +44,8 @@ namespace uranus::network {
         void terminate();
 
         void onAccept(const AcceptCallback &cb);
-        void onRemove(const RemoveCallback &cb);
+
+        void onErrorCode(const ErrorCodeCallback &cb);
         void onException(const ExceptionCallback &cb);
 
     private:
@@ -63,8 +64,7 @@ namespace uranus::network {
         vector<thread> pool_;
 
         AcceptCallback onAccept_;
-        RemoveCallback onRemove_;
+        ErrorCodeCallback onErrorCode_;
         ExceptionCallback onException_;
-
     };
 }

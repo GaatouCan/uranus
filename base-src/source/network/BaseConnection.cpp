@@ -43,6 +43,7 @@ namespace uranus::network {
         co_spawn(strand_, [self = shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
             if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
+                self->onErrorCode(ec);
                 self->disconnect();
                 co_return;
             }
@@ -70,7 +71,7 @@ namespace uranus::network {
         watchdog_.cancel();
 
         // Call the virtual method
-        onDisconnect();
+        this->onDisconnect();
     }
 
     bool BaseConnection::isConnected() const {
@@ -80,10 +81,6 @@ namespace uranus::network {
         return socket_.is_open();
 #endif
     }
-
-    // const std::string &BaseConnection::getKey() const {
-    //     return key_;
-    // }
 
     asio::ip::address BaseConnection::remoteAddress() const {
 #ifdef URANUS_SSL
@@ -116,25 +113,25 @@ namespace uranus::network {
                 if (auto [ec] = co_await watchdog_.async_wait(); ec) {
                     if (ec != asio::error::operation_aborted) {
                         // Not excepted error
-                        onErrorCode(ec);
+                        this->onErrorCode(ec);
                     }
 
                     if (isConnected()) {
-                        disconnect();
+                        this->disconnect();
                     }
 
                     co_return;
                 }
 
-                onTimeout();
+                this->onTimeout();
 
                 if (isConnected()) {
-                    disconnect();
+                    this->disconnect();
                 }
             } while (received_ + expiration_ > std::chrono::steady_clock::now());
         } catch (std::exception &e) {
-            onException(e);
-            disconnect();
+            this->onException(e);
+            this->disconnect();
         }
     }
 }

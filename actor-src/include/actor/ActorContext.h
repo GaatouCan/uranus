@@ -8,7 +8,10 @@
 #include <asio/any_completion_handler.hpp>
 #include <asio/use_awaitable.hpp>
 
+
 namespace uranus::actor {
+
+    using std::unique_ptr;
 
     class ActorContext {
 
@@ -31,14 +34,13 @@ namespace uranus::actor {
         [[nodiscard]] T *getModuleT(const std::string &name) const;
 
         virtual void send(int ty, int64_t target, PackageHandle &&pkg) = 0;
+        virtual void dispatch(int ty, int64_t target, int64_t evt, unique_ptr<DataAsset> &&data) = 0;
 
         template<asio::completion_token_for<void(PackageHandle)> CompletionToken>
         auto call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token = asio::use_awaitable);
 
     protected:
-        virtual void dispatchEvent(int ty, int64_t target, int64_t evt, std::unique_ptr<DataAsset> &&data) = 0;
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) = 0;
-
     };
 
     template<class T>

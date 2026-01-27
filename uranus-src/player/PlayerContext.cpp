@@ -110,7 +110,7 @@ namespace uranus {
         }
     }
 
-    void PlayerContext::dispatchEvent(const int ty, const int64_t target, const int64_t evt, DataAssetHandle &&data) {
+    void PlayerContext::dispatch(const int ty, const int64_t target, const int64_t evt, DataAssetHandle &&data) {
         const auto pid = getPlayerId();
         if (pid < 0)
             return;

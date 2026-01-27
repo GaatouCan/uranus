@@ -55,8 +55,8 @@ namespace uranus {
             return conn;
         });
 
-        bootstrap_->onRemove([](const std::string &key) {
-            SPDLOG_TRACE("Remove connection: {}", key);
+        bootstrap_->onErrorCode([](const std::error_code ec) {
+            SPDLOG_ERROR("Server bootstrap error: {}", ec.message());
         });
 
         bootstrap_->onException([](std::exception &e) {
@@ -100,10 +100,7 @@ namespace uranus {
         } while (false);
 
         if (repeated) {
-            // auto res = login::LoginAuth::PackLoginFailure(pid, "Player ID repeated");
-            // conn->send(std::move(res));
             login::LoginAuth::sendLoginFailure(conn, pid, "Player ID repeated");
-
             return;
         }
 
