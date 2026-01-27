@@ -35,6 +35,7 @@ namespace uranus::actor {
         [[nodiscard]] T *getModuleT(const std::string &name) const;
 
         [[nodiscard]] virtual ServiceMap getServiceMap() const = 0;
+        [[nodiscard]] virtual int64_t queryServiceId(const std::string &name) const = 0;
 
         virtual void send(int ty, int64_t target, PackageHandle &&pkg) = 0;
         virtual void dispatch(int ty, int64_t target, int64_t evt, unique_ptr<DataAsset> &&data) = 0;

@@ -75,6 +75,13 @@ namespace uranus {
         return {};
     }
 
+    int64_t PlayerContext::queryServiceId(const std::string &name) const {
+        if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
+            return mgr->queryServiceId(name);
+        }
+        return -1;
+    }
+
     void PlayerContext::setPlayerId(const int64_t pid) {
         attr().set("PLAYER_ID", pid);
     }

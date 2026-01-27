@@ -85,6 +85,10 @@ namespace uranus {
         return manager_->getServiceMap();
     }
 
+    int64_t ServiceContext::queryServiceId(const std::string &name) const {
+        return manager_->queryServiceId(name);
+    }
+
     void ServiceContext::setServiceId(int64_t sid) {
         attr().set("SERVICE_ID", sid);
     }

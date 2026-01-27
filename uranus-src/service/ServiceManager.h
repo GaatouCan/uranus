@@ -39,6 +39,7 @@ namespace uranus {
         [[nodiscard]] shared_ptr<ServiceContext> find(int64_t sid) const;
 
         [[nodiscard]] ServiceMap getServiceMap() const;
+        [[nodiscard]] int64_t queryServiceId(const std::string &name) const;
 
     private:
         void updateServiceCache();

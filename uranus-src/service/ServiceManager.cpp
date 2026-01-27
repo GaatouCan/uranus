@@ -108,6 +108,15 @@ namespace uranus {
         return result;
     }
 
+    int64_t ServiceManager::queryServiceId(const std::string &name) const {
+        if (!world_.isRunning())
+            return -1;
+
+        shared_lock lock(cacheMutex_);
+        const auto iter = nameToId_.find(name);
+        return iter == nameToId_.end() ? -1 : iter->second;
+    }
+
     void ServiceManager::updateServiceCache() {
         if (!world_.isRunning())
             return;

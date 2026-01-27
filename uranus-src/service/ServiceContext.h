@@ -35,7 +35,9 @@ namespace uranus {
         [[nodiscard]] GameWorld *getWorld() const;
 
         [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
+
         [[nodiscard]] actor::ServiceMap getServiceMap() const override;
+        [[nodiscard]] int64_t queryServiceId(const std::string &name) const override;
 
         void setServiceId(int64_t sid);
         [[nodiscard]] int64_t getServiceId() const;
