@@ -63,3 +63,4 @@ add_subdirectory(protobuf)
 add_subdirectory(uranus-src)
 
 add_subdirectory(gameplay/player)
+add_subdirectory(gameplay/friend)

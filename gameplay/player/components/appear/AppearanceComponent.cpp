@@ -38,6 +38,6 @@ namespace gameplay {
         info.set_current_frame(curFrame_);
         info.set_current_background(curBackground_);
 
-        getPlayer().sendToClient(static_cast<int64_t>(protocol::ProtocolID::kAppearanceInfo), info);
+        getPlayer().sendToClient(protocol::ProtocolID::kAppearanceInfo, info);
     }
 }
