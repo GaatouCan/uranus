@@ -3,7 +3,7 @@
 #include "actor/BaseActorContext.h"
 #include "actor/Envelope.h"
 
-#include <login/DA_PlayerResult.h>
+#include <database/DA_PlayerResult.h>
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
 
@@ -32,7 +32,7 @@ namespace gameplay {
 
     void GamePlayer::onStart(DataAsset *data) {
         if (data != nullptr) {
-            if (const auto *temp = dynamic_cast<uranus::login::DA_PlayerResult *>(data)) {
+            if (const auto *temp = dynamic_cast<uranus::database::DA_PlayerResult *>(data)) {
                 component_.deserialize(temp->data);
             }
         }
