@@ -66,7 +66,11 @@ namespace uranus {
 
         for (const auto &[sid, ctx] : services_) {
             ctx->run(nullptr);
-            SPDLOG_INFO("Started service [{} - {}]", sid, ctx->getService()->getName());
+
+            const auto name = ctx->getService()->getName();
+            SPDLOG_INFO("Started service [{} - {}]", sid, name);
+
+            nameToId_[name] = sid;
         }
     }
 
@@ -90,17 +94,30 @@ namespace uranus {
         return iter == services_.end() ? nullptr : iter->second;
     }
 
-    map<std::string, uint32_t> ServiceManager::getServiceList() const {
+    ServiceMap ServiceManager::getServiceMap() const {
         if (!world_.isRunning())
             return {};
 
-        shared_lock lock(mutex_);
+        ServiceMap result;
 
-        map<std::string, uint32_t> res;
-        for (const auto &[key, val] : services_) {
-            res[val->getService()->getName()] = key;
+        shared_lock lock(cacheMutex_);
+        for (const auto &[name, sid] : nameToId_) {
+            result[name] = sid;
         }
 
-        return res;
+        return result;
+    }
+
+    void ServiceManager::updateServiceCache() {
+        if (!world_.isRunning())
+            return;
+
+        unique_lock cacheLock(cacheMutex_);
+        nameToId_.clear();
+
+        shared_lock lock(mutex_);
+        for (const auto &[key, val] : services_) {
+            nameToId_[val->getService()->getName()] = key;
+        }
     }
 } // uranus

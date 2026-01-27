@@ -17,6 +17,9 @@ namespace uranus {
     using std::unique_lock;
     using std::shared_lock;
 
+    using ServiceMap = map<std::string, int64_t>;
+    using ServiceHashMap = unordered_map<std::string, int64_t>;
+
     class GameWorld;
     class ServiceContext;
 
@@ -35,7 +38,10 @@ namespace uranus {
 
         [[nodiscard]] shared_ptr<ServiceContext> find(int64_t sid) const;
 
-        [[nodiscard]] map<std::string, uint32_t> getServiceList() const;
+        [[nodiscard]] ServiceMap getServiceMap() const;
+
+    private:
+        void updateServiceCache();
 
     private:
         GameWorld &world_;
@@ -44,5 +50,8 @@ namespace uranus {
 
         mutable shared_mutex mutex_;
         unordered_map<int64_t, shared_ptr<ServiceContext>> services_;
+
+        ServiceHashMap nameToId_;
+        mutable shared_mutex cacheMutex_;
     };
 } // uranus
