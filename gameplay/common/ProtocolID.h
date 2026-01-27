@@ -13,6 +13,8 @@ namespace gameplay::protocol {
 		// Source File: ../protobuf/def\greeting.proto
 		kGreetingRequest = 1101,
 		kGreetingResponse = 1102,
+		kPlayerInfoRequest = 1103,
+		kPlayerInfoResponse = 1104,
 
 		// appearance
 		// Source File: ../protobuf/def\appearance.proto

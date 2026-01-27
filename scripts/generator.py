@@ -3,7 +3,7 @@ import os
 import re
 
 VERSION = '0.1'
-TARGET_DIR = '../gameplay'
+TARGET_DIR = '../gameplay/common'
 PROTOBUF_DIR = '../protobuf/def'
 PROTO_FILE = [
     'greeting',
@@ -74,7 +74,7 @@ with open(os.path.join(TARGET_DIR, 'ProtocolID.h'), 'w', encoding='utf-8') as fi
 
     file.write("namespace gameplay::protocol {\n")
 
-    file.write('\tenum class ProtocolID {\n')
+    file.write('\tenum ProtocolID {\n')
 
     package_index = 11
     proto_index = 1

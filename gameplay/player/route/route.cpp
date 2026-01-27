@@ -39,11 +39,10 @@ namespace gameplay {
     }
 
     PackageHandle GamePlayer::onRequest(PackageHandle &&req) {
-
         using namespace gameplay::protocol;
 
         switch (static_cast<ProtocolID>(req->id_)) {
-
+            HANDLE_REQUEST(PlayerInfoRequest)
             default: return nullptr;
         }
     }

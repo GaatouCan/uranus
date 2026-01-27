@@ -25,6 +25,10 @@ namespace gameplay {
 
         void sendInfo() const;
 
+        [[nodiscard]] int getCurrentAvatar() const      { return curAvatar_; }
+        [[nodiscard]] int getCurrentFrame() const       { return curFrame_; }
+        [[nodiscard]] int getCurrentBackground() const  { return curBackground_; }
+
     private:
         int curAvatar_;
         int curFrame_;

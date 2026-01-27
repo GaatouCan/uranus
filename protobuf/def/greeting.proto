@@ -11,3 +11,13 @@ message GreetingRequest {
 message GreetingResponse {
   string data = 1;
 }
+
+message PlayerInfoRequest {
+  string from_service = 1;
+}
+
+message PlayerInfoResponse {
+  int32 current_avatar = 1;
+  int32 current_frame = 2;
+  int32 current_background = 3;
+}
