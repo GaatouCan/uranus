@@ -3,9 +3,14 @@
 #include "actor/BaseActorContext.h"
 #include "actor/Envelope.h"
 
+#include "../common/ProtocolID.h"
+
 #include <database/DA_PlayerResult.h>
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
+
+#include <greeting.pb.h>
+
 
 namespace gameplay {
 
@@ -55,6 +60,19 @@ namespace gameplay {
 
     void GamePlayer::onLogin() {
         component_.onLogin();
+
+        greeting::SyncPlayerInfo info;
+
+        {
+            const auto &comp = component_.getAppearance();
+            info.set_current_avatar(comp.getCurrentAvatar());
+            info.set_current_frame(comp.getCurrentFrame());
+            info.set_current_background(comp.getCurrentBackground());
+        }
+
+        // TODO: Other Info
+
+        sendToService("FriendService", protocol::kSyncPlayerInfo, info);
     }
 
     void GamePlayer::onLogout() {

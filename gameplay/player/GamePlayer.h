@@ -40,6 +40,10 @@ namespace gameplay {
         requires std::derived_from<T, MessageLite>
         void sendToClient(int64_t id, const T &msg) const;
 
+        template<class T>
+        requires std::derived_from<T, MessageLite>
+        void sendToService(const std::string &name, int64_t id, const T &msg) const;
+
         [[nodiscard]] int64_t getPlayerId() const;
 
         ComponentModule &getComponentModule();
@@ -59,5 +63,22 @@ namespace gameplay {
         msg.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
 
         super::sendToClient(std::move(pkg));
+    }
+
+    template<class T>
+    requires std::derived_from<T, MessageLite>
+    void GamePlayer::sendToService(
+        const std::string &name,
+        int64_t id,
+        const T &msg
+    ) const {
+        auto pkg = uranus::actor::Package::getHandle();
+
+        pkg->setId(id);
+
+        pkg->payload_.resize(msg.ByteSizeLong());
+        msg.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
+
+        super::sendToService(name, std::move(pkg));
     }
 }

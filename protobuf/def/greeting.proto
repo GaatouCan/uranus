@@ -21,3 +21,9 @@ message PlayerInfoResponse {
   int32 current_frame = 2;
   int32 current_background = 3;
 }
+
+message SyncPlayerInfo {
+  int32 current_avatar = 1;
+  int32 current_frame = 2;
+  int32 current_background = 3;
+}

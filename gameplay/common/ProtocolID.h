@@ -15,6 +15,7 @@ namespace gameplay::protocol {
 		kGreetingResponse = 1102,
 		kPlayerInfoRequest = 1103,
 		kPlayerInfoResponse = 1104,
+		kSyncPlayerInfo = 1105,
 
 		// appearance
 		// Source File: ../protobuf/def\appearance.proto
