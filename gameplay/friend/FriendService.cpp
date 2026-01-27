@@ -1,8 +1,7 @@
-//
-// Created by admin on 2026/1/27.
-//
-
 #include "FriendService.h"
+#include "../common/ProtocolID.h"
+
+#include <greeting.pb.h>
 
 namespace gameplay {
     FriendService::FriendService() {
@@ -15,13 +14,27 @@ namespace gameplay {
         return "FriendService";
     }
 
-    void FriendService::onPackage(PackageHandle &&pkg) {
+    void FriendService::onPackage(int64_t src, PackageHandle &&pkg) {
+        using namespace protocol;
+
+        if (pkg == nullptr)
+            return;
+
+        switch (pkg->id_) {
+            case kSyncPlayerInfo: {
+                greeting::SyncPlayerInfo info;
+                info.ParseFromArray(pkg->payload_.data(), pkg->payload_.size());
+            }
+            break;
+            default: break;
+        }
+
     }
 
-    void FriendService::onEvent(int64_t evt, DataAsset *data) {
+    void FriendService::onEvent(int64_t src, int64_t evt, DataAsset *data) {
     }
 
-    PackageHandle FriendService::onRequest(PackageHandle &&req) {
+    PackageHandle FriendService::onRequest(int64_t src, PackageHandle &&req) {
         // TODO
         return nullptr;
     }

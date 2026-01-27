@@ -23,10 +23,10 @@ namespace uranus::actor {
         virtual void onStart(DataAsset *data);
         virtual void onTerminate();
 
-        virtual void onPackage(PackageHandle &&pkg) = 0;
-        virtual void onEvent(int64_t evt, DataAsset *data) = 0;
+        virtual void onPackage(int64_t src, PackageHandle &&pkg) = 0;
+        virtual void onEvent(int64_t src, int64_t evt, DataAsset *data) = 0;
 
-        virtual PackageHandle onRequest(PackageHandle &&req) = 0;
+        virtual PackageHandle onRequest(int64_t src, PackageHandle &&req) = 0;
 
     private:
         ActorContext *ctx_;

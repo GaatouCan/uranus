@@ -184,7 +184,7 @@ namespace uranus::actor {
 
                 if ((evl.type & Envelope::kEvent) != 0) {
                     if (const auto *da = std::get_if<DataAssetHandle>(&evl.variant)) {
-                        handle_->onEvent(evl.event, da->get());
+                        handle_->onEvent(evl.source, evl.event, da->get());
                     }
                 }
                 // 异步请求处理
@@ -201,7 +201,7 @@ namespace uranus::actor {
                     }
 
                     if (auto *req = std::get_if<PackageHandle>(&evl.variant)) {
-                        auto res = handle_->onRequest(std::move(*req));
+                        auto res = handle_->onRequest(evl.source, std::move(*req));
                         sendResponse(type, sess, from, std::move(res));
                     }
                 }
@@ -248,7 +248,7 @@ namespace uranus::actor {
                 // 普通信息
                 else {
                     if (auto *pkg = std::get_if<PackageHandle>(&evl.variant)) {
-                        handle_->onRequest(std::move(*pkg));
+                        handle_->onRequest(evl.source, std::move(*pkg));
                     }
                 }
             }

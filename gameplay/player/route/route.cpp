@@ -14,7 +14,7 @@ namespace gameplay {
 #define HANDLE_REQUEST(proto) \
     case k##proto: return Request_##proto(this, std::move(req));
 
-    void GamePlayer::onPackage(PackageHandle &&pkg) {
+    void GamePlayer::onPackage(int64_t src, PackageHandle &&pkg) {
         using namespace gameplay::protocol;
 
         switch (pkg->id_) {
@@ -29,7 +29,7 @@ namespace gameplay {
         }
     }
 
-    void GamePlayer::onEvent(const int64_t evt, DataAsset *data) {
+    void GamePlayer::onEvent(int64_t src, const int64_t evt, DataAsset *data) {
         using event::EventType;
 
         switch (evt) {
@@ -38,7 +38,7 @@ namespace gameplay {
         }
     }
 
-    PackageHandle GamePlayer::onRequest(PackageHandle &&req) {
+    PackageHandle GamePlayer::onRequest(int64_t src, PackageHandle &&req) {
         using namespace gameplay::protocol;
 
         switch (static_cast<ProtocolID>(req->id_)) {
