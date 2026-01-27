@@ -36,8 +36,6 @@ namespace gameplay {
         void onEvent(int64_t evt, DataAsset *data) override;
         PackageHandle onRequest(PackageHandle &&req) override;
 
-        void sendToClient(PackageHandle &&pkg) const;
-
         template<class T>
         requires std::derived_from<T, MessageLite>
         void sendToClient(int64_t id, const T &msg) const;

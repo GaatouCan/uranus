@@ -61,10 +61,6 @@ namespace gameplay {
         component_.onLogout();
     }
 
-    void GamePlayer::sendToClient(PackageHandle &&pkg) const {
-        getContext()->send(Envelope::kToClient, 0, std::move(pkg));
-    }
-
     int64_t GamePlayer::getPlayerId() const {
         auto *ctx = getContext();
         if (ctx == nullptr)

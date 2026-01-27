@@ -8,5 +8,8 @@ namespace uranus::actor {
     public:
         BasePlayer();
         ~BasePlayer() override;
+
+        void sendToClient(PackageHandle &&pkg) const;
+        void sendToService(const std::string &name, PackageHandle &&pkg) const;
     };
 }
