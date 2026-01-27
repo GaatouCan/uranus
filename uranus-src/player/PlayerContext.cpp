@@ -67,6 +67,14 @@ namespace uranus {
         return nullptr;
     }
 
+    actor::ServiceMap PlayerContext::getServiceMap() const {
+        if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
+            return mgr->getServiceMap();
+        }
+
+        return {};
+    }
+
     void PlayerContext::setPlayerId(const int64_t pid) {
         attr().set("PLAYER_ID", pid);
     }

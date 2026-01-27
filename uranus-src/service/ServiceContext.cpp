@@ -81,6 +81,10 @@ namespace uranus {
         return nullptr;
     }
 
+    actor::ServiceMap ServiceContext::getServiceMap() const {
+        return manager_->getServiceMap();
+    }
+
     void ServiceContext::setServiceId(int64_t sid) {
         attr().set("SERVICE_ID", sid);
     }

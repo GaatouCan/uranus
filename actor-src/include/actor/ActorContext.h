@@ -7,11 +7,12 @@
 #include <base/AttributeMap.h>
 #include <asio/any_completion_handler.hpp>
 #include <asio/use_awaitable.hpp>
-
+#include <map>
 
 namespace uranus::actor {
 
     using std::unique_ptr;
+    using ServiceMap = std::map<std::string, int64_t>;
 
     class ActorContext {
 
@@ -32,6 +33,8 @@ namespace uranus::actor {
         template<class T>
         requires std::derived_from<T, ServerModule>
         [[nodiscard]] T *getModuleT(const std::string &name) const;
+
+        [[nodiscard]] virtual ServiceMap getServiceMap() const = 0;
 
         virtual void send(int ty, int64_t target, PackageHandle &&pkg) = 0;
         virtual void dispatch(int ty, int64_t target, int64_t evt, unique_ptr<DataAsset> &&data) = 0;

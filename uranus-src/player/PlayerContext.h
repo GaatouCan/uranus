@@ -28,6 +28,8 @@ namespace uranus {
 
         [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
 
+        [[nodiscard]] actor::ServiceMap getServiceMap() const override;
+
         void setPlayerId(int64_t pid);
         [[nodiscard]] int64_t getPlayerId() const;
 
