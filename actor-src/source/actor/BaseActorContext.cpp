@@ -1,12 +1,17 @@
 ﻿#include "BaseActorContext.h"
 #include "BaseActor.h"
 
+#include <asio/experimental/awaitable_operators.hpp>
 #include <asio/detached.hpp>
 #include <asio/bind_allocator.hpp>
 #include <ranges>
 
 
 namespace uranus::actor {
+
+    using namespace asio::experimental::awaitable_operators;
+    using asio::detached;
+
     BaseActorContext::SessionNode::SessionNode(asio::io_context &ctx, SessionHandler &&h, const int64_t s)
         : handler_(std::move(h)),
           guard_(asio::make_work_guard(handler_)),
@@ -34,7 +39,7 @@ namespace uranus::actor {
             } catch (std::exception &e) {
 
             }
-        }, asio::detached);
+        }, detached);
     }
 
     BaseActorContext::SessionNode::~SessionNode() {
@@ -77,7 +82,8 @@ namespace uranus::actor {
         : ctx_(ctx),
           strand_(asio::make_strand(ctx_)),
           handle_(std::move(handle)),
-          mailbox_(ctx_, 1024) {
+          mailbox_(ctx_, 1024),
+          ticker_(ctx_) {
 #ifndef NDEBUG
         assert(handle_ != nullptr);
 #endif
@@ -98,8 +104,15 @@ namespace uranus::actor {
 
     void BaseActorContext::run(DataAssetHandle &&data) {
         handle_->onStart(data.get());
-        co_spawn(ctx_, [self = shared_from_this()]() mutable -> awaitable<void> {
-            co_await self->process();
+        co_spawn(strand_, [self = shared_from_this()]() mutable -> awaitable<void> {
+            if (self->handle_->enableTick_) {
+                co_await(
+                  self->process() &&
+                  self->tick()
+                );
+            } else {
+                co_await self->process();
+            }
         }, asio::detached);
     }
 
@@ -109,6 +122,7 @@ namespace uranus::actor {
 
         running_.clear();
 
+        ticker_.cancel();
         mailbox_.cancel();
         mailbox_.close();
     }
@@ -257,25 +271,6 @@ namespace uranus::actor {
             }
 
             // 释放所有会话
-            // for (auto it = sessions_.begin(); it != sessions_.end();) {
-            //     if (it->second == nullptr) {
-            //         ++it;
-            //         continue;
-            //     }
-            //
-            //     const auto node = it->second;
-            //
-            //     auto alloc = asio::get_associated_allocator(node->handle_, asio::recycling_allocator<void>());
-            //     asio::dispatch(
-            //         node->guard_.get_executor(),
-            //         asio::bind_allocator(alloc, [handler = std::move(node->handle_)]() mutable {
-            //             std::move(handler)(nullptr);
-            //         })
-            //     );
-            //
-            //     it = sessions_.erase(it);
-            // }
-
             for (const auto &node: sessions_ | std::views::values) {
                 node->cancel();
             }
@@ -287,6 +282,27 @@ namespace uranus::actor {
             handle_->onTerminate();
         } catch (std::exception &e) {
             // onException(e);
+        }
+    }
+
+    awaitable<void> BaseActorContext::tick() {
+        try {
+            auto point = std::chrono::steady_clock::now();
+            constexpr SteadyDuration kTickDelta = std::chrono::microseconds(500);
+            while (isRunning()) {
+                point += kTickDelta;
+                ticker_.expires_at(point);
+
+                const auto [ec] = co_await ticker_.async_wait();
+                if (ec) {
+                    //
+                    break;
+                }
+
+                handle_->onTick(point, kTickDelta);
+            }
+        } catch (std::exception &e) {
+
         }
     }
 }

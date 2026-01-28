@@ -85,6 +85,7 @@ namespace uranus::actor {
 
     private:
         awaitable<void> process();
+        awaitable<void> tick();
 
     private:
         asio::io_context &ctx_;
@@ -94,7 +95,9 @@ namespace uranus::actor {
         ActorHandle handle_;
 
         atomic_flag running_;
+
         ConcurrentChannel<Envelope> mailbox_;
+        SteadyTimer ticker_;
 
         IdentAllocator<int64_t, true> sessAlloc_;
         SessionMap sessions_;

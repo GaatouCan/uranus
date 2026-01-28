@@ -3,12 +3,20 @@
 #include "Package.h"
 #include "base/noncopy.h"
 
+#include <chrono>
+
 namespace uranus::actor {
 
     class ActorContext;
+    class BaseActorContext;
     class DataAsset;
 
+    using SteadyTimePoint = std::chrono::steady_clock::time_point;
+    using SteadyDuration = std::chrono::steady_clock::duration;
+
     class ACTOR_API BaseActor {
+
+        friend class BaseActorContext;
 
     public:
         BaseActor();
@@ -28,8 +36,11 @@ namespace uranus::actor {
 
         virtual PackageHandle onRequest(int64_t src, PackageHandle &&req) = 0;
 
+        virtual void onTick(SteadyTimePoint now, SteadyDuration delta);
+
     private:
         ActorContext *ctx_;
+        bool enableTick_;
     };
 
     inline constexpr auto kUranusActorABIVersion = 1;

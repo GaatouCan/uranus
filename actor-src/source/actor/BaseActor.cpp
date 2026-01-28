@@ -21,4 +21,7 @@ namespace uranus::actor {
 
     void BaseActor::onTerminate() {
     }
+
+    void BaseActor::onTick(SteadyTimePoint now, SteadyDuration delta) {
+    }
 }
