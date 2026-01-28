@@ -107,6 +107,8 @@ namespace uranus::actor {
         if (!mailbox_.is_open())
             return;
 
+        running_.clear();
+
         mailbox_.cancel();
         mailbox_.close();
     }
