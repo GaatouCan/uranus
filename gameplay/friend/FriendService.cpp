@@ -43,11 +43,5 @@ namespace gameplay {
 using gameplay::FriendService;
 
 EXPORT_ACTOR_VERSION
-
-ACTOR_EXPORT FriendService *CreateInstance() {
-    return new FriendService();
-}
-
-ACTOR_EXPORT void DeleteInstance(FriendService *ser) {
-    delete ser;
-}
+EXPORT_CREATE_SERVICE(FriendService)
+EXPORT_DELETE_SERVICE

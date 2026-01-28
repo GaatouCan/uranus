@@ -17,3 +17,13 @@ namespace uranus::actor {
         void sendToService(const std::string &name, PackageHandle &&pkg) const;
     };
 }
+
+#define EXPORT_CREATE_SERVICE(ser)                          \
+ACTOR_EXPORT uranus::actor::BaseService *CreateInstance() { \
+    return new ser();                                       \
+}
+
+#define EXPORT_DELETE_SERVICE                                       \
+ACTOR_EXPORT void DeleteInstance(uranus::actor::BaseService *ser) { \
+    delete ser;                                                     \
+}

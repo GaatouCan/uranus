@@ -96,15 +96,8 @@ namespace gameplay {
     }
 }
 
-using uranus::actor::BasePlayer;
 using gameplay::GamePlayer;
 
 EXPORT_ACTOR_VERSION
-
-ACTOR_EXPORT BasePlayer *CreatePlayer() {
-    return new GamePlayer();
-}
-
-ACTOR_EXPORT void DeletePlayer(BasePlayer *plr) {
-    delete plr;
-}
+EXPORT_CREATE_PLAYER(GamePlayer)
+EXPORT_DELETE_PLAYER
