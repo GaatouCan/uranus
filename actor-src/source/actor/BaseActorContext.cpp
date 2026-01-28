@@ -80,7 +80,6 @@ namespace uranus::actor {
 
     BaseActorContext::BaseActorContext(asio::io_context &ctx, ActorHandle &&handle)
         : ctx_(ctx),
-          strand_(asio::make_strand(ctx_)),
           handle_(std::move(handle)),
           mailbox_(ctx_, 1024),
           ticker_(ctx_) {
@@ -104,7 +103,7 @@ namespace uranus::actor {
 
     void BaseActorContext::run(DataAssetHandle &&data) {
         handle_->onStart(data.get());
-        co_spawn(strand_, [self = shared_from_this()]() mutable -> awaitable<void> {
+        co_spawn(ctx_, [self = shared_from_this()]() mutable -> awaitable<void> {
             if (self->handle_->enableTick_) {
                 co_await(
                   self->process() &&
@@ -142,7 +141,7 @@ namespace uranus::actor {
         const int64_t evt,
         unique_ptr<DataAsset> &&data
     ) {
-        Envelope evl(Envelope::kEvent, 0, evt, std::move(data));
+        Envelope evl(0, 0, evt, std::move(data));
         this->pushEnvelope(std::move(evl));
     }
 
@@ -217,56 +216,77 @@ namespace uranus::actor {
                     break;
                 }
 
-                if ((evl.type & Envelope::kEvent) != 0) {
-                    if (const auto *da = std::get_if<DataAssetHandle>(&evl.variant)) {
-                        handle_->onEvent(evl.source, evl.event, da->get());
-                    }
-                }
-                // 异步请求处理
-                else if ((evl.type & Envelope::kRequest) != 0) {
-                    const auto sess = evl.session;
-                    const auto from = evl.source;
-                    int type = Envelope::kResponse;
+                switch (evl.tag) {
+                    case Envelope::kPackage: {
+                        auto *pkg = std::get_if<PackageHandle>(&evl.variant);
 
-                    if ((evl.type & Envelope::kFromPlayer) != 0) {
-                        type |= Envelope::kToPlayer;
-                    }
-                    if ((evl.type & Envelope::kFromService) != 0) {
-                        type |= Envelope::kToService;
-                    }
+                        // 异步请求处理
+                        if ((evl.type & Envelope::kRequest) != 0) {
+                            const auto sess = evl.session;
+                            const auto from = evl.source;
+                            int type = Envelope::kResponse;
 
-                    if (auto *req = std::get_if<PackageHandle>(&evl.variant)) {
-                        auto res = handle_->onRequest(evl.source, std::move(*req));
-                        sendResponse(type, sess, from, std::move(res));
-                    }
-                }
-                // 异步请求返回
-                else if ((evl.type & Envelope::kResponse) != 0) {
-                    shared_ptr<SessionNode> node = nullptr;
+                            if ((evl.type & Envelope::kFromPlayer) != 0) {
+                                type |= Envelope::kToPlayer;
+                            }
+                            if ((evl.type & Envelope::kFromService) != 0) {
+                                type |= Envelope::kToService;
+                            }
 
-                    // 查找会话节点
-                    {
-                        unique_lock lock(sessMutex_);
-                        if (const auto it = sessions_.find(evl.session); it != sessions_.end()) {
-                            node = it->second;
-                            sessions_.erase(it);
+                            if (pkg != nullptr) {
+                                auto res = handle_->onRequest(evl.source, std::move(*pkg));
+                                sendResponse(type, sess, from, std::move(res));
+                            }
+                        }
+                        // 异步请求返回
+                        else if ((evl.type & Envelope::kResponse) != 0) {
+                            shared_ptr<SessionNode> node = nullptr;
+
+                            // 查找会话节点
+                            {
+                                unique_lock lock(sessMutex_);
+                                if (const auto it = sessions_.find(evl.session); it != sessions_.end()) {
+                                    node = it->second;
+                                    sessions_.erase(it);
+                                }
+                            }
+
+                            if (node != nullptr) {
+                                if (pkg != nullptr) {
+                                    node->dispatch(std::move(*pkg));
+                                } else {
+                                    node->cancel();
+                                }
+                                sessAlloc_.recycle(node->sess_);
+                            }
+                        }
+                        // 普通信息
+                        else {
+                            if (pkg != nullptr) {
+                                handle_->onRequest(evl.source, std::move(*pkg));
+                            }
                         }
                     }
-
-                    if (node != nullptr) {
-                        if (auto *res = std::get_if<PackageHandle>(&evl.variant)) {
-                            node->dispatch(std::move(*res));
-                        } else {
-                            node->cancel();
+                    break;
+                    case Envelope::kDataAsset: {
+                        if (const auto *da = std::get_if<DataAssetHandle>(&evl.variant)) {
+                            handle_->onEvent(evl.source, evl.event, da->get());
                         }
-                        sessAlloc_.recycle(node->sess_);
                     }
-                }
-                // 普通信息
-                else {
-                    if (auto *pkg = std::get_if<PackageHandle>(&evl.variant)) {
-                        handle_->onRequest(evl.source, std::move(*pkg));
+                    break;
+                    case Envelope::kTickInfo: {
+                        if (const auto *info = std::get_if<ActorTickInfo>(&evl.variant)) {
+                            handle_->onTick(info->now, info->delta);
+                        }
                     }
+                    break;
+                    case Envelope::kTask: {
+                        if (auto *task = std::get_if<ActorTask>(&evl.variant)) {
+                            std::invoke(*task, handle_.get());
+                        }
+                    }
+                    break;
+                    default: break;
                 }
             }
 
@@ -299,7 +319,8 @@ namespace uranus::actor {
                     break;
                 }
 
-                // handle_->onTick(point, kTickDelta);
+                Envelope evl(point, kTickDelta);
+                this->pushEnvelope(std::move(evl));
             }
         } catch (std::exception &e) {
 

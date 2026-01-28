@@ -138,7 +138,7 @@ namespace uranus {
         if (pid < 0)
             return;
 
-        if ((ty & Envelope::kToService) != 0 && (ty & Envelope::kEvent) != 0) {
+        if ((ty & Envelope::kToService) != 0) {
             if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
                 if (const auto ctx = mgr->find(target)) {
                     Envelope evl((Envelope::kFromPlayer | ty), pid, evt, std::move(data));

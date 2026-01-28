@@ -89,7 +89,6 @@ namespace uranus::actor {
 
     private:
         asio::io_context &ctx_;
-        ExecutorStrand strand_;
 
         AttributeMap attr_;
         ActorHandle handle_;

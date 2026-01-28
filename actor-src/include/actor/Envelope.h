@@ -4,12 +4,33 @@
 #include "DataAsset.h"
 
 #include <variant>
+#include <chrono>
+#include <functional>
 
 namespace uranus::actor {
 
+    class BaseActor;
+
     using DataAssetHandle = std::unique_ptr<DataAsset>;
 
+    using SteadyTimePoint = std::chrono::steady_clock::time_point;
+    using SteadyDuration = std::chrono::steady_clock::duration;
+
+    struct ActorTickInfo {
+        SteadyTimePoint now;
+        SteadyDuration delta;
+    };
+
+    using ActorTask = std::function<void(BaseActor *)>;
+
     struct ACTOR_API Envelope final {
+
+        enum EnvelopeTag {
+            kPackage    = 1,
+            kDataAsset  = 2,
+            kTickInfo   = 3,
+            kTask       = 4
+        };
 
         enum EnvelopeType {
             kFromClient     = 1,
@@ -20,10 +41,16 @@ namespace uranus::actor {
             kToService      = 1 << 5,
             kRequest        = 1 << 6,
             kResponse       = 1 << 7,
-            kEvent          = 1 << 8,
         };
 
-        using VariantHandle = std::variant<PackageHandle, DataAssetHandle>;
+        using VariantHandle = std::variant<
+            PackageHandle,
+            DataAssetHandle,
+            ActorTickInfo,
+            ActorTask
+        >;
+
+        int32_t tag;
 
         int32_t type;
         int64_t source;
@@ -41,6 +68,8 @@ namespace uranus::actor {
         Envelope(int32_t ty, int64_t src, int64_t sess, PackageHandle &&pkg);
 
         Envelope(int32_t ty, int64_t src, int64_t evt, DataAssetHandle &&data);
+
+        Envelope(SteadyTimePoint now, SteadyDuration delta);
 
         Envelope(const Envelope &) = delete;
         Envelope &operator=(const Envelope &) = delete;

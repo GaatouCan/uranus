@@ -173,9 +173,6 @@ namespace uranus {
         if (sid < 0)
             return;
 
-        if ((ty & Envelope::kEvent) == 0)
-            return;
-
         if ((ty & Envelope::kToService) != 0) {
             if (target == sid)
                 return;
