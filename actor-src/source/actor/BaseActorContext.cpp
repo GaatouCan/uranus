@@ -314,7 +314,7 @@ namespace uranus::actor {
     awaitable<void> BaseActorContext::tick() {
         try {
             auto point = std::chrono::steady_clock::now();
-            constexpr SteadyDuration kTickDelta = std::chrono::microseconds(500);
+            constexpr SteadyDuration kTickDelta = std::chrono::milliseconds(500);
             while (isRunning()) {
                 point += kTickDelta;
                 ticker_.expires_at(point);
