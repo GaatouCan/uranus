@@ -17,7 +17,7 @@ namespace uranus::actor {
     class ActorContext {
 
     protected:
-        using SessionHandle = asio::any_completion_handler<void(PackageHandle)>;
+        using SessionHandler = asio::any_completion_handler<void(PackageHandle)>;
 
     public:
         ActorContext() = default;
@@ -44,7 +44,7 @@ namespace uranus::actor {
         auto call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token = asio::use_awaitable);
 
     protected:
-        virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) = 0;
+        virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandler &&handle) = 0;
     };
 
     template<class T>

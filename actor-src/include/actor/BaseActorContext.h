@@ -34,15 +34,16 @@ namespace uranus::actor {
         public:
             SessionNode() = delete;
 
-            SessionNode(asio::io_context &ctx, SessionHandle &&h, int64_t s);
+            SessionNode(asio::io_context &ctx, SessionHandler &&h, int64_t s);
             ~SessionNode();
 
             DISABLE_COPY_MOVE(SessionNode)
 
+            void dispatch(PackageHandle &&res);
             void cancel();
 
         public:
-            SessionHandle       handle_;
+            SessionHandler      handler_;
             SessionWorkGuard    guard_;
             SteadyTimer         timer_;
             int64_t             sess_;
@@ -77,7 +78,7 @@ namespace uranus::actor {
         void pushEnvelope(Envelope &&envelope);
 
     protected:
-        void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandle &&handle) override;
+        void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandler &&handle) override;
 
         virtual void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) = 0;
         virtual void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) = 0;
