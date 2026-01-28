@@ -60,6 +60,34 @@ namespace uranus {
                     continue;
                 }
 
+                {
+                    using actor::ActorVersion;
+                    using actor::kUranusActorABIVersion;
+                    using actor::kUranusActorAPIVersion;
+                    using actor::kUranusActorHeaderVersion;
+                    using VersionGetter = const ActorVersion* (*)();
+
+                    auto *getter = library.getSymbol<VersionGetter>("GetActorVersion");
+                    if (getter == nullptr) {
+                        SPDLOG_ERROR("Failed to get service[{}] library version", entry.path().string());
+                        exit(-2);
+                    }
+
+                    const auto *ver = getter();
+                    if (ver == nullptr) {
+                        SPDLOG_ERROR("Failed to get service[{}] library version", entry.path().string());
+                        exit(-2);
+                    }
+
+                    if (ver->abi_version != kUranusActorABIVersion ||
+                        ver->api_version != kUranusActorAPIVersion ||
+                        ver->header_version != kUranusActorHeaderVersion
+                    ) {
+                        SPDLOG_ERROR("Service[{}] library version is not match!!!", entry.path().string());
+                        exit(-2);
+                    }
+                }
+
                 const auto creator = library.getSymbol<ServiceCreator>("CreateInstance");
                 const auto deleter = library.getSymbol<ServiceDeleter>("DeleteInstance");
 

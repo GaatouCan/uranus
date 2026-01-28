@@ -99,6 +99,8 @@ namespace gameplay {
 using uranus::actor::BasePlayer;
 using gameplay::GamePlayer;
 
+EXPORT_ACTOR_VERSION
+
 ACTOR_EXPORT BasePlayer *CreatePlayer() {
     return new GamePlayer();
 }

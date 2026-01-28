@@ -1,7 +1,9 @@
 #include "PlayerFactory.h"
 
+#include <actor/BaseActor.h>
 #include <filesystem>
 #include <spdlog/spdlog.h>
+
 
 namespace uranus {
     static constexpr auto kPlayerDirectory = "player";
@@ -38,6 +40,34 @@ namespace uranus {
         if (!lib_.available()) {
             SPDLOG_ERROR("player library not available");
             exit(-2);
+        }
+
+        {
+            using actor::ActorVersion;
+            using actor::kUranusActorABIVersion;
+            using actor::kUranusActorAPIVersion;
+            using actor::kUranusActorHeaderVersion;
+            using VersionGetter = const ActorVersion* (*)();
+
+            auto *getter = lib_.getSymbol<VersionGetter>("GetActorVersion");
+            if (getter == nullptr) {
+                SPDLOG_ERROR("Failed to get player library version");
+                exit(-2);
+            }
+
+            const auto *ver = getter();
+            if (ver == nullptr) {
+                SPDLOG_ERROR("Failed to get player library version");
+                exit(-2);
+            }
+
+            if (ver->abi_version != kUranusActorABIVersion ||
+                ver->api_version != kUranusActorAPIVersion ||
+                ver->header_version != kUranusActorHeaderVersion
+            ) {
+                SPDLOG_ERROR("Player library version is not match!!!");
+                exit(-2);
+            }
         }
 
         creator_ = lib_.getSymbol<PlayerCreator>("CreatePlayer");

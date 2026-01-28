@@ -42,6 +42,8 @@ namespace gameplay {
 
 using gameplay::FriendService;
 
+EXPORT_ACTOR_VERSION
+
 ACTOR_EXPORT FriendService *CreateInstance() {
     return new FriendService();
 }

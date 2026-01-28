@@ -31,6 +31,16 @@ namespace uranus::actor {
     private:
         ActorContext *ctx_;
     };
+
+    inline constexpr auto kUranusActorABIVersion = 1;
+    inline constexpr auto kUranusActorAPIVersion = 1;
+    inline constexpr auto kUranusActorHeaderVersion = 1;
+
+    struct ActorVersion final {
+        uint32_t abi_version;
+        uint32_t api_version;
+        uint32_t header_version;
+    };
 }
 
 #define ACTOR_GET_MODULE(module) \
@@ -43,4 +53,13 @@ namespace uranus::actor {
 #   define ACTOR_EXPORT extern "C" __attribute__((visibility("default")))
 # endif
 
-
+#define EXPORT_ACTOR_VERSION                                        \
+ACTOR_EXPORT const uranus::actor::ActorVersion *GetActorVersion() { \
+    using namespace uranus::actor;                                  \
+    static constexpr ActorVersion ver {                             \
+        kUranusActorABIVersion,                                     \
+        kUranusActorAPIVersion,                                     \
+        kUranusActorHeaderVersion                                   \
+    };                                                              \
+    return &ver;                                                    \
+}
