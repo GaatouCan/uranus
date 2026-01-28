@@ -83,6 +83,9 @@ namespace uranus::actor {
         virtual void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) = 0;
         virtual void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) = 0;
 
+        virtual void onErrorCode(std::error_code ec);
+        virtual void onException(std::exception &e);
+
     private:
         awaitable<void> process();
         awaitable<void> tick();

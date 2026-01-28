@@ -199,6 +199,12 @@ namespace uranus::actor {
         sendRequest(ty, sess, target, std::move(req));
     }
 
+    void BaseActorContext::onErrorCode(std::error_code ec) {
+    }
+
+    void BaseActorContext::onException(std::exception &e) {
+    }
+
     awaitable<void> BaseActorContext::process() {
         running_.test_and_set();
         try {
@@ -212,7 +218,7 @@ namespace uranus::actor {
                 }
 
                 if (ec) {
-                    // onErrorCode(ec);
+                    this->onErrorCode(ec);
                     break;
                 }
 
@@ -301,7 +307,7 @@ namespace uranus::actor {
             // Call actor terminate
             handle_->onTerminate();
         } catch (std::exception &e) {
-            // onException(e);
+            this->onException(e);
         }
     }
 
@@ -315,7 +321,7 @@ namespace uranus::actor {
 
                 const auto [ec] = co_await ticker_.async_wait();
                 if (ec) {
-                    //
+                    this->onErrorCode(ec);
                     break;
                 }
 
@@ -323,7 +329,7 @@ namespace uranus::actor {
                 this->pushEnvelope(std::move(evl));
             }
         } catch (std::exception &e) {
-
+            this->onException(e);
         }
     }
 }

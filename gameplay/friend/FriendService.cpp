@@ -5,6 +5,7 @@
 
 namespace gameplay {
     FriendService::FriendService() {
+        enableTick_ = true;
     }
 
     FriendService::~FriendService() {
