@@ -40,6 +40,8 @@ namespace uranus::actor {
 
     private:
         ActorContext *ctx_;
+
+    protected:
         bool enableTick_;
     };
 

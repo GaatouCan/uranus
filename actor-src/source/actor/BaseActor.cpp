@@ -2,7 +2,8 @@
 
 namespace uranus::actor {
     BaseActor::BaseActor()
-        : ctx_(nullptr) {
+        : ctx_(nullptr),
+          enableTick_(false) {
     }
 
     BaseActor::~BaseActor() {
