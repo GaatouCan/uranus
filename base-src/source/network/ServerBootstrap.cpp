@@ -129,7 +129,8 @@ namespace uranus::network {
 
 
             while (!ctx_.stopped()) {
-                auto [ec, socket] = co_await acceptor_.async_accept();
+                asio::ip::tcp::socket socket(asio::make_strand(ctx_));
+                auto [ec] = co_await acceptor_.async_accept(socket);
 
                 if (ec) {
                     if (onErrorCode_) {

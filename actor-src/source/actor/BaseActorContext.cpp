@@ -113,7 +113,7 @@ namespace uranus::actor {
             } else {
                 co_await self->process();
             }
-        }, asio::detached);
+        }, detached);
     }
 
     void BaseActorContext::terminate() {
@@ -299,7 +299,7 @@ namespace uranus::actor {
                     break;
                 }
 
-                handle_->onTick(point, kTickDelta);
+                // handle_->onTick(point, kTickDelta);
             }
         } catch (std::exception &e) {
 

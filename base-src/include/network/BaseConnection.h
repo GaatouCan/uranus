@@ -47,7 +47,6 @@ namespace uranus::network {
 
     protected:
         TcpSocket socket_;
-        ExecutorStrand strand_;
 
         AttributeMap attr_;
 

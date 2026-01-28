@@ -12,7 +12,6 @@ namespace uranus::network {
 
     BaseConnection::BaseConnection(TcpSocket &&socket)
         : socket_(std::move(socket)),
-          strand_(asio::make_strand(socket_.get_executor())),
           watchdog_(socket_.get_executor()),
           expiration_(-1) {
 
@@ -40,7 +39,7 @@ namespace uranus::network {
         // Mark the received timestamp
         received_ = std::chrono::steady_clock::now();
 
-        co_spawn(strand_, [self = shared_from_this()]() -> awaitable<void> {
+        co_spawn(socket_.get_executor(), [self = shared_from_this()]() -> awaitable<void> {
 #ifdef URANUS_SSL
             if (const auto [ec] = co_await self->socket_.async_handshake(asio::ssl::stream_base::server); ec) {
                 self->onErrorCode(ec);
@@ -63,15 +62,20 @@ namespace uranus::network {
         if (!isConnected())
             return;
 
-#ifdef URANUS_SSL
-        socket_.next_layer().close();
-#else
-        socket_.close();
-#endif
-        watchdog_.cancel();
+        asio::dispatch(socket_.get_executor(), [self = shared_from_this()]() {
+            if (!self->isConnected())
+                return;
 
-        // Call the virtual method
-        this->onDisconnect();
+#ifdef URANUS_SSL
+            self->socket_.next_layer().close();
+#else
+            self->socket_.close();
+#endif
+            self->watchdog_.cancel();
+
+            // Call the virtual method
+            self->onDisconnect();
+        });
     }
 
     bool BaseConnection::isConnected() const {
