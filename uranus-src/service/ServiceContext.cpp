@@ -81,12 +81,28 @@ namespace uranus {
         return nullptr;
     }
 
-    actor::ServiceMap ServiceContext::getServiceMap() const {
-        return manager_->getServiceMap();
+    ActorMap ServiceContext::getActorMap(const std::string &type) const {
+        if (type == "service") {
+            return manager_->getServiceMap();
+        }
+
+        if (type == "player") {
+            // TODO
+        }
+
+        return {};
     }
 
-    int64_t ServiceContext::queryServiceId(const std::string &name) const {
-        return manager_->queryServiceId(name);
+    int64_t ServiceContext::queryActorId(const std::string &type, const std::string &name) const {
+        if (type == "service") {
+            return manager_->queryServiceId(name);
+        }
+
+        if (type == "player") {
+            // TODO
+        }
+
+        return -1;
     }
 
     void ServiceContext::setServiceId(int64_t sid) {

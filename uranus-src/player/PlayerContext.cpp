@@ -67,17 +67,25 @@ namespace uranus {
         return nullptr;
     }
 
-    actor::ServiceMap PlayerContext::getServiceMap() const {
-        if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
-            return mgr->getServiceMap();
+    ActorMap PlayerContext::getActorMap(const std::string &type) const {
+        if (type == "service") {
+            if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
+                return mgr->getServiceMap();
+            }
+        } else if (type == "player") {
+            // TODO:
         }
 
         return {};
     }
 
-    int64_t PlayerContext::queryServiceId(const std::string &name) const {
-        if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
-            return mgr->queryServiceId(name);
+    int64_t PlayerContext::queryActorId(const std::string &type, const std::string &name) const {
+        if (type == "service") {
+            if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
+                return mgr->queryServiceId(name);
+            }
+        } else if (type == "player") {
+            // TODO
         }
         return -1;
     }

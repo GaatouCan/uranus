@@ -18,7 +18,7 @@ namespace uranus::actor {
     }
 
     void BaseService::sendToService(const std::string &name, PackageHandle &&pkg) const {
-        if (const auto sid = getContext()->queryServiceId(name); sid >= 0) {
+        if (const auto sid = getContext()->queryActorId("service", name); sid >= 0) {
             getContext()->send(Envelope::kToService, sid, std::move(pkg));
         }
     }

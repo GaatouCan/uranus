@@ -9,6 +9,7 @@ namespace uranus {
     using actor::ServerModule;
     using actor::PackageHandle;
     using actor::DataAssetHandle;
+    using actor::ActorMap;
 
     class PlayerManager;
     class GameWorld;
@@ -28,8 +29,8 @@ namespace uranus {
 
         [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
 
-        [[nodiscard]] actor::ServiceMap getServiceMap() const override;
-        [[nodiscard]] int64_t queryServiceId(const std::string &name) const override;
+        [[nodiscard]] ActorMap getActorMap(const std::string &type) const override;
+        [[nodiscard]] int64_t queryActorId(const std::string &type, const std::string &name) const override;
 
         void setPlayerId(int64_t pid);
         [[nodiscard]] int64_t getPlayerId() const;
