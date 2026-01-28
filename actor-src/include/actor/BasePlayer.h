@@ -14,12 +14,11 @@ namespace uranus::actor {
     };
 }
 
-#define EXPORT_CREATE_PLAYER(plr)                           \
-ACTOR_EXPORT uranus::actor::BasePlayer *CreatePlayer() {    \
-    return new plr();                                       \
-}
-
-#define EXPORT_DELETE_PLAYER                                        \
-ACTOR_EXPORT void DeletePlayer(uranus::actor::BasePlayer *plr) {    \
-    delete plr;                                                     \
+#define EXPORT_PLAYER(plr)                                          \
+EXPORT_ACTOR_VERSION                                                \
+ACTOR_EXPORT uranus::actor::BasePlayer *CreatePlayer() {            \
+    return new plr();                                               \
+}                                                                   \
+ACTOR_EXPORT void DeletePlayer(uranus::actor::BasePlayer *ptr) {    \
+    delete ptr;                                                     \
 }

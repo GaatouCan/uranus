@@ -18,12 +18,11 @@ namespace uranus::actor {
     };
 }
 
-#define EXPORT_CREATE_SERVICE(ser)                          \
-ACTOR_EXPORT uranus::actor::BaseService *CreateInstance() { \
-    return new ser();                                       \
-}
-
-#define EXPORT_DELETE_SERVICE                                       \
-ACTOR_EXPORT void DeleteInstance(uranus::actor::BaseService *ser) { \
-    delete ser;                                                     \
+#define EXPORT_SERVICE(ser)                                         \
+EXPORT_ACTOR_VERSION                                                \
+ACTOR_EXPORT uranus::actor::BaseService *CreateInstance() {         \
+    return new ser();                                               \
+}                                                                   \
+ACTOR_EXPORT void DeleteInstance(uranus::actor::BaseService *ptr) { \
+    delete ptr;                                                     \
 }

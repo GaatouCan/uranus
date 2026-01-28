@@ -98,6 +98,4 @@ namespace gameplay {
 
 using gameplay::GamePlayer;
 
-EXPORT_ACTOR_VERSION
-EXPORT_CREATE_PLAYER(GamePlayer)
-EXPORT_DELETE_PLAYER
+EXPORT_PLAYER(GamePlayer)

@@ -41,7 +41,4 @@ namespace gameplay {
 } // gameplay
 
 using gameplay::FriendService;
-
-EXPORT_ACTOR_VERSION
-EXPORT_CREATE_SERVICE(FriendService)
-EXPORT_DELETE_SERVICE
+EXPORT_SERVICE(FriendService)
