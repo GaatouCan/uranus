@@ -79,7 +79,7 @@ FetchContent_MakeAvailable(yaml-cpp)
 FetchContent_MakeAvailable(mimalloc)
 
 #find_package(asio CONFIG REQUIRED)
-find_package(mimalloc CONFIG REQUIRED)
+#find_package(mimalloc CONFIG REQUIRED)
 find_package(OpenSSL COMPONENTS REQUIRED)
 
 add_subdirectory(base-src)
