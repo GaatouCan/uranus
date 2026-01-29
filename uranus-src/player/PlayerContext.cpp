@@ -143,11 +143,13 @@ namespace uranus {
     }
 
     void PlayerContext::dispatch(const int64_t evt, DataAssetHandle &&data) {
-        const auto pid = getPlayerId();
-        if (pid < 0)
-            return;
+        // const auto pid = getPlayerId();
+        // if (pid < 0)
+        //     return;
 
-        // TODO
+        if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
+            mgr->dispatchEvent(evt, std::move(data));
+        }
     }
 
     void PlayerContext::listen(const int64_t evt, const bool cancel) {

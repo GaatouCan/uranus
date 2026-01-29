@@ -178,11 +178,13 @@ namespace uranus {
     }
 
     void ServiceContext::dispatch(int64_t evt, DataAssetHandle &&data) {
-        const auto sid = getServiceId();
-        if (sid < 0)
-            return;
+        // const auto sid = getServiceId();
+        // if (sid < 0)
+        //     return;
 
-        // TODO
+        if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
+            mgr->dispatchEvent(evt, std::move(data));
+        }
     }
 
     void ServiceContext::listen(const int64_t evt, const bool cancel) {
