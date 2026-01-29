@@ -71,7 +71,9 @@ namespace uranus {
         if (!ctx)
             return;
 
-        Envelope evl((Envelope::kFromClient | Envelope::kToPlayer), pid, std::move(pkg));
+        constexpr int type = Package::kFromClient | Package::kToPlayer;
+        auto evl = Envelope::makePackage(type, pid, std::move(pkg));
+
         ctx->pushEnvelope(std::move(evl));
     }
 

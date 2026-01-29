@@ -32,6 +32,9 @@ namespace uranus {
 
         void send(int ty, int64_t target, PackageHandle &&pkg) override;
 
+        void dispatch(int64_t evt, DataAssetHandle &&data) override;
+        void listen(int64_t evt) override;
+
         [[nodiscard]] ServiceManager *getServiceManager() const;
         [[nodiscard]] GameWorld *getWorld() const;
 
@@ -46,8 +49,6 @@ namespace uranus {
     protected:
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
         void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
-
-        void dispatch(int ty, int64_t target, int64_t evt, DataAssetHandle &&data) override;
 
     private:
         void setServiceManager(ServiceManager *mgr);

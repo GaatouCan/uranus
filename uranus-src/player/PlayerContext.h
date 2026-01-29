@@ -22,12 +22,15 @@ namespace uranus {
         PlayerContext(asio::io_context &ctx, ActorHandle &&actor);
         ~PlayerContext() override;
 
-        void send(int ty, int64_t target, PackageHandle &&pkg) override;
-
         [[nodiscard]] PlayerManager *getPlayerManager() const;
         [[nodiscard]] GameWorld *getWorld() const;
 
         [[nodiscard]] ServerModule *getModule(const std::string &name) const override;
+
+        void send(int ty, int64_t target, PackageHandle &&pkg) override;
+
+        void dispatch(int64_t evt, DataAssetHandle &&data) override;
+        void listen(int64_t evt) override;
 
         [[nodiscard]] ActorMap getActorMap(const std::string &type) const override;
         [[nodiscard]] int64_t queryActorId(const std::string &type, const std::string &name) const override;
@@ -38,8 +41,6 @@ namespace uranus {
     protected:
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
         void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
-
-        void dispatch(int ty, int64_t target, int64_t evt, DataAssetHandle &&data) override;
 
     private:
         void setPlayerManager(PlayerManager *mgr);
