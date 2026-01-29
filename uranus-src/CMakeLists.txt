@@ -36,3 +36,11 @@ add_custom_command(
         $<TARGET_FILE:spdlog::spdlog>
         $<TARGET_FILE_DIR:uranus>
 )
+
+add_custom_command(
+        TARGET uranus
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:yaml-cpp::yaml-cpp>
+        $<TARGET_FILE_DIR:uranus>
+)

@@ -35,8 +35,8 @@ endif ()
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/spdlog)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/mimalloc)
-list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/nlohmann_json)
-list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/YAML_CPP)
+#list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/nlohmann_json)
+#list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/YAML_CPP)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/abseil-cpp)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/protobuf)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/zlib)
@@ -45,19 +45,34 @@ list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/zlib)
 include(GenerateExportHeader)
 include(FetchContent)
 
+set(BUILD_TESTING OFF CACHE BOOL "Not build test" FORCE)
 set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as SHARED library" FORCE)
+set(YAML_BUILD_SHARED_LIBS ON CACHE BOOL "Build yaml-cpp as SHARED library" FORCE)
+
 FetchContent_Declare(
         spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
         GIT_TAG v1.17.0
 )
+FetchContent_Declare(
+        json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.12.0
+)
+
+FetchContent_Declare(
+        yaml-cpp
+        GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+        GIT_TAG 0.8.0
+)
+
 FetchContent_MakeAvailable(spdlog)
+FetchContent_MakeAvailable(json)
+FetchContent_MakeAvailable(yaml-cpp)
 
 find_package(asio CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
 find_package(OpenSSL COMPONENTS REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
-find_package(yaml-cpp CONFIG REQUIRED)
 
 add_subdirectory(base-src)
 add_subdirectory(actor-src)
