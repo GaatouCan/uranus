@@ -32,7 +32,7 @@ namespace gameplay {
 
     }
 
-    void FriendService::onEvent(int64_t src, int64_t evt, DataAsset *data) {
+    void FriendService::onEvent(int64_t evt, DataAsset *data) {
     }
 
     PackageHandle FriendService::onRequest(int64_t src, PackageHandle &&req) {

@@ -29,7 +29,7 @@ namespace gameplay {
         }
     }
 
-    void GamePlayer::onEvent(int64_t src, const int64_t evt, DataAsset *data) {
+    void GamePlayer::onEvent(const int64_t evt, DataAsset *data) {
         using event::EventType;
 
         switch (evt) {
