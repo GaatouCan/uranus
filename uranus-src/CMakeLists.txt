@@ -44,3 +44,22 @@ add_custom_command(
         $<TARGET_FILE:yaml-cpp::yaml-cpp>
         $<TARGET_FILE_DIR:uranus>
 )
+
+add_custom_command(
+        TARGET uranus
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:mimalloc>
+        $<TARGET_FILE_DIR:uranus>
+)
+
+if (WIN32)
+    FetchContent_GetProperties(mimalloc SOURCE_DIR MIMALLOC_SOURCE_DIR)
+    add_custom_command(
+            TARGET uranus
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${MIMALLOC_SOURCE_DIR}/bin/mimalloc-redirect.dll"
+            $<TARGET_FILE_DIR:uranus>
+    )
+endif ()
