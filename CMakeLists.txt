@@ -33,7 +33,7 @@ elseif (UNIX)
 endif ()
 
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/spdlog)
-list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
+#list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/mimalloc)
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/nlohmann_json)
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/YAML_CPP)
@@ -78,7 +78,7 @@ FetchContent_MakeAvailable(json)
 FetchContent_MakeAvailable(yaml-cpp)
 FetchContent_MakeAvailable(mimalloc)
 
-find_package(asio CONFIG REQUIRED)
+#find_package(asio CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
 find_package(OpenSSL COMPONENTS REQUIRED)
 
