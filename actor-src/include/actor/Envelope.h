@@ -21,38 +21,28 @@ namespace uranus::actor {
         SteadyDuration delta;
     };
 
-    using ActorTask = std::function<void(BaseActor *)>;
+    using ActorCallback = std::function<void(BaseActor *)>;
 
     struct ACTOR_API Envelope final {
 
-        enum EnvelopeTag {
-            kPackage    = 1,
-            kDataAsset  = 2,
-            kTickInfo   = 3,
-            kTask       = 4
-        };
-
         enum EnvelopeType {
-            kFromClient     = 1,
-            kFromPlayer     = 1 << 1,
-            kFromService    = 1 << 2,
-            kToClient       = 1 << 3,
-            kToPlayer       = 1 << 4,
-            kToService      = 1 << 5,
-            kRequest        = 1 << 6,
-            kResponse       = 1 << 7,
+            kPackage    = 1,
+            kRequest    = 2,
+            kResponse   = 3,
+            kDataAsset  = 4,
+            kTickInfo   = 5,
+            kCallback   = 6
         };
 
         using VariantHandle = std::variant<
             PackageHandle,
             DataAssetHandle,
             ActorTickInfo,
-            ActorTask
-        >;
-
-        int32_t tag;
+            ActorCallback>;
 
         int32_t type;
+        int32_t flag;
+
         int64_t source;
 
         union {
@@ -64,17 +54,19 @@ namespace uranus::actor {
 
         Envelope();
 
-        Envelope(int32_t ty, int64_t src, PackageHandle &&pkg);
-        Envelope(int32_t ty, int64_t src, int64_t sess, PackageHandle &&pkg);
-
-        Envelope(int32_t ty, int64_t src, int64_t evt, DataAssetHandle &&data);
-
-        Envelope(SteadyTimePoint now, SteadyDuration delta);
-
         Envelope(const Envelope &) = delete;
         Envelope &operator=(const Envelope &) = delete;
 
         Envelope(Envelope &&rhs) noexcept;
         Envelope &operator=(Envelope &&rhs) noexcept;
+
+        static Envelope makePackage(int flag, int64_t src, PackageHandle &&pkg);
+
+        static Envelope makeRequest(int flag, int64_t src, int64_t sess, PackageHandle &&req);
+        static Envelope makeResponse(int flag, int64_t src, int64_t sess, PackageHandle &&res);
+
+        static Envelope makeDataAsset(int64_t src, int64_t evt, DataAssetHandle &&data);
+        static Envelope makeTickInfo(SteadyTimePoint now, SteadyDuration delta);
+        static Envelope makeCallback(ActorCallback &&cb);
     };
 }

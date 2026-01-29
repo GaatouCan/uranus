@@ -80,6 +80,7 @@ namespace uranus::actor {
 
     BaseActorContext::BaseActorContext(asio::io_context &ctx, ActorHandle &&handle)
         : ctx_(ctx),
+          strand_(asio::make_strand(ctx)),
           handle_(std::move(handle)),
           mailbox_(ctx_, 1024),
           ticker_(ctx_) {
@@ -103,7 +104,7 @@ namespace uranus::actor {
 
     void BaseActorContext::run(DataAssetHandle &&data) {
         handle_->onStart(data.get());
-        co_spawn(ctx_, [self = shared_from_this()]() mutable -> awaitable<void> {
+        co_spawn(strand_, [self = shared_from_this()]() mutable -> awaitable<void> {
             if (self->handle_->enableTick_) {
                 co_await(
                   self->process() &&
@@ -116,14 +117,18 @@ namespace uranus::actor {
     }
 
     void BaseActorContext::terminate() {
-        if (!mailbox_.is_open())
+        if (!isRunning())
             return;
 
-        running_.clear();
+        asio::dispatch(strand_, [self = shared_from_this()]() mutable {
+            if (!self->isRunning())
+                return;
 
-        ticker_.cancel();
-        mailbox_.cancel();
-        mailbox_.close();
+            self->running_.clear();
+            self->ticker_.cancel();
+            self->mailbox_.cancel();
+            self->mailbox_.close();
+        });
     }
 
     bool BaseActorContext::isRunning() const {
@@ -137,13 +142,13 @@ namespace uranus::actor {
         return nullptr;
     }
 
-    void BaseActorContext::pushEvent(
-        const int64_t evt,
-        unique_ptr<DataAsset> &&data
-    ) {
-        Envelope evl(0, 0, evt, std::move(data));
-        this->pushEnvelope(std::move(evl));
-    }
+    // void BaseActorContext::pushEvent(
+    //     const int64_t evt,
+    //     unique_ptr<DataAsset> &&data
+    // ) {
+    //     Envelope evl(0, 0, evt, std::move(data));
+    //     this->pushEnvelope(std::move(evl));
+    // }
 
     void BaseActorContext::pushEnvelope(Envelope &&envelope) {
         if (!isRunning())
@@ -195,8 +200,7 @@ namespace uranus::actor {
             sessions_.emplace(sess, make_shared<SessionNode>(ctx_, std::move(handle), sess));
         }
 
-        ty |= Envelope::kRequest;
-        sendRequest(ty, sess, target, std::move(req));
+        this->sendRequest(ty, sess, target, std::move(req));
     }
 
     void BaseActorContext::onErrorCode(std::error_code ec) {
@@ -222,56 +226,54 @@ namespace uranus::actor {
                     break;
                 }
 
-                switch (evl.tag) {
+                switch (evl.type) {
                     case Envelope::kPackage: {
-                        auto *pkg = std::get_if<PackageHandle>(&evl.variant);
+                        if (auto *pkg = std::get_if<PackageHandle>(&evl.variant)) {
+                            handle_->onRequest(evl.source, std::move(*pkg));
+                        }
+                    }
+                    break;
+                    case Envelope::kRequest: {
+                        if (auto *pkg = std::get_if<PackageHandle>(&evl.variant)) {
+                            auto res = handle_->onRequest(evl.source, std::move(*pkg));
 
-                        // 异步请求处理
-                        if ((evl.type & Envelope::kRequest) != 0) {
                             const auto sess = evl.session;
                             const auto from = evl.source;
-                            int type = Envelope::kResponse;
 
-                            if ((evl.type & Envelope::kFromPlayer) != 0) {
-                                type |= Envelope::kToPlayer;
+                            int type = 0;
+                            if ((evl.type & Package::kFromPlayer) != 0) {
+                                type = Package::kToPlayer;
                             }
-                            if ((evl.type & Envelope::kFromService) != 0) {
-                                type |= Envelope::kToService;
+                            if ((evl.type & Package::kFromService) != 0) {
+                                type = Package::kToService;
                             }
 
-                            if (pkg != nullptr) {
-                                auto res = handle_->onRequest(evl.source, std::move(*pkg));
-                                sendResponse(type, sess, from, std::move(res));
+                            this->sendResponse(type, sess, from, std::move(res));
+                        }
+                    }
+                    break;
+                    case Envelope::kResponse: {
+                        auto *res = std::get_if<PackageHandle>(&evl.variant);
+                        shared_ptr<SessionNode> node = nullptr;
+
+                        // 查找会话节点
+                        {
+                            unique_lock lock(sessMutex_);
+                            if (const auto it = sessions_.find(evl.session); it != sessions_.end()) {
+                                node = it->second;
+                                sessions_.erase(it);
                             }
                         }
-                        // 异步请求返回
-                        else if ((evl.type & Envelope::kResponse) != 0) {
-                            shared_ptr<SessionNode> node = nullptr;
 
-                            // 查找会话节点
-                            {
-                                unique_lock lock(sessMutex_);
-                                if (const auto it = sessions_.find(evl.session); it != sessions_.end()) {
-                                    node = it->second;
-                                    sessions_.erase(it);
-                                }
-                            }
-
-                            if (node != nullptr) {
-                                if (pkg != nullptr) {
-                                    node->dispatch(std::move(*pkg));
-                                } else {
-                                    node->cancel();
-                                }
-                                sessAlloc_.recycle(node->sess_);
+                        if (node != nullptr) {
+                            if (res != nullptr) {
+                                node->dispatch(std::move(*res));
+                            } else {
+                                node->cancel();
                             }
                         }
-                        // 普通信息
-                        else {
-                            if (pkg != nullptr) {
-                                handle_->onRequest(evl.source, std::move(*pkg));
-                            }
-                        }
+
+                        sessAlloc_.recycle(evl.session);
                     }
                     break;
                     case Envelope::kDataAsset: {
@@ -286,8 +288,8 @@ namespace uranus::actor {
                         }
                     }
                     break;
-                    case Envelope::kTask: {
-                        if (auto *task = std::get_if<ActorTask>(&evl.variant)) {
+                    case Envelope::kCallback: {
+                        if (auto *task = std::get_if<ActorCallback>(&evl.variant)) {
                             std::invoke(*task, handle_.get());
                         }
                     }
@@ -325,7 +327,7 @@ namespace uranus::actor {
                     break;
                 }
 
-                Envelope evl(point, kTickDelta);
+                auto evl = Envelope::makeTickInfo(point, kTickDelta);
                 this->pushEnvelope(std::move(evl));
             }
         } catch (std::exception &e) {

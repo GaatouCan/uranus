@@ -50,6 +50,15 @@ namespace uranus::actor {
     public:
         Package() = delete;
 
+        enum PackageFlag {
+            kFromClient     = 1,
+            kFromPlayer     = 1 << 1,
+            kFromService    = 1 << 2,
+            kToClient       = 1 << 3,
+            kToPlayer       = 1 << 4,
+            kToService      = 1 << 5,
+        };
+
         void setId(int64_t id);
         [[nodiscard]] int64_t getId() const;
 

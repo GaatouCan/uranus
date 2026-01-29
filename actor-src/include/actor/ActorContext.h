@@ -38,10 +38,12 @@ namespace uranus::actor {
         [[nodiscard]] virtual int64_t queryActorId(const std::string &type, const std::string &name) const = 0;
 
         virtual void send(int ty, int64_t target, PackageHandle &&pkg) = 0;
-        virtual void dispatch(int ty, int64_t target, int64_t evt, unique_ptr<DataAsset> &&data) = 0;
 
         template<asio::completion_token_for<void(PackageHandle)> CompletionToken>
         auto call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token = asio::use_awaitable);
+
+        virtual void listen(int64_t evt) = 0;
+        virtual void dispatch(int64_t evt, unique_ptr<DataAsset> &&data) = 0;
 
     protected:
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandler &&handle) = 0;
