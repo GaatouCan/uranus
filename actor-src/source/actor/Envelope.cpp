@@ -76,11 +76,10 @@ namespace uranus::actor {
         return evl;
     }
 
-    Envelope Envelope::makeDataAsset(const int64_t src, const int64_t evt, DataAssetHandle &&data) {
+    Envelope Envelope::makeDataAsset(const int64_t evt, DataAssetHandle &&data) {
         Envelope evl;
 
         evl.type = kDataAsset;
-        evl.source = src;
         evl.event = evt;
 
         evl.variant = std::move(data);

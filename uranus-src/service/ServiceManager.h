@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <string>
 #include <map>
+#include <set>
 
 
 namespace uranus {
@@ -14,6 +15,7 @@ namespace uranus {
     using actor::ServerModule;
     using std::unordered_map;
     using std::map;
+    using std::set;
     using std::shared_ptr;
     using std::shared_mutex;
     using std::unique_lock;
@@ -39,6 +41,7 @@ namespace uranus {
         [[nodiscard]] GameWorld &getWorld() const;
 
         [[nodiscard]] shared_ptr<ServiceContext> find(int64_t sid) const;
+        [[nodiscard]] set<shared_ptr<ServiceContext>> getServiceSet(const set<int64_t> &sids) const;
 
         [[nodiscard]] ServiceMap getServiceMap() const;
         [[nodiscard]] int64_t queryServiceId(const std::string &name) const;

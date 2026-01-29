@@ -1,21 +1,25 @@
 #pragma once
 
 #include <actor/ServerModule.h>
+#include <actor/Envelope.h>
+
 #include <shared_mutex>
 #include <unordered_map>
-#include <unordered_set>
+#include <set>
+
 
 namespace uranus {
 
     using actor::ServerModule;
+    using actor::DataAssetHandle;
 
     class GameWorld;
 
     class EventManager final : public ServerModule {
 
         struct ListenerSet {
-            std::unordered_set<int64_t> services;
-            std::unordered_set<int64_t> players;
+            std::set<int64_t> services;
+            std::set<int64_t> players;
         };
 
         using ListenerMap = std::unordered_map<int64_t, ListenerSet>;
@@ -31,6 +35,8 @@ namespace uranus {
         void stop() override;
 
         void listenEvent(bool is_player, int64_t id, int evt, bool cancel);
+
+        void dispatchEvent(int64_t evt, DataAssetHandle &&data);
 
     private:
         GameWorld &world_;

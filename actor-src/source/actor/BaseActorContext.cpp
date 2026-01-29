@@ -280,7 +280,7 @@ namespace uranus::actor {
                     break;
                     case Envelope::kDataAsset: {
                         if (const auto *da = std::get_if<DataAssetHandle>(&evl.variant)) {
-                            handle_->onEvent(evl.source, evl.event, da->get());
+                            handle_->onEvent(evl.event, da->get());
                         }
                     }
                     break;

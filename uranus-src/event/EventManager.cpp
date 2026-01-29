@@ -1,10 +1,18 @@
 #include "EventManager.h"
+#include "GameWorld.h"
+#include "player/PlayerManager.h"
+#include "player/PlayerContext.h"
+#include "service/ServiceManager.h"
+#include "service/ServiceContext.h"
 
 #include <ranges>
 
-#include "GameWorld.h"
-
 namespace uranus {
+
+    using actor::Envelope;
+    using std::make_unique;
+    using std::unique_ptr;
+
     EventManager::EventManager(GameWorld &world)
         : world_(world) {
     }
@@ -45,6 +53,44 @@ namespace uranus {
                     plr.erase(id);
                 } else {
                     ser.erase(id);
+                }
+            }
+        }
+    }
+
+    void EventManager::dispatchEvent(int64_t evt, DataAssetHandle &&data) {
+        if (!world_.isRunning())
+            return;
+
+        if (evt < 0)
+            return;
+
+        ListenerSet set;
+
+        {
+            std::shared_lock lock(mutex_);
+            const auto it = listeners_.find(evt);
+            if (it == listeners_.end())
+                return;
+            set = it->second;
+        }
+
+        if (const auto *mgr = GET_MODULE(&world_, ServiceManager)) {
+            const auto services = mgr->getServiceSet(set.services);
+            for (const auto &ctx : services) {
+                if (data != nullptr) {
+                    auto evl = Envelope::makeDataAsset(evt, DataAssetHandle(data->clone()));
+                    ctx->pushEnvelope(std::move(evl));
+                }
+            }
+        }
+
+        if (const auto *mgr = GET_MODULE(&world_, PlayerManager)) {
+            const auto players = mgr->getPlayerSet(set.players);
+            for (const auto &ctx : players) {
+                if (data != nullptr) {
+                    auto evl = Envelope::makeDataAsset(evt, DataAssetHandle(data->clone()));
+                    ctx->pushEnvelope(std::move(evl));
                 }
             }
         }

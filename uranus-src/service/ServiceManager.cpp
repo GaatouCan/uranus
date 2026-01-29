@@ -94,6 +94,22 @@ namespace uranus {
         return iter == services_.end() ? nullptr : iter->second;
     }
 
+    set<shared_ptr<ServiceContext>> ServiceManager::getServiceSet(const set<int64_t> &sids) const {
+        if (!world_.isRunning())
+            return {};
+
+        set<shared_ptr<ServiceContext>> result;
+        shared_lock lock(mutex_);
+
+        for (const auto sid : sids) {
+            if (const auto it = services_.find(sid); it != services_.end()) {
+                result.insert(it->second);
+            }
+        }
+
+        return result;
+    }
+
     ServiceMap ServiceManager::getServiceMap() const {
         if (!world_.isRunning())
             return {};

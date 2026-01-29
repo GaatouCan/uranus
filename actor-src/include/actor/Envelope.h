@@ -64,7 +64,7 @@ namespace uranus::actor {
         static Envelope makeRequest(int flag, int64_t src, int64_t sess, PackageHandle &&req);
         static Envelope makeResponse(int flag, int64_t src, int64_t sess, PackageHandle &&res);
 
-        static Envelope makeDataAsset(int64_t src, int64_t evt, DataAssetHandle &&data);
+        static Envelope makeDataAsset(int64_t evt, DataAssetHandle &&data);
         static Envelope makeTickInfo(SteadyTimePoint now, SteadyDuration delta);
         static Envelope makeCallback(ActorCallback &&cb);
     };

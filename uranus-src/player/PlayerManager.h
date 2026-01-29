@@ -4,6 +4,7 @@
 
 #include <shared_mutex>
 #include <unordered_map>
+#include <set>
 
 namespace uranus {
 
@@ -13,6 +14,7 @@ namespace uranus {
     using std::shared_mutex;
     using std::unique_lock;
     using std::shared_lock;
+    using std::set;
 
     class GameWorld;
     class PlayerContext;
@@ -36,6 +38,8 @@ namespace uranus {
         void onPlayerLogout(int64_t pid);
 
         [[nodiscard]] shared_ptr<PlayerContext> find(int64_t pid) const;
+
+        [[nodiscard]] set<shared_ptr<PlayerContext>> getPlayerSet(const set<int64_t> &pids) const;
 
     private:
         GameWorld &world_;

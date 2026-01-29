@@ -128,4 +128,20 @@ namespace uranus {
         const auto it = players_.find(pid);
         return it != players_.end() ? it->second : nullptr;
     }
+
+    set<shared_ptr<PlayerContext>> PlayerManager::getPlayerSet(const set<int64_t> &pids) const {
+        if (!world_.isRunning())
+            return {};
+
+        set<shared_ptr<PlayerContext>> result;
+        shared_lock lock(mutex_);
+
+        for (const auto pid : pids) {
+            if (const auto it = players_.find(pid); it != players_.end()) {
+                result.insert(it->second);
+            }
+        }
+
+        return result;
+    }
 } // uranus
