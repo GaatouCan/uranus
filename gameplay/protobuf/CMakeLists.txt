@@ -16,7 +16,7 @@ foreach (proto ${PROTOBUF_LIST})
     add_custom_command(
             OUTPUT ${proto_src} ${proto_hdr}
             COMMAND ${PROTOBUF_PROTOC}
-            ARGS --cpp_out gen -I def ${proto}
+            ARGS --cpp_out ${CMAKE_CURRENT_SOURCE_DIR}/gen -I ${CMAKE_CURRENT_SOURCE_DIR}/def ${proto}
             DEPENDS ${proto})
 
     list(APPEND PROTO_GEN_FILES ${proto_hdr} ${proto_src})

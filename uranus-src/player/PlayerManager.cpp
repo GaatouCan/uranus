@@ -4,7 +4,7 @@
 #include "factory/PlayerFactory.h"
 
 #include <actor/BasePlayer.h>
-#include <database/DA_PlayerResult.h>
+#include <common/data_asset/DA_PlayerResult.h>
 #include <spdlog/spdlog.h>
 
 namespace uranus {
@@ -92,7 +92,7 @@ namespace uranus {
 
             SPDLOG_INFO("Player database result: {}", pid);
 
-            auto result = std::make_unique<database::DA_PlayerResult>();
+            auto result = std::make_unique<DA_PlayerResult>();
             result->data = nlohmann::json::parse(res);
 
             plr->run(std::move(result));

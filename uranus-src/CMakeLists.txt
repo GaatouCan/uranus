@@ -19,7 +19,7 @@ add_executable(uranus ${URANUS_FILES})
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(uranus PUBLIC base)
-target_link_libraries(uranus PUBLIC actor)
+target_link_libraries(uranus PUBLIC common)
 target_link_libraries(uranus PUBLIC config)
 target_link_libraries(uranus PUBLIC login)
 target_link_libraries(uranus PUBLIC logger)

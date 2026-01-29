@@ -5,7 +5,7 @@
 
 #include "common/ProtocolID.h"
 
-#include <database/DA_PlayerResult.h>
+#include <common/data_asset/DA_PlayerResult.h>
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
 
@@ -37,7 +37,7 @@ namespace gameplay {
 
     void GamePlayer::onStart(DataAsset *data) {
         if (data != nullptr) {
-            if (const auto *temp = dynamic_cast<uranus::database::DA_PlayerResult *>(data)) {
+            if (const auto *temp = dynamic_cast<uranus::DA_PlayerResult *>(data)) {
                 component_.deserialize(temp->data);
             }
         }
