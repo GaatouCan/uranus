@@ -5,5 +5,7 @@ namespace uranus::actor {
     public:
         DataAsset() = default;
         virtual ~DataAsset() = default;
+
+        virtual DataAsset *clone() = 0;
     };
 }

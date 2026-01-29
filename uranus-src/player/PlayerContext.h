@@ -16,6 +16,8 @@ namespace uranus {
 
     class PlayerContext final : public BaseActorContext {
 
+        using super = BaseActorContext;
+
         friend class PlayerManager;
 
     public:
@@ -30,7 +32,7 @@ namespace uranus {
         void send(int ty, int64_t target, PackageHandle &&pkg) override;
 
         void dispatch(int64_t evt, DataAssetHandle &&data) override;
-        void listen(int64_t evt) override;
+        void listen(int64_t evt, bool cancel) override;
 
         [[nodiscard]] ActorMap getActorMap(const std::string &type) const override;
         [[nodiscard]] int64_t queryActorId(const std::string &type, const std::string &name) const override;
@@ -42,6 +44,7 @@ namespace uranus {
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
         void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
 
+        void cleanUp() override;
     private:
         void setPlayerManager(PlayerManager *mgr);
 

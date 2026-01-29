@@ -6,6 +6,7 @@
 #include "gateway/Gateway.h"
 #include "service/ServiceManager.h"
 #include "service/ServiceContext.h"
+#include "event/EventManager.h"
 
 namespace uranus {
 
@@ -133,25 +134,30 @@ namespace uranus {
         }
     }
 
+    void PlayerContext::cleanUp() {
+        super::cleanUp();
+
+        if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
+            mgr->listenEvent(true, getPlayerId(), -1, true);
+        }
+    }
+
     void PlayerContext::dispatch(const int64_t evt, DataAssetHandle &&data) {
         const auto pid = getPlayerId();
         if (pid < 0)
             return;
 
         // TODO
-
-        // if ((ty & Envelope::kToService) != 0) {
-        //     if (const auto *mgr = GET_MODULE(getWorld(), ServiceManager)) {
-        //         if (const auto ctx = mgr->find(target)) {
-        //             Envelope evl((Envelope::kFromPlayer | ty), pid, evt, std::move(data));
-        //             ctx->pushEnvelope(std::move(evl));
-        //         }
-        //     }
-        // }
     }
 
-    void PlayerContext::listen(int64_t evt) {
-        // TODO
+    void PlayerContext::listen(const int64_t evt, const bool cancel) {
+        const auto pid = getPlayerId();
+        if (pid < 0)
+            return;
+
+        if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
+            mgr->listenEvent(true, pid, evt, cancel);
+        }
     }
 
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {

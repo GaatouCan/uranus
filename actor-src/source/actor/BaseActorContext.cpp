@@ -142,14 +142,6 @@ namespace uranus::actor {
         return nullptr;
     }
 
-    // void BaseActorContext::pushEvent(
-    //     const int64_t evt,
-    //     unique_ptr<DataAsset> &&data
-    // ) {
-    //     Envelope evl(0, 0, evt, std::move(data));
-    //     this->pushEnvelope(std::move(evl));
-    // }
-
     void BaseActorContext::pushEnvelope(Envelope &&envelope) {
         if (!isRunning())
             return;
@@ -207,6 +199,16 @@ namespace uranus::actor {
     }
 
     void BaseActorContext::onException(std::exception &e) {
+    }
+
+    void BaseActorContext::cleanUp() {
+        // 释放所有会话
+        for (const auto &node: sessions_ | std::views::values) {
+            node->cancel();
+        }
+
+        running_.clear();
+        sessions_.clear();
     }
 
     awaitable<void> BaseActorContext::process() {
@@ -298,13 +300,7 @@ namespace uranus::actor {
                 }
             }
 
-            // 释放所有会话
-            for (const auto &node: sessions_ | std::views::values) {
-                node->cancel();
-            }
-
-            running_.clear();
-            sessions_.clear();
+            this->cleanUp();
 
             // Call actor terminate
             handle_->onTerminate();

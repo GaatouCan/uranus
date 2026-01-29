@@ -5,6 +5,7 @@
 #include "gateway/ClientConnection.h"
 #include "player/PlayerManager.h"
 #include "service/ServiceManager.h"
+#include "event/EventManager.h"
 
 #include <config/ConfigModule.h>
 #include <logger/LoggerModule.h>
@@ -18,6 +19,7 @@ using uranus::config::ConfigModule;
 using uranus::login::LoginAuth;
 using uranus::logger::LoggerModule;
 using uranus::database::DatabaseModule;
+using uranus::EventManager;
 using uranus::PlayerManager;
 using uranus::ServiceManager;
 using uranus::Gateway;
@@ -33,6 +35,7 @@ int main() {
     world->pushModule(new LoggerModule());
     world->pushModule(new LoginAuth());
     world->pushModule(new DatabaseModule());
+    world->pushModule(new EventManager(*world));
     world->pushModule(new PlayerManager(*world));
     world->pushModule(new ServiceManager(*world));
     world->pushModule(new Gateway(*world));

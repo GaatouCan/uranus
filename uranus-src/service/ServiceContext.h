@@ -22,6 +22,8 @@ namespace uranus {
 
     class ServiceContext final : public BaseActorContext {
 
+        using super = BaseActorContext;
+
         friend class ServiceManager;
 
     public:
@@ -33,7 +35,7 @@ namespace uranus {
         void send(int ty, int64_t target, PackageHandle &&pkg) override;
 
         void dispatch(int64_t evt, DataAssetHandle &&data) override;
-        void listen(int64_t evt) override;
+        void listen(int64_t evt, bool cancel) override;
 
         [[nodiscard]] ServiceManager *getServiceManager() const;
         [[nodiscard]] GameWorld *getWorld() const;
@@ -49,6 +51,8 @@ namespace uranus {
     protected:
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
         void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
+
+        void cleanUp() override;
 
     private:
         void setServiceManager(ServiceManager *mgr);

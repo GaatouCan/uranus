@@ -4,6 +4,7 @@
 #include "player/PlayerContext.h"
 #include "gateway/Gateway.h"
 #include "gateway/ClientConnection.h"
+#include "event/EventManager.h"
 #include "GameWorld.h"
 
 #include <actor/BaseService.h>
@@ -168,36 +169,30 @@ namespace uranus {
         }
     }
 
+    void ServiceContext::cleanUp() {
+        super::cleanUp();
+
+        if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
+            mgr->listenEvent(false, getServiceId(), -1, true);
+        }
+    }
+
     void ServiceContext::dispatch(int64_t evt, DataAssetHandle &&data) {
         const auto sid = getServiceId();
         if (sid < 0)
             return;
 
-        // if ((ty & Envelope::kToService) != 0) {
-        //     if (target == sid)
-        //         return;
-        //
-        //     if (const auto dest = manager_->find(target)) {
-        //         Envelope evl((Envelope::kFromService | ty), sid, evt, std::move(data));
-        //         dest->pushEnvelope(std::move(evl));
-        //         return;
-        //     }
-        // }
-        //
-        // if ((ty & Envelope::kToPlayer) != 0) {
-        //     if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
-        //         if (const auto plr = mgr->find(target)) {
-        //             Envelope evl((Envelope::kFromService | ty), sid, evt, std::move(data));
-        //             plr->pushEnvelope(std::move(evl));
-        //             return;
-        //         }
-        //     }
-        // }
         // TODO
     }
 
-    void ServiceContext::listen(int64_t evt) {
-        // TODO
+    void ServiceContext::listen(const int64_t evt, const bool cancel) {
+        const auto sid = getServiceId();
+        if (sid < 0)
+            return;
+
+        if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
+            mgr->listenEvent(false, sid, evt, cancel);
+        }
     }
 
     void ServiceContext::setServiceManager(ServiceManager *mgr) {

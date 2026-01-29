@@ -11,5 +11,12 @@ namespace uranus {
 
     public:
         nlohmann::json data;
+
+    public:
+        DataAsset *clone() override {
+            auto *res = new DA_PlayerResult();
+            res->data = data;
+            return res;
+        }
     };
 }

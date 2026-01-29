@@ -42,7 +42,7 @@ namespace uranus::actor {
         template<asio::completion_token_for<void(PackageHandle)> CompletionToken>
         auto call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token = asio::use_awaitable);
 
-        virtual void listen(int64_t evt) = 0;
+        virtual void listen(int64_t evt, bool cancel) = 0;
         virtual void dispatch(int64_t evt, unique_ptr<DataAsset> &&data) = 0;
 
     protected:

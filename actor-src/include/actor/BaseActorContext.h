@@ -85,6 +85,8 @@ namespace uranus::actor {
         virtual void onErrorCode(std::error_code ec);
         virtual void onException(std::exception &e);
 
+        virtual void cleanUp();
+
     private:
         awaitable<void> process();
         awaitable<void> tick();
