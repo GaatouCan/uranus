@@ -3,7 +3,7 @@
 #include "actor/BaseActorContext.h"
 #include "actor/Envelope.h"
 
-#include "../common/ProtocolID.h"
+#include "common/ProtocolID.h"
 
 #include <database/DA_PlayerResult.h>
 #include <logger/LoggerModule.h>

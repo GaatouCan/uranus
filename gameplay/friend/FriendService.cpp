@@ -1,5 +1,5 @@
 #include "FriendService.h"
-#include "../common/ProtocolID.h"
+#include "common/ProtocolID.h"
 
 #include <greeting.pb.h>
 

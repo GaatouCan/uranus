@@ -12,14 +12,11 @@ if (MSVC)
     endforeach()
 endif ()
 
-add_library(friend_service SHARED ${FRIEND_SERVICE_FILES}
-        ../common/ProtocolID.h
-        ../common/EventType.h
-)
+add_library(friend_service SHARED ${FRIEND_SERVICE_FILES})
 
 target_include_directories(friend_service PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(friend_service PUBLIC actor)
+target_link_libraries(friend_service PUBLIC common)
 target_link_libraries(friend_service PUBLIC config)
 target_link_libraries(friend_service PUBLIC login)
 target_link_libraries(friend_service PUBLIC logger)

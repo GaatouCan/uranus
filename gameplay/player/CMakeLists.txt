@@ -12,14 +12,11 @@ if (MSVC)
     endforeach()
 endif ()
 
-add_library(player SHARED ${GAME_PLAYER_FILES}
-        ../common/ProtocolID.h
-        ../common/EventType.h
-)
+add_library(player SHARED ${GAME_PLAYER_FILES})
 
 target_include_directories(player PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(player PUBLIC actor)
+target_link_libraries(player PUBLIC common)
 target_link_libraries(player PUBLIC config)
 target_link_libraries(player PUBLIC login)
 target_link_libraries(player PUBLIC logger)

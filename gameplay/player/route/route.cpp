@@ -1,7 +1,7 @@
 #include "GamePlayer.h"
 
-#include "../../common/ProtocolID.h"
-#include "../../common/EventType.h"
+#include <common/ProtocolID.h>
+#include <common/EventType.h>
 
 #include "greeting/GreetingController.h"
 #include "appearance/AppearanceController.h"

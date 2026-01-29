@@ -1,5 +1,5 @@
 #include "GreetingController.h"
-#include "../../../common/ProtocolID.h"
+#include "common/ProtocolID.h"
 
 #include <greeting.pb.h>
 #include <spdlog/fmt/fmt.h>

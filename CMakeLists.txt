@@ -59,7 +59,7 @@ add_subdirectory(modules/login-src)
 add_subdirectory(modules/logger-src)
 add_subdirectory(modules/database-src)
 add_subdirectory(protobuf)
-#add_subdirectory(http-src)
+add_subdirectory(gameplay/common)
 add_subdirectory(uranus-src)
 
 add_subdirectory(gameplay/player)
