@@ -26,7 +26,6 @@ target_include_directories(logger
 )
 
 target_link_libraries(logger PUBLIC actor)
-target_link_libraries(logger PUBLIC spdlog::spdlog)
 
 set_target_properties(logger PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(logger PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

@@ -29,7 +29,6 @@ target_include_directories(database
 
 target_link_libraries(database PUBLIC actor)
 target_link_libraries(database PUBLIC nlohmann_json::nlohmann_json)
-#target_link_libraries(database PUBLIC mongo::mongocxx_shared)
 
 set_target_properties(database PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(database PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

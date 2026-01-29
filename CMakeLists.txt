@@ -32,7 +32,7 @@ elseif (UNIX)
     set(CMAKE_INSTALL_PREFIX ~/Documents/library/install/uranus)
 endif ()
 
-list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/spdlog)
+#list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/spdlog)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/mimalloc)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/nlohmann_json)
@@ -43,14 +43,21 @@ list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/zlib)
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/MONGO_CXX_DRIVER)
 
 include(GenerateExportHeader)
+include(FetchContent)
 
-find_package(spdlog CONFIG REQUIRED)
+set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as SHARED library" FORCE)
+FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.17.0
+)
+FetchContent_MakeAvailable(spdlog)
+
 find_package(asio CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
 find_package(OpenSSL COMPONENTS REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
-
 
 add_subdirectory(base-src)
 add_subdirectory(actor-src)

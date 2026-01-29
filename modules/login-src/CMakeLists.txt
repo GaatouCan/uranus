@@ -56,7 +56,6 @@ target_include_directories(login
 )
 
 target_link_libraries(login PUBLIC actor)
-target_link_libraries(login PUBLIC spdlog::spdlog)
 target_link_libraries(login PUBLIC protobuf::libprotobuf-lite)
 
 set_target_properties(login PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
