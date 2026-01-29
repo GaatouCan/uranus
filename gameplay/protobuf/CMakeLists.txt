@@ -16,7 +16,7 @@ foreach (proto ${PROTOBUF_LIST})
     add_custom_command(
             OUTPUT ${proto_src} ${proto_hdr}
             COMMAND ${PROTOBUF_PROTOC}
-            ARGS --cpp_out ${CMAKE_CURRENT_SOURCE_DIR}/gen -I ${CMAKE_CURRENT_SOURCE_DIR}/def ${proto}
+            ARGS --cpp_out gen -I def ${proto}
             DEPENDS ${proto})
 
     list(APPEND PROTO_GEN_FILES ${proto_hdr} ${proto_src})
@@ -32,6 +32,6 @@ if (PROTO_GEN_FILES)
     )
 
     set_target_properties(proto_static PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-    set_target_properties(proto_static PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
-    set_target_properties(proto_static PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+    set_target_properties(proto_static PROPERTIES LIBRARY_OUTPUT_DIRECTORY lib)
+    set_target_properties(proto_static PROPERTIES ARCHIVE_OUTPUT_DIRECTORY lib)
 endif ()

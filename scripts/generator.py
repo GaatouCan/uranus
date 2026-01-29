@@ -3,8 +3,8 @@ import os
 import re
 
 VERSION = '0.1'
-TARGET_DIR = '../gameplay/common'
-PROTOBUF_DIR = '../protobuf/def'
+TARGET_DIR = '../gameplay/common/include/common'
+PROTOBUF_DIR = '../gameplay/protobuf/def'
 PROTO_FILE = [
     'greeting',
     'appearance'
