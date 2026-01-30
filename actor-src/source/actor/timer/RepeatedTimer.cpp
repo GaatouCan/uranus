@@ -61,9 +61,9 @@ namespace uranus::actor {
                 auto point = std::chrono::steady_clock::now();
                 point += self->delay_;
 
-                auto kCleanUp = [&] {
+                auto kCleanUp = [self] {
                     self->completed_.test_and_set(std::memory_order_release);
-                    if (const auto temp = self->owner_.lock(); temp && self->id_ > 0) {
+                    if (const auto temp = self->owner_.lock()) {
                         temp->timerManager_.removeOnCompleted(self->id_);
                     }
                 };
@@ -71,22 +71,24 @@ namespace uranus::actor {
                 // The first await
                 {
                     self->innerTimer_.expires_at(point);
-                    if (const auto [ec] = co_await self->innerTimer_.async_wait(); ec) {
-                        if (ec != asio::error::operation_aborted) {
-                            // TODO: Not cancel error_Code
-                        }
+                    const auto [ec] = co_await self->innerTimer_.async_wait();
+
+                    const auto temp = self->owner_.lock();
+                    if (temp == nullptr) {
+                        self->completed_.test_and_set(std::memory_order_release);
+                        co_return;
+                    }
+
+                    if (ec) {
+                        if (ec != asio::error::operation_aborted)
+                            temp->onErrorCode(ec);
 
                         kCleanUp();
                         co_return;
                     }
 
-                    if (const auto temp = self->owner_.lock()) {
-                        auto evl = Envelope::makeCallback(self->task_);
-                        temp->pushEnvelope(std::move(evl));
-                    } else {
-                        kCleanUp();
-                        co_return;
-                    }
+                    auto evl = Envelope::makeCallback(self->task_);
+                    temp->pushEnvelope(std::move(evl));
                 }
 
                 // The loop
@@ -95,20 +97,23 @@ namespace uranus::actor {
                         point += self->rate_;
                         self->innerTimer_.expires_at(point);
 
-                        if (const auto [ec] = co_await self->innerTimer_.async_wait(); ec) {
-                            if (ec != asio::error::operation_aborted) {
-                                // TODO: Not cancel error_Code
-                            }
+                        const auto [ec] = co_await self->innerTimer_.async_wait();
+
+                        const auto temp = self->owner_.lock();
+                        if (temp == nullptr) {
+                            self->completed_.test_and_set(std::memory_order_release);
+                            co_return;
+                        }
+
+                        if (ec) {
+                            if (ec != asio::error::operation_aborted)
+                                temp->onErrorCode(ec);
+
                             break;
                         }
 
-                        if (const auto temp = self->owner_.lock()) {
-                            auto evl = Envelope::makeCallback(self->task_);
-                            temp->pushEnvelope(std::move(evl));
-                        } else {
-                            kCleanUp();
-                            co_return;
-                        }
+                        auto evl = Envelope::makeCallback(self->task_);
+                        temp->pushEnvelope(std::move(evl));
                     }
                 }
 
