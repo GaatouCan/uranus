@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <base/noncopy.h>
 
 namespace uranus::actor {
@@ -7,7 +8,7 @@ namespace uranus::actor {
     class ServerModule {
 
     public:
-        ServerModule() = default;
+        ServerModule() noexcept = default;
         virtual ~ServerModule() = default;
 
         DISABLE_COPY_MOVE(ServerModule)
