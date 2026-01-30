@@ -1,6 +1,6 @@
 #pragma once
 
-#include "actor.export.h"
+#include "../actor.export.h"
 
 #include <base/noncopy.h>
 #include <base/types.h>
