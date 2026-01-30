@@ -27,7 +27,7 @@ namespace uranus::actor {
     public:
         RepeatedTimer() = delete;
 
-        RepeatedTimer(const shared_ptr<BaseActorContext> &ctx, int64_t id);
+        RepeatedTimer(const shared_ptr<BaseActorContext> &owner, int64_t id);
         ~RepeatedTimer();
 
         DISABLE_COPY_MOVE(RepeatedTimer)
@@ -42,8 +42,10 @@ namespace uranus::actor {
         void cancel();
 
     private:
-        weak_ptr<BaseActorContext> context_;
-        int64_t id_;
+        asio::any_io_executor exec_;
+        const int64_t id_;
+
+        weak_ptr<BaseActorContext> owner_;
 
         SteadyTimer innerTimer_;
         RepeatedTask task_;

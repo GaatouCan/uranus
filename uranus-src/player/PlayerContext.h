@@ -21,7 +21,7 @@ namespace uranus {
         friend class PlayerManager;
 
     public:
-        PlayerContext(asio::io_context &ctx, ActorHandle &&actor);
+        PlayerContext(asio::any_io_executor ctx, ActorHandle &&actor);
         ~PlayerContext() override;
 
         [[nodiscard]] PlayerManager *getPlayerManager() const;

@@ -27,7 +27,7 @@ namespace uranus {
         friend class ServiceManager;
 
     public:
-        ServiceContext(asio::io_context &ctx, ActorHandle &&actor);
+        ServiceContext(asio::any_io_executor ctx, ActorHandle &&actor);
         ~ServiceContext() override;
 
         [[nodiscard]] BaseService *getService() const;

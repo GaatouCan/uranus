@@ -9,13 +9,15 @@
 
 #include <actor/BaseService.h>
 
+#include <utility>
+
 namespace uranus {
 
     using actor::Package;
     using actor::Envelope;
 
-    ServiceContext::ServiceContext(asio::io_context &ctx, ActorHandle &&actor)
-        : BaseActorContext(ctx, std::move(actor)),
+    ServiceContext::ServiceContext(asio::any_io_executor ctx, ActorHandle &&actor)
+        : BaseActorContext(std::move(ctx), std::move(actor)),
           manager_(nullptr) {
     }
 

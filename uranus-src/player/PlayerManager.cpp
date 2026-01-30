@@ -52,7 +52,8 @@ namespace uranus {
             delete ptr;
         });
 
-        auto ctx = std::make_shared<PlayerContext>(world_.getWorkerIOContext(), std::move(handle));
+        auto strand = asio::make_strand(world_.getWorkerIOContext());
+        auto ctx = std::make_shared<PlayerContext>(strand, std::move(handle));
 
         shared_ptr<PlayerContext> old;
 

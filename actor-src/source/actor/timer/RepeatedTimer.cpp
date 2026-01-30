@@ -9,10 +9,11 @@ namespace uranus::actor {
     using asio::detached;
     using asio::awaitable;
 
-    RepeatedTimer::RepeatedTimer(const shared_ptr<BaseActorContext> &ctx, const int64_t id)
-        : context_(ctx),
+    RepeatedTimer::RepeatedTimer(const shared_ptr<BaseActorContext> &owner, const int64_t id)
+        : exec_(owner->executor()),
           id_(id),
-          innerTimer_(ctx->strand_),
+          owner_(owner),
+          innerTimer_(exec_),
           delay_(0),
           rate_(0) {
     }
@@ -48,12 +49,8 @@ namespace uranus::actor {
         if (running_.test_and_set(std::memory_order_acq_rel))
             return;
 
-        const auto ctx = context_.lock();
-        if (!ctx)
-            return;
-
-        co_spawn(ctx->strand_, [self = shared_from_this()]()-> awaitable<void> {
-            if (self->context_.expired()) {
+        co_spawn(exec_, [self = shared_from_this()]()-> awaitable<void> {
+            if (self->owner_.expired()) {
                 self->completed_.test_and_set(std::memory_order_release);
                 co_return;
             }
@@ -66,9 +63,8 @@ namespace uranus::actor {
 
             auto kCleanUp = [&] {
                 self->completed_.test_and_set(std::memory_order_release);
-                if (const auto temp = self->context_.lock(); temp && self->id_ > 0) {
+                if (const auto temp = self->owner_.lock(); temp && self->id_ > 0) {
                     temp->timerManager_.removeOnCompleted(self->id_);
-                    self->id_ = -1;
                 }
             };
 
@@ -84,7 +80,7 @@ namespace uranus::actor {
                     co_return;
                 }
 
-                if (const auto temp = self->context_.lock()) {
+                if (const auto temp = self->owner_.lock()) {
                     auto evl = Envelope::makeCallback(self->task_);
                     temp->pushEnvelope(std::move(evl));
                 } else {
@@ -106,7 +102,7 @@ namespace uranus::actor {
                         break;
                     }
 
-                    if (const auto temp = self->context_.lock()) {
+                    if (const auto temp = self->owner_.lock()) {
                         auto evl = Envelope::makeCallback(self->task_);
                         temp->pushEnvelope(std::move(evl));
                     } else {
@@ -124,16 +120,12 @@ namespace uranus::actor {
         if (completed_.test_and_set(std::memory_order_acq_rel))
             return;
 
-        if (!running_.test(std::memory_order_acquire) && id_ > 0) {
-            if (const auto ctx = context_.lock()) {
-                asio::dispatch(ctx->strand_, [self = shared_from_this()]() mutable {
-                    if (const auto temp = self->context_.lock(); temp && self->id_ > 0) {
-                        temp->timerManager_.removeOnCompleted(self->id_);
-                        self->id_ = -1;
-                    }
-                });
-            }
-
+        if (!running_.test_and_set(std::memory_order_acq_rel)) {
+            asio::dispatch(exec_, [self = shared_from_this()]() mutable {
+                if (const auto temp = self->owner_.lock(); temp && self->id_ > 0) {
+                    temp->timerManager_.removeOnCompleted(self->id_);
+                }
+            });
             return;
         }
 

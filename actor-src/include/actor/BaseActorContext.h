@@ -3,12 +3,7 @@
 #include "ActorContext.h"
 #include "Envelope.h"
 #include "timer/TimerManager.h"
-
-#include <base/types.h>
-#include <base/IdentAllocator.h>
-
-#include <asio/co_spawn.hpp>
-#include <functional>
+#include "session/SessionManager.h"
 
 
 namespace uranus::actor {
@@ -18,48 +13,24 @@ namespace uranus::actor {
     using std::function;
     using std::atomic_flag;
     using asio::awaitable;
-    using asio::co_spawn;
 
     using ActorDeleter  = function<void(BaseActor *)>;
     using ActorHandle   = unique_ptr<BaseActor, ActorDeleter>;
 
     class BaseActor;
     class RepeatedTimer;
+    class RequestSession;
 
 
     class ACTOR_API BaseActorContext : public ActorContext, public std::enable_shared_from_this<BaseActorContext> {
 
-        using SessionWorkGuard = asio::executor_work_guard<asio::any_completion_executor>;
-
-        class ACTOR_API SessionNode final : public std::enable_shared_from_this<SessionNode> {
-
-        public:
-            SessionNode() = delete;
-
-            SessionNode(asio::io_context &ctx, SessionHandler &&h, int64_t s);
-            ~SessionNode();
-
-            DISABLE_COPY_MOVE(SessionNode)
-
-            void dispatch(PackageHandle &&res);
-            void cancel();
-
-        public:
-            SessionHandler      handler_;
-            SessionWorkGuard    guard_;
-            SteadyTimer         timer_;
-            int64_t             sess_;
-            atomic_flag         completed_;
-        };
-
-        using SessionMap = std::unordered_map<int64_t, shared_ptr<SessionNode>>;
-
         friend class RepeatedTimer;
+        friend class RequestSession;
 
     public:
         BaseActorContext() = delete;
 
-        BaseActorContext(asio::io_context &ctx, ActorHandle &&handle);
+        BaseActorContext(asio::any_io_executor exec, ActorHandle &&actor);
         ~BaseActorContext() override;
 
         DISABLE_COPY_MOVE(BaseActorContext)
@@ -73,6 +44,8 @@ namespace uranus::actor {
         [[nodiscard]] virtual bool isInitial() const;
         [[nodiscard]] virtual bool isRunning() const;
         [[nodiscard]] virtual bool isTerminated() const;
+
+        asio::any_io_executor &executor();
 
         [[nodiscard]] BaseActor *getActor() const;
 
@@ -101,8 +74,7 @@ namespace uranus::actor {
         awaitable<void> tick();
 
     private:
-        asio::io_context &ctx_;
-        ExecutorStrand strand_;
+        asio::any_io_executor exec_;
 
         AttributeMap attr_;
         ActorHandle handle_;
@@ -113,10 +85,7 @@ namespace uranus::actor {
         ConcurrentChannel<Envelope> mailbox_;
         SteadyTimer ticker_;
 
-        IdentAllocator<int64_t, true> sessAlloc_;
-        SessionMap sessions_;
-        std::mutex sessMutex_;
-
+        SessionManager sessionManager_;
         TimerManager timerManager_;
     };
 

@@ -1,4 +1,6 @@
 ﻿#include "PlayerContext.h"
+
+#include <utility>
 #include "PlayerManager.h"
 
 #include "GameWorld.h"
@@ -13,8 +15,8 @@ namespace uranus {
     using actor::Package;
     using actor::Envelope;
 
-    PlayerContext::PlayerContext(asio::io_context &ctx, ActorHandle &&actor)
-        : BaseActorContext(ctx, std::move(actor)),
+    PlayerContext::PlayerContext(asio::any_io_executor ctx, ActorHandle &&actor)
+        : BaseActorContext(std::move(ctx), std::move(actor)),
           manager_(nullptr) {
     }
 

@@ -15,6 +15,10 @@ class IdentAllocator {
     using IntegralType     = std::conditional_t<bConcurrent, std::atomic<Type>, Type>;
 
 public:
+    IdentAllocator();
+
+    explicit IdentAllocator(IntegralType start);
+
     //Type allocateTS();
     Type allocate();
 
@@ -29,6 +33,20 @@ private:
     IntegralType                next_;
     IntegralType                usage_;
 };
+
+template<class Type, bool bConcurrent>
+requires std::is_integral_v<Type>
+IdentAllocator<Type, bConcurrent>::IdentAllocator()
+    : next_(0),
+      usage_(0) {
+}
+
+template<class Type, bool bConcurrent>
+requires std::is_integral_v<Type>
+IdentAllocator<Type, bConcurrent>::IdentAllocator(IntegralType start)
+    : next_(start),
+      usage_(0) {
+}
 
 template<class Type, bool bConcurrent>
 requires std::is_integral_v<Type>

@@ -54,7 +54,8 @@ namespace uranus {
                 delete ptr;
             });
 
-            const auto ctx = std::make_shared<ServiceContext>(world_.getWorkerIOContext(), std::move(handle));
+            auto strand = asio::make_strand(world_.getWorkerIOContext());
+            const auto ctx = std::make_shared<ServiceContext>(strand, std::move(handle));
 
             ctx->setServiceManager(this);
             ctx->setServiceId(sid);
