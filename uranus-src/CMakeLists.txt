@@ -16,11 +16,12 @@ endif ()
 
 add_executable(uranus ${URANUS_FILES})
 
-target_link_libraries(uranus PUBLIC common)
+target_link_libraries(uranus PRIVATE mimalloc)
 target_link_libraries(uranus PUBLIC config)
 target_link_libraries(uranus PUBLIC login)
 target_link_libraries(uranus PUBLIC logger)
 target_link_libraries(uranus PUBLIC database)
+target_link_libraries(uranus PUBLIC common)
 
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

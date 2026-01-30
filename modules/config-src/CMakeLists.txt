@@ -26,8 +26,6 @@ target_include_directories(config
 )
 
 target_link_libraries(config PUBLIC actor)
-target_link_libraries(config PUBLIC yaml-cpp::yaml-cpp)
-target_link_libraries(config PUBLIC nlohmann_json::nlohmann_json)
 
 set_target_properties(config PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(config PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
