@@ -26,7 +26,6 @@ target_include_directories(actor
 )
 
 target_link_libraries(actor PUBLIC base)
-target_link_libraries(base PUBLIC mimalloc)
 
 set_target_properties(actor PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(actor PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

@@ -44,7 +44,7 @@ namespace uranus {
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
             this->terminate();
-            // delete this;
+            delete this;
         });
 
         SPDLOG_INFO("GameWorld is running...");
@@ -52,7 +52,7 @@ namespace uranus {
     }
 
     void GameWorld::terminate() {
-        if (terminated_.test_and_set(std::memory_order_acq_rel))
+        if (ctx_.stopped())
             return;
 
         // Shutdown all modules

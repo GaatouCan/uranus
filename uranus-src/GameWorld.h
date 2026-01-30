@@ -3,7 +3,6 @@
 #include <base/SingleIOContextPool.h>
 #include <memory>
 #include <vector>
-#include <atomic>
 #include <unordered_map>
 
 namespace uranus {
@@ -16,7 +15,6 @@ namespace uranus {
     using std::unique_ptr;
     using std::vector;
     using std::unordered_map;
-    using std::atomic_flag;
 
     class GameWorld final {
 
@@ -41,8 +39,6 @@ namespace uranus {
     private:
         asio::io_context ctx_;
         asio::executor_work_guard<asio::io_context::executor_type> guard_;
-
-        atomic_flag terminated_;
 
         SingleIOContextPool pool_;
 
