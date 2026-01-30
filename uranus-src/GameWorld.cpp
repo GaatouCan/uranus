@@ -61,15 +61,15 @@ namespace uranus {
             val->stop();
         }
 
-        ordered_.clear();
-        modules_.clear();
-
         // Shutdown the workers pool
         pool_.stop();
 
         // Shutdown the main io_context first
         guard_.reset();
         ctx_.stop();
+
+        ordered_.clear();
+        modules_.clear();
 
         SPDLOG_INFO("GameWorld terminated");
     }
