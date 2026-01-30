@@ -1,6 +1,7 @@
 #include "LoginAuth.h"
 #include "LoginProtocol.h"
 
+#include <spdlog/spdlog.h>
 #include <network/Connection.h>
 
 #include "login.pb.h"
@@ -17,6 +18,7 @@ namespace uranus::login {
     }
 
     LoginAuth::~LoginAuth() {
+        SPDLOG_DEBUG("Destroy LoginAuth");
     }
 
     void LoginAuth::start() {

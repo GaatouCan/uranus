@@ -1,6 +1,7 @@
 #include "DatabaseModule.h"
 
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 
 
 namespace uranus::database {
@@ -37,6 +38,8 @@ namespace uranus::database {
     }
 
     DatabaseModule::~DatabaseModule() {
+        SPDLOG_DEBUG("Destroy DatabaseModule");
+
         if (th_.joinable()) {
             th_.join();
         }

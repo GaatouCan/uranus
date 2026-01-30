@@ -29,6 +29,7 @@ namespace uranus::config {
     }
 
     ConfigModule::~ConfigModule() {
+        SPDLOG_DEBUG("Destroy ConfigModule");
     }
 
     void ConfigModule::start() {

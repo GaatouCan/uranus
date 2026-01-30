@@ -10,6 +10,7 @@ namespace uranus::logger {
     }
 
     LoggerModule::~LoggerModule() {
+        SPDLOG_DEBUG("Destroy LoggerModule");
     }
 
     void LoggerModule::start() {
