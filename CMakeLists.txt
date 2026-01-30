@@ -34,7 +34,7 @@ endif ()
 
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/spdlog)
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/asio)
-#list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/mimalloc)
+list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/mimalloc)
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/nlohmann_json)
 #list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/YAML_CPP)
 list(APPEND CMAKE_PREFIX_PATH ${THIRD_LIBRARY_DIR}/abseil-cpp)
@@ -67,19 +67,19 @@ FetchContent_Declare(
 )
 
 
-FetchContent_Declare(
-        mimalloc
-        GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
-        GIT_TAG v3.2.7
-)
+#FetchContent_Declare(
+#        mimalloc
+#        GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+#        GIT_TAG v3.2.7
+#)
 
 FetchContent_MakeAvailable(spdlog)
 FetchContent_MakeAvailable(json)
 FetchContent_MakeAvailable(yaml-cpp)
-FetchContent_MakeAvailable(mimalloc)
+#FetchContent_MakeAvailable(mimalloc)
 
 #find_package(asio CONFIG REQUIRED)
-#find_package(mimalloc CONFIG REQUIRED)
+find_package(mimalloc CONFIG REQUIRED)
 find_package(OpenSSL COMPONENTS REQUIRED)
 
 add_subdirectory(base-src)

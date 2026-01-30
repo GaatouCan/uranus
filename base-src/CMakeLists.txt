@@ -32,10 +32,9 @@ target_include_directories(base
 )
 message(STATUS "Add ${CMAKE_SOURCE_DIR}/third_party/asio-1.36.0/ to target")
 
-
+target_link_libraries(base PUBLIC mimalloc)
 target_link_libraries(base PUBLIC spdlog::spdlog)
 target_link_libraries(base PUBLIC nlohmann_json::nlohmann_json)
-target_link_libraries(base PUBLIC mimalloc)
 target_link_libraries(base PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
 set_target_properties(base PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

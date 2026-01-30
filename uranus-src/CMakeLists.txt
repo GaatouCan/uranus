@@ -16,14 +16,13 @@ endif ()
 
 add_executable(uranus ${URANUS_FILES})
 
-target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries(uranus PUBLIC base)
 target_link_libraries(uranus PUBLIC common)
 target_link_libraries(uranus PUBLIC config)
 target_link_libraries(uranus PUBLIC login)
 target_link_libraries(uranus PUBLIC logger)
 target_link_libraries(uranus PUBLIC database)
+
+target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
@@ -45,21 +44,21 @@ add_custom_command(
         $<TARGET_FILE_DIR:uranus>
 )
 
-add_custom_command(
-        TARGET uranus
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:mimalloc>
-        $<TARGET_FILE_DIR:uranus>
-)
-
-if (WIN32)
-    FetchContent_GetProperties(mimalloc SOURCE_DIR MIMALLOC_SOURCE_DIR)
-    add_custom_command(
-            TARGET uranus
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${MIMALLOC_SOURCE_DIR}/bin/mimalloc-redirect.dll"
-            $<TARGET_FILE_DIR:uranus>
-    )
-endif ()
+#add_custom_command(
+#        TARGET uranus
+#        POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#        $<TARGET_FILE:mimalloc>
+#        $<TARGET_FILE_DIR:uranus>
+#)
+#
+#if (WIN32)
+#    FetchContent_GetProperties(mimalloc SOURCE_DIR MIMALLOC_SOURCE_DIR)
+#    add_custom_command(
+#            TARGET uranus
+#            POST_BUILD
+#            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#            "${MIMALLOC_SOURCE_DIR}/bin/mimalloc-redirect.dll"
+#            $<TARGET_FILE_DIR:uranus>
+#    )
+#endif ()
