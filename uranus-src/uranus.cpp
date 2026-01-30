@@ -30,7 +30,7 @@ using uranus::ClientConnection;
 
 
 int main() {
-    spdlog::info("Use mi-malloc: {}", mi_version());
+    spdlog::info("Using mi-malloc version: {}", mi_version());
 
     auto *world = new GameWorld();
 
@@ -79,6 +79,7 @@ int main() {
     //         co_await timer.async_wait();
     //
     //         world->terminate();
+    //         delete world;
     //     }, detached);
     // }
 
