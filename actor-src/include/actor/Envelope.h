@@ -66,6 +66,6 @@ namespace uranus::actor {
 
         static Envelope makeDataAsset(int64_t evt, DataAssetHandle &&data);
         static Envelope makeTickInfo(SteadyTimePoint now, SteadyDuration delta);
-        static Envelope makeCallback(ActorCallback &&cb);
+        static Envelope makeCallback(const ActorCallback &cb);
     };
 }

@@ -22,6 +22,8 @@ namespace uranus {
     }
 
     void PlayerContext::send(const int ty, const int64_t target, PackageHandle &&pkg) {
+
+
         const auto pid = getPlayerId();
         if (pid < 0)
             return;
@@ -103,6 +105,9 @@ namespace uranus {
     }
 
     void PlayerContext::sendRequest(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
+        if (!isRunning())
+            return;
+
         const auto pid = getPlayerId();
         if (pid < 0)
             return;
@@ -119,6 +124,9 @@ namespace uranus {
     }
 
     void PlayerContext::sendResponse(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
+        if (!isRunning())
+            return;
+
         const auto pid = getPlayerId();
         if (pid < 0)
             return;
@@ -134,18 +142,20 @@ namespace uranus {
         }
     }
 
-    void PlayerContext::cleanUp() {
-        super::cleanUp();
+    bool PlayerContext::cleanUp() {
+        if (!super::cleanUp())
+            return false;
 
         if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
             mgr->listenEvent(true, getPlayerId(), -1, true);
         }
+
+        return true;
     }
 
     void PlayerContext::dispatch(const int64_t evt, DataAssetHandle &&data) {
-        // const auto pid = getPlayerId();
-        // if (pid < 0)
-        //     return;
+        if (!isRunning())
+            return;
 
         if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
             mgr->dispatchEvent(evt, std::move(data));
@@ -153,6 +163,9 @@ namespace uranus {
     }
 
     void PlayerContext::listen(const int64_t evt, const bool cancel) {
+        if (isTerminated())
+            return;
+
         const auto pid = getPlayerId();
         if (pid < 0)
             return;
@@ -163,6 +176,9 @@ namespace uranus {
     }
 
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {
+        if (!isInitial())
+            return;
+
         manager_ = mgr;
     }
 } // uranus

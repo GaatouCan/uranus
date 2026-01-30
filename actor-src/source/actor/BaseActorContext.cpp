@@ -83,7 +83,8 @@ namespace uranus::actor {
           strand_(asio::make_strand(ctx)),
           handle_(std::move(handle)),
           mailbox_(ctx_, 1024),
-          ticker_(ctx_) {
+          ticker_(ctx_),
+          timerManager_(*this) {
 #ifndef NDEBUG
         assert(handle_ != nullptr);
 #endif
@@ -103,7 +104,14 @@ namespace uranus::actor {
     }
 
     void BaseActorContext::run(DataAssetHandle &&data) {
+        if (terminated_.test(std::memory_order_acquire))
+            return;
+
+        if (running_.test_and_set(std::memory_order_acq_rel))
+            return;
+
         handle_->onStart(data.get());
+
         co_spawn(strand_, [self = shared_from_this()]() mutable -> awaitable<void> {
             if (self->handle_->enableTick_) {
                 co_await(
@@ -117,22 +125,33 @@ namespace uranus::actor {
     }
 
     void BaseActorContext::terminate() {
-        if (!isRunning())
+        if (terminated_.test_and_set(std::memory_order_acq_rel))
             return;
 
         asio::dispatch(strand_, [self = shared_from_this()]() mutable {
-            if (!self->isRunning())
+            if (self->terminated_.test(std::memory_order_acquire))
                 return;
 
-            self->running_.clear();
             self->ticker_.cancel();
             self->mailbox_.cancel();
             self->mailbox_.close();
+            self->timerManager_.cancelAll();
         });
     }
 
+    bool BaseActorContext::isInitial() const {
+        return !running_.test()
+            && !terminated_.test();
+    }
+
+    bool BaseActorContext::isTerminated() const {
+        return terminated_.test();
+    }
+
     bool BaseActorContext::isRunning() const {
-        return mailbox_.is_open() && running_.test();
+        return mailbox_.is_open()
+            && running_.test()
+            && !terminated_.test();
     }
 
     BaseActor *BaseActorContext::getActor() const {
@@ -147,6 +166,22 @@ namespace uranus::actor {
             return;
 
         mailbox_.try_send_via_dispatch(std::error_code{}, std::move(envelope));
+    }
+
+    RepeatedTimerHandle BaseActorContext::createTimer(
+        const RepeatedTask &task,
+        const SteadyDuration delay,
+        const SteadyDuration rate
+    ) {
+
+        if (!isRunning())
+            return {-1, nullptr};
+
+        return timerManager_.createTimer(task, delay, rate);
+    }
+
+    void BaseActorContext::cancelTimer(const RepeatedTimerHandle &handle) {
+        TimerManager::cancelTimer(handle);
     }
 
     void BaseActorContext::createSession(
@@ -201,18 +236,20 @@ namespace uranus::actor {
     void BaseActorContext::onException(std::exception &e) {
     }
 
-    void BaseActorContext::cleanUp() {
+    bool BaseActorContext::cleanUp() {
+        if (!terminated_.test(std::memory_order_acquire))
+            return false;
+
         // 释放所有会话
         for (const auto &node: sessions_ | std::views::values) {
             node->cancel();
         }
-
-        running_.clear();
         sessions_.clear();
+
+        return true;
     }
 
     awaitable<void> BaseActorContext::process() {
-        running_.test_and_set();
         try {
             while (isRunning()) {
                 // 从邮箱中读取一条信息
@@ -227,6 +264,9 @@ namespace uranus::actor {
                     this->onErrorCode(ec);
                     break;
                 }
+
+                if (!isRunning())
+                    break;
 
                 switch (evl.type) {
                     case Envelope::kPackage: {

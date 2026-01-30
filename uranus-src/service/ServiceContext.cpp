@@ -27,6 +27,9 @@ namespace uranus {
     }
 
     void ServiceContext::send(const int ty, const int64_t target, PackageHandle &&pkg) {
+        if (!isRunning())
+            return;
+
         const auto sid = getServiceId();
         if (sid < 0)
             return;
@@ -118,6 +121,9 @@ namespace uranus {
     }
 
     void ServiceContext::sendRequest(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
+        if (!isRunning())
+            return;
+
         const auto sid = getServiceId();
         if (sid < 0)
             return;
@@ -145,6 +151,9 @@ namespace uranus {
     }
 
     void ServiceContext::sendResponse(const int ty, const int64_t sess, const int64_t target, PackageHandle &&pkg) {
+        if (!isRunning())
+            return;
+
         const auto sid = getServiceId();
         if (sid < 0)
             return;
@@ -169,18 +178,20 @@ namespace uranus {
         }
     }
 
-    void ServiceContext::cleanUp() {
-        super::cleanUp();
+    bool ServiceContext::cleanUp() {
+        if (!super::cleanUp())
+            return false;
 
         if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
             mgr->listenEvent(false, getServiceId(), -1, true);
         }
+
+        return true;
     }
 
     void ServiceContext::dispatch(int64_t evt, DataAssetHandle &&data) {
-        // const auto sid = getServiceId();
-        // if (sid < 0)
-        //     return;
+        if (!isRunning())
+            return;
 
         if (auto *mgr = GET_MODULE(getWorld(), EventManager)) {
             mgr->dispatchEvent(evt, std::move(data));
@@ -188,6 +199,9 @@ namespace uranus {
     }
 
     void ServiceContext::listen(const int64_t evt, const bool cancel) {
+        if (isTerminated())
+            return;
+
         const auto sid = getServiceId();
         if (sid < 0)
             return;
@@ -198,6 +212,9 @@ namespace uranus {
     }
 
     void ServiceContext::setServiceManager(ServiceManager *mgr) {
+        if (!isInitial())
+            return;
+
         manager_ = mgr;
     }
 }

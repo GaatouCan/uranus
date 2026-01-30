@@ -96,11 +96,11 @@ namespace uranus::actor {
         return evl;
     }
 
-    Envelope Envelope::makeCallback(ActorCallback &&cb) {
+    Envelope Envelope::makeCallback(const ActorCallback &cb) {
         Envelope evl;
 
         evl.type = kCallback;
-        evl.variant = std::move(cb);
+        evl.variant = cb;
 
         return evl;
     }

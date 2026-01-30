@@ -8,11 +8,19 @@
 #include <asio/any_completion_handler.hpp>
 #include <asio/use_awaitable.hpp>
 #include <map>
+#include <chrono>
+#include <functional>
 
 namespace uranus::actor {
 
+    class BaseActor;
+    struct RepeatedTimerHandle;
+
     using std::unique_ptr;
     using ActorMap = std::map<std::string, int64_t>;
+    using RepeatedTask = std::function<void(BaseActor *)>;
+    using SteadyTimePoint = std::chrono::steady_clock::time_point;
+    using SteadyDuration = std::chrono::steady_clock::duration;
 
     class ActorContext {
 
@@ -44,6 +52,9 @@ namespace uranus::actor {
 
         virtual void listen(int64_t evt, bool cancel) = 0;
         virtual void dispatch(int64_t evt, unique_ptr<DataAsset> &&data) = 0;
+
+        virtual RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyDuration delay, SteadyDuration rate) = 0;
+        virtual void cancelTimer(const RepeatedTimerHandle &handle) = 0;
 
     protected:
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandler &&handle) = 0;

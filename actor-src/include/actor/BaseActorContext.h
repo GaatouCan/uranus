@@ -2,6 +2,7 @@
 
 #include "ActorContext.h"
 #include "Envelope.h"
+#include "TimerManager.h"
 
 #include <base/types.h>
 #include <base/IdentAllocator.h>
@@ -12,8 +13,6 @@
 
 namespace uranus::actor {
 
-    class BaseActor;
-
     using std::shared_ptr;
     using std::make_shared;
     using std::function;
@@ -23,6 +22,9 @@ namespace uranus::actor {
 
     using ActorDeleter  = function<void(BaseActor *)>;
     using ActorHandle   = unique_ptr<BaseActor, ActorDeleter>;
+
+    class BaseActor;
+    class RepeatedTimer;
 
 
     class ACTOR_API BaseActorContext : public ActorContext, public std::enable_shared_from_this<BaseActorContext> {
@@ -52,6 +54,8 @@ namespace uranus::actor {
 
         using SessionMap = std::unordered_map<int64_t, shared_ptr<SessionNode>>;
 
+        friend class RepeatedTimer;
+
     public:
         BaseActorContext() = delete;
 
@@ -66,7 +70,9 @@ namespace uranus::actor {
         virtual void run(DataAssetHandle &&data);
         virtual void terminate();
 
+        [[nodiscard]] virtual bool isInitial() const;
         [[nodiscard]] virtual bool isRunning() const;
+        [[nodiscard]] virtual bool isTerminated() const;
 
         [[nodiscard]] BaseActor *getActor() const;
 
@@ -75,6 +81,9 @@ namespace uranus::actor {
         T &getActor() const;
 
         void pushEnvelope(Envelope &&envelope);
+
+        RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyDuration delay, SteadyDuration rate) override;
+        void cancelTimer(const RepeatedTimerHandle &handle) override;
 
     protected:
         void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandler &&handle) override;
@@ -85,7 +94,7 @@ namespace uranus::actor {
         virtual void onErrorCode(std::error_code ec);
         virtual void onException(std::exception &e);
 
-        virtual void cleanUp();
+        virtual bool cleanUp();
 
     private:
         awaitable<void> process();
@@ -99,6 +108,7 @@ namespace uranus::actor {
         ActorHandle handle_;
 
         atomic_flag running_;
+        atomic_flag terminated_;
 
         ConcurrentChannel<Envelope> mailbox_;
         SteadyTimer ticker_;
@@ -106,6 +116,8 @@ namespace uranus::actor {
         IdentAllocator<int64_t, true> sessAlloc_;
         SessionMap sessions_;
         std::mutex sessMutex_;
+
+        TimerManager timerManager_;
     };
 
     template<class T>

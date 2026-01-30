@@ -52,7 +52,7 @@ namespace uranus {
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
         void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
 
-        void cleanUp() override;
+        bool cleanUp() override;
 
     private:
         void setServiceManager(ServiceManager *mgr);
