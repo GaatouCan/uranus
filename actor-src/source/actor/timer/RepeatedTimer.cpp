@@ -4,7 +4,6 @@
 #include <asio.hpp>
 
 namespace uranus::actor {
-
     using asio::co_spawn;
     using asio::detached;
     using asio::awaitable;
@@ -50,56 +49,35 @@ namespace uranus::actor {
             return;
 
         co_spawn(exec_, [self = shared_from_this()]()-> awaitable<void> {
-            if (self->owner_.expired()) {
-                self->completed_.test_and_set(std::memory_order_release);
-                co_return;
-            }
-
-            if (self->completed_.test(std::memory_order_acquire))
-                co_return;
-
-            auto point = std::chrono::steady_clock::now();
-            point += self->delay_;
-
-            auto kCleanUp = [&] {
-                self->completed_.test_and_set(std::memory_order_release);
-                if (const auto temp = self->owner_.lock(); temp && self->id_ > 0) {
-                    temp->timerManager_.removeOnCompleted(self->id_);
+            try {
+                if (self->owner_.expired()) {
+                    self->completed_.test_and_set(std::memory_order_release);
+                    co_return;
                 }
-            };
 
-            // The first await
-            {
-                self->innerTimer_.expires_at(point);
-                if (const auto [ec] = co_await self->innerTimer_.async_wait(); ec) {
-                    if (ec != asio::error::operation_aborted) {
-                        // TODO: Not cancel error_Code
+                if (self->completed_.test(std::memory_order_acquire))
+                    co_return;
+
+                auto point = std::chrono::steady_clock::now();
+                point += self->delay_;
+
+                auto kCleanUp = [&] {
+                    self->completed_.test_and_set(std::memory_order_release);
+                    if (const auto temp = self->owner_.lock(); temp && self->id_ > 0) {
+                        temp->timerManager_.removeOnCompleted(self->id_);
                     }
+                };
 
-                    kCleanUp();
-                    co_return;
-                }
-
-                if (const auto temp = self->owner_.lock()) {
-                    auto evl = Envelope::makeCallback(self->task_);
-                    temp->pushEnvelope(std::move(evl));
-                } else {
-                    kCleanUp();
-                    co_return;
-                }
-            }
-
-            // The loop
-            if (self->rate_ > SteadyDuration::zero()) {
-                while (true) {
-                    point += self->rate_;
+                // The first await
+                {
                     self->innerTimer_.expires_at(point);
-
                     if (const auto [ec] = co_await self->innerTimer_.async_wait(); ec) {
                         if (ec != asio::error::operation_aborted) {
                             // TODO: Not cancel error_Code
                         }
-                        break;
+
+                        kCleanUp();
+                        co_return;
                     }
 
                     if (const auto temp = self->owner_.lock()) {
@@ -110,9 +88,36 @@ namespace uranus::actor {
                         co_return;
                     }
                 }
-            }
 
-            kCleanUp();
+                // The loop
+                if (self->rate_ > SteadyDuration::zero()) {
+                    while (true) {
+                        point += self->rate_;
+                        self->innerTimer_.expires_at(point);
+
+                        if (const auto [ec] = co_await self->innerTimer_.async_wait(); ec) {
+                            if (ec != asio::error::operation_aborted) {
+                                // TODO: Not cancel error_Code
+                            }
+                            break;
+                        }
+
+                        if (const auto temp = self->owner_.lock()) {
+                            auto evl = Envelope::makeCallback(self->task_);
+                            temp->pushEnvelope(std::move(evl));
+                        } else {
+                            kCleanUp();
+                            co_return;
+                        }
+                    }
+                }
+
+                kCleanUp();
+            } catch (std::exception &e) {
+                if (const auto temp = self->owner_.lock()) {
+                    temp->onException(e);
+                }
+            }
         }, detached);
     }
 
@@ -132,4 +137,3 @@ namespace uranus::actor {
         innerTimer_.cancel();
     }
 }
-
