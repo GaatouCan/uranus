@@ -45,7 +45,7 @@ namespace uranus::actor {
         [[nodiscard]] virtual bool isRunning() const;
         [[nodiscard]] virtual bool isTerminated() const;
 
-        asio::any_io_executor &executor();
+        asio::any_io_executor &executor() override;
 
         [[nodiscard]] BaseActor *getActor() const;
 

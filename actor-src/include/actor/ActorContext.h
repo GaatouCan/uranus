@@ -7,9 +7,10 @@
 #include <base/AttributeMap.h>
 #include <asio/any_completion_handler.hpp>
 #include <asio/use_awaitable.hpp>
-#include <map>
-#include <chrono>
+#include <asio/any_io_executor.hpp>
 #include <functional>
+#include <chrono>
+#include <map>
 
 namespace uranus::actor {
 
@@ -35,6 +36,8 @@ namespace uranus::actor {
 
         virtual AttributeMap &attr() = 0;
         [[nodiscard]] virtual const AttributeMap &attr() const = 0;
+
+        virtual asio::any_io_executor &executor() = 0;
 
         [[nodiscard]] virtual ServerModule *getModule(const std::string &name) const = 0;
 
