@@ -27,6 +27,7 @@ target_include_directories(database
         PUBLIC include
 )
 
+target_link_libraries(database PRIVATE mimalloc)
 target_link_libraries(database PUBLIC actor)
 
 set_target_properties(database PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

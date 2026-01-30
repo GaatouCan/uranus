@@ -25,6 +25,7 @@ target_include_directories(config
         PUBLIC include
 )
 
+target_link_libraries(config PRIVATE mimalloc)
 target_link_libraries(config PUBLIC actor)
 
 set_target_properties(config PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

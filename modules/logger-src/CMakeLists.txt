@@ -25,6 +25,7 @@ target_include_directories(logger
         PUBLIC include
 )
 
+target_link_libraries(logger PRIVATE mimalloc)
 target_link_libraries(logger PUBLIC actor)
 
 set_target_properties(logger PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)

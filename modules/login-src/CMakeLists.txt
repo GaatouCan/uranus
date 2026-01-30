@@ -55,6 +55,7 @@ target_include_directories(login
         PUBLIC include
 )
 
+target_link_libraries(login PRIVATE mimalloc)
 target_link_libraries(login PUBLIC actor)
 target_link_libraries(login PUBLIC protobuf::libprotobuf-lite)
 
