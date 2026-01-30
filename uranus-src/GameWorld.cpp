@@ -1,11 +1,11 @@
 #include "GameWorld.h"
 
-#include <ranges>
 #include <actor/ServerModule.h>
-#include <format>
-#include <asio/signal_set.hpp>
 #include <config/ConfigModule.h>
 
+#include <ranges>
+#include <format>
+#include <asio/signal_set.hpp>
 #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
 
