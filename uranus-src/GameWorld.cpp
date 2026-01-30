@@ -44,7 +44,6 @@ namespace uranus {
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
             this->terminate();
-            delete this;
         });
 
         SPDLOG_INFO("GameWorld is running...");
