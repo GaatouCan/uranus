@@ -78,6 +78,7 @@ namespace uranus::actor {
     public:
         int64_t id_;
         std::vector<uint8_t, detail::BufferAllocator<uint8_t>> payload_;
+        // std::vector<uint8_t> payload_;
     };
 
     DECLARE_MESSAGE_POOL(Package)

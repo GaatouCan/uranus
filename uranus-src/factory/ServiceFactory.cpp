@@ -20,6 +20,7 @@ namespace uranus {
 
     ServiceFactory::~ServiceFactory() {
         coreServices_.clear();
+        extendServices_.clear();
     }
 
     void ServiceFactory::initial() {

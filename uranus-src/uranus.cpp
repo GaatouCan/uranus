@@ -1,3 +1,4 @@
+#include <mimalloc.h>
 #include <spdlog/spdlog.h>
 
 #include "GameWorld.h"
@@ -12,6 +13,7 @@
 #include <login/LoginAuth.h>
 #include <database/DatabaseModule.h>
 
+#include <asio.hpp>
 
 using uranus::network::Connection;
 using uranus::GameWorld;
@@ -27,7 +29,7 @@ using uranus::ClientConnection;
 
 
 int main() {
-    spdlog::info("Hello World!");
+    spdlog::info("Use mi-malloc: {}", mi_version());
 
     auto *world = new GameWorld();
 
@@ -65,8 +67,21 @@ int main() {
             });
     }
 
+    // Fot test
+    {
+        using asio::co_spawn;
+        using asio::awaitable;
+        using asio::detached;
+        co_spawn(world->getWorkerIOContext(), [&]() -> awaitable<void> {
+            auto exec = co_await asio::this_coro::executor;
+            uranus::SteadyTimer timer(exec, std::chrono::seconds(2));
+            co_await timer.async_wait();
+
+            world->terminate();
+        }, detached);
+    }
+
     world->run();
-    world->terminate();
 
     delete world;
 

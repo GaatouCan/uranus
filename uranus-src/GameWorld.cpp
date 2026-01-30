@@ -17,8 +17,7 @@ namespace uranus {
     }
 
     GameWorld::~GameWorld() {
-        ordered_.clear();
-        modules_.clear();
+        SPDLOG_INFO("GameWorld is destroying...");
     }
 
     void GameWorld::run() {
@@ -45,6 +44,7 @@ namespace uranus {
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
             this->terminate();
+            // delete this;
         });
 
         SPDLOG_INFO("GameWorld is running...");
@@ -52,21 +52,24 @@ namespace uranus {
     }
 
     void GameWorld::terminate() {
-        if (ctx_.stopped())
+        if (terminated_.test_and_set(std::memory_order_acq_rel))
             return;
 
-        // Shutdown the main io_context first
-        guard_.reset();
-        ctx_.stop();
+        // Shutdown all modules
+        for (const auto val : ordered_ | std::views::reverse) {
+            SPDLOG_INFO("Stop module: {}", val->getModuleName());
+            val->stop();
+        }
+
+        ordered_.clear();
+        modules_.clear();
 
         // Shutdown the workers pool
         pool_.stop();
 
-        // Shutdown all modules
-        for (const auto &val : ordered_ | std::views::reverse) {
-            SPDLOG_INFO("Stop module: {}", val->getModuleName());
-            val->stop();
-        }
+        // Shutdown the main io_context first
+        guard_.reset();
+        ctx_.stop();
 
         SPDLOG_INFO("GameWorld terminated");
     }

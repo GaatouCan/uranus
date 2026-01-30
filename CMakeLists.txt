@@ -46,6 +46,7 @@ include(GenerateExportHeader)
 include(FetchContent)
 
 set(BUILD_TESTING OFF CACHE BOOL "Not build test" FORCE)
+set(MI_OVERRIDE ON CACHE BOOL "Use mi-malloc override" FORCE)
 set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as SHARED library" FORCE)
 set(YAML_BUILD_SHARED_LIBS ON CACHE BOOL "Build yaml-cpp as SHARED library" FORCE)
 
@@ -67,19 +68,19 @@ FetchContent_Declare(
 )
 
 
-#FetchContent_Declare(
-#        mimalloc
-#        GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
-#        GIT_TAG v3.2.7
-#)
+FetchContent_Declare(
+        mimalloc
+        GIT_REPOSITORY https://github.com/microsoft/mimalloc.git
+        GIT_TAG v3.2.7
+)
 
 FetchContent_MakeAvailable(spdlog)
 FetchContent_MakeAvailable(json)
 FetchContent_MakeAvailable(yaml-cpp)
-#FetchContent_MakeAvailable(mimalloc)
+FetchContent_MakeAvailable(mimalloc)
 
 #find_package(asio CONFIG REQUIRED)
-find_package(mimalloc CONFIG REQUIRED)
+#find_package(mimalloc CONFIG REQUIRED)
 find_package(OpenSSL COMPONENTS REQUIRED)
 
 add_subdirectory(base-src)

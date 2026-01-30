@@ -1,8 +1,9 @@
 #pragma once
 
+#include <actor/BasePlayer.h>
+
 #include "components/ComponentModule.h"
 
-#include <actor/BasePlayer.h>
 #include <google/protobuf/message_lite.h>
 
 namespace gameplay {

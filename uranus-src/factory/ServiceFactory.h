@@ -1,7 +1,7 @@
 #pragma once
 
-#include <base/Singleton.h>
 #include <base/SharedLibrary.h>
+#include <base/Singleton.h>
 #include <tuple>
 #include <unordered_map>
 
