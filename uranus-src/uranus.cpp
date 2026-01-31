@@ -85,5 +85,6 @@ int main() {
 
     world->run();
 
+    delete world;
     return 0;
 }

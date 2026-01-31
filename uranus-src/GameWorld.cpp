@@ -17,7 +17,7 @@ namespace uranus {
     }
 
     GameWorld::~GameWorld() {
-        SPDLOG_INFO("GameWorld is destroying...");
+
     }
 
     void GameWorld::run() {
@@ -44,7 +44,7 @@ namespace uranus {
         asio::signal_set signals(ctx_, SIGINT, SIGTERM);
         signals.async_wait([this](auto, auto) {
             this->terminate();
-            delete this;
+            // delete this;
         });
 
         SPDLOG_INFO("GameWorld is running...");
@@ -68,8 +68,8 @@ namespace uranus {
         guard_.reset();
         ctx_.stop();
 
-        ordered_.clear();
-        modules_.clear();
+        // ordered_.clear();
+        // modules_.clear();
 
         SPDLOG_INFO("GameWorld terminated");
     }
