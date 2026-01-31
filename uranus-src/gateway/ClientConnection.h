@@ -1,14 +1,11 @@
 #pragma once
 
-
-#include <network/ServerBootstrap.h>
 #include <network/ConnectionAdapter.h>
 #include <actor/PackageCodec.h>
 
 
 namespace uranus {
 
-    using network::ServerBootstrap;
     using network::ConnectionAdapter;
     using actor::Package;
     using actor::PackageHandle;

@@ -5,6 +5,8 @@
 #include "timer/TimerManager.h"
 #include "session/SessionManager.h"
 
+#include <base/AttributeMap.h>
+
 
 namespace uranus::actor {
 
@@ -16,10 +18,6 @@ namespace uranus::actor {
 
     using ActorDeleter  = function<void(BaseActor *)>;
     using ActorHandle   = unique_ptr<BaseActor, ActorDeleter>;
-
-    class BaseActor;
-    class RepeatedTimer;
-    class RequestSession;
 
 
     class ACTOR_API BaseActorContext : public ActorContext, public std::enable_shared_from_this<BaseActorContext> {

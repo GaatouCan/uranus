@@ -1,5 +1,4 @@
 #include "PackageCodec.h"
-#include "Package.h"
 
 #include <asio/read.hpp>
 #include <asio/write.hpp>
@@ -12,7 +11,9 @@
 #include <arpa/inet.h>
 #endif
 
+
 namespace uranus::actor {
+
     struct PackageHeader {
         int64_t id = 0;
         size_t length = 0;
@@ -71,7 +72,7 @@ namespace uranus::actor {
         co_return error_code{};
     }
 
-    awaitable<tuple<error_code, PackageHandle> > PackageCodec::decode() {
+    awaitable<PackageCodec::ResultTuple> PackageCodec::decode() {
         PackageHeader header;
 
         // Read header

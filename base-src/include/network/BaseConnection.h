@@ -1,14 +1,16 @@
 #pragma once
 
 #include "Connection.h"
+#include "base/AttributeMap.h"
 #include "base/types.h"
 
 namespace uranus::network {
 
     using asio::awaitable;
     using std::error_code;
+    using std::enable_shared_from_this;
 
-    class BASE_API BaseConnection : public Connection, public std::enable_shared_from_this<BaseConnection> {
+    class BASE_API BaseConnection : public Connection, public enable_shared_from_this<BaseConnection> {
 
     public:
         BaseConnection() = delete;
@@ -50,8 +52,8 @@ namespace uranus::network {
 
         AttributeMap attr_;
 
-        SteadyTimer     watchdog_;
-        SteadyDuration  expiration_;
+        SteadyTimer watchdog_;
+        SteadyDuration expiration_;
         SteadyTimePoint received_;
     };
 }

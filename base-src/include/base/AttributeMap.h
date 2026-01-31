@@ -8,6 +8,7 @@
 #include <string>
 
 namespace uranus {
+
     class BASE_API AttributeMap final {
 
     public:

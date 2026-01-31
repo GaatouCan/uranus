@@ -13,6 +13,7 @@ namespace uranus::actor {
 
     using SteadyTimePoint = std::chrono::steady_clock::time_point;
     using SteadyDuration = std::chrono::steady_clock::duration;
+    using DataAssetHandle = std::unique_ptr<DataAsset>;
 
     class ACTOR_API BaseActor {
 

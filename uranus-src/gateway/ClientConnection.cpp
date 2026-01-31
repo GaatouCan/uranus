@@ -1,7 +1,6 @@
 #include "ClientConnection.h"
-#include "Gateway.h"
 #include "GameWorld.h"
-
+#include "Gateway.h"
 #include "player/PlayerManager.h"
 #include "player/PlayerContext.h"
 

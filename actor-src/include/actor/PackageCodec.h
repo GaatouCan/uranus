@@ -4,6 +4,7 @@
 
 #include <network/MessageCodec.h>
 
+
 namespace uranus::actor {
 
     using network::MessageCodec;
@@ -12,6 +13,7 @@ namespace uranus::actor {
     using std::error_code;
     using std::tuple;
     using std::make_tuple;
+
 
     class ACTOR_API PackageCodec final : public MessageCodec<Package> {
 
@@ -28,7 +30,7 @@ namespace uranus::actor {
         ~PackageCodec() override;
 
         awaitable<error_code> encode(Package *pkg) override;
-        awaitable<tuple<error_code, PackageHandle>> decode() override;
+        awaitable<ResultTuple> decode() override;
     };
 
     class ACTOR_API PackageCodecErrorCategory : public std::error_category {

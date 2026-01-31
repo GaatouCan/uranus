@@ -105,6 +105,8 @@ namespace uranus::network {
         if (ctx_.stopped())
             return;
 
+        acceptor_.close();
+
         guard_.reset();
         ctx_.stop();
     }
@@ -132,7 +134,7 @@ namespace uranus::network {
                 asio::ip::tcp::socket socket(asio::make_strand(ctx_));
                 auto [ec] = co_await acceptor_.async_accept(socket);
 
-                if (ec) {
+                if (ec && ec != asio::error::operation_aborted) {
                     if (onErrorCode_) {
                         std::invoke(onErrorCode_, ec);
                     }

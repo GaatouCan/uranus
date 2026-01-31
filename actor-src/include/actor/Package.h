@@ -6,6 +6,7 @@
 #include <base/Recycler.h>
 #include <vector>
 
+
 namespace uranus::actor {
 
     namespace detail {
@@ -42,6 +43,8 @@ namespace uranus::actor {
 
     class ACTOR_API Package final : public Message {
 
+        using ByteArray = std::vector<uint8_t, detail::BufferAllocator<uint8_t>>;
+
         DECLARE_MESSAGE_POOL_GET(Package)
 
         explicit Package(const PackageRecyclerHandle &handle);
@@ -77,8 +80,7 @@ namespace uranus::actor {
 
     public:
         int64_t id_;
-        std::vector<uint8_t, detail::BufferAllocator<uint8_t>> payload_;
-        // std::vector<uint8_t> payload_;
+        ByteArray payload_;
     };
 
     DECLARE_MESSAGE_POOL(Package)

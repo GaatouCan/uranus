@@ -2,9 +2,8 @@
 
 #include "Package.h"
 #include "DataAsset.h"
-#include "ServerModule.h"
 
-#include <base/AttributeMap.h>
+#include <base/noncopy.h>
 #include <asio/any_completion_handler.hpp>
 #include <asio/use_awaitable.hpp>
 #include <asio/any_io_executor.hpp>
@@ -12,21 +11,29 @@
 #include <chrono>
 #include <map>
 
+
+namespace uranus {
+    class AttributeMap;
+}
+
 namespace uranus::actor {
 
+    class ServerModule;
     class BaseActor;
     struct RepeatedTimerHandle;
 
     using std::unique_ptr;
-    using ActorMap = std::map<std::string, int64_t>;
-    using RepeatedTask = std::function<void(BaseActor *)>;
-    using SteadyTimePoint = std::chrono::steady_clock::time_point;
-    using SteadyDuration = std::chrono::steady_clock::duration;
+
+    using DataAssetHandle   = unique_ptr<DataAsset>;
+    using RepeatedTask      = std::function<void(BaseActor *)>;
+    using ActorMap          = std::map<std::string, int64_t>;
+
+    using SteadyTimePoint   = std::chrono::steady_clock::time_point;
+    using SteadyDuration    = std::chrono::steady_clock::duration;
+    using SessionHandler    = asio::any_completion_handler<void(PackageHandle)>;
+
 
     class ActorContext {
-
-    protected:
-        using SessionHandler = asio::any_completion_handler<void(PackageHandle)>;
 
     public:
         ActorContext() = default;
@@ -54,7 +61,7 @@ namespace uranus::actor {
         auto call(int ty, int64_t target, PackageHandle &&req, CompletionToken &&token = asio::use_awaitable);
 
         virtual void listen(int64_t evt, bool cancel) = 0;
-        virtual void dispatch(int64_t evt, unique_ptr<DataAsset> &&data) = 0;
+        virtual void dispatch(int64_t evt, DataAssetHandle &&data) = 0;
 
         virtual RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyDuration delay, SteadyDuration rate) = 0;
         virtual void cancelTimer(const RepeatedTimerHandle &handle) = 0;

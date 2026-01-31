@@ -2,10 +2,12 @@
 
 #include "MessageCodec.h"
 
+
 namespace uranus::network {
+
     template<class Codec>
     concept kCodecType = requires { typename Codec::MessageType; }
-        && std::derived_from<Codec, MessageCodec<typename Codec::MessageType>>;
+        && derived_from<Codec, MessageCodec<typename Codec::MessageType>>;
 
     template<kCodecType Codec>
     class ConnectionAdapter : public BaseConnection {

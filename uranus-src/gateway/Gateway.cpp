@@ -1,13 +1,15 @@
 #include "Gateway.h"
-#include "ClientConnection.h"
 #include "GameWorld.h"
+#include "ClientConnection.h"
 #include "player/PlayerManager.h"
 
+#include <database/DatabaseModule.h>
 #include <config/ConfigModule.h>
 #include <login/LoginAuth.h>
-#include <database/DatabaseModule.h>
+
 #include <yaml-cpp/yaml.h>
 #include <spdlog/spdlog.h>
+
 
 namespace uranus {
 

@@ -1,6 +1,7 @@
 #include "BaseActor.h"
 
 namespace uranus::actor {
+
     BaseActor::BaseActor()
         : ctx_(nullptr),
           enableTick_(false) {
