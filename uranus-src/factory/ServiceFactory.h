@@ -4,6 +4,7 @@
 #include <base/Singleton.h>
 #include <tuple>
 #include <unordered_map>
+#include <atomic>
 
 namespace uranus {
 
@@ -15,6 +16,7 @@ namespace uranus {
     using std::unordered_map;
     using std::tuple;
     using std::make_tuple;
+    using std::atomic_uint32_t;
 
     using ServiceCreator = BaseService *(*)();
     using ServiceDeleter = void (*)(BaseService *);
@@ -31,15 +33,26 @@ namespace uranus {
 
         void initial();
 
-        [[nodiscard]] InstanceResult create(const std::string &path) const;
+        [[nodiscard]] InstanceResult create(const std::string &path);
         void destroy(BaseService *ptr, const std::string &path);
 
 
     private:
         struct ServiceNode {
+
             SharedLibrary lib;
             ServiceCreator ctor = nullptr;
             ServiceDeleter del = nullptr;
+            atomic_uint32_t count = 0;
+
+            ServiceNode();
+            ~ServiceNode();
+
+            ServiceNode(const ServiceNode &rhs);
+            ServiceNode &operator=(const ServiceNode &rhs);
+
+            ServiceNode(ServiceNode &&rhs) noexcept;
+            ServiceNode &operator=(ServiceNode &&rhs) noexcept;
         };
 
         unordered_map<std::string, ServiceNode> coreServices_;

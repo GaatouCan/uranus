@@ -150,7 +150,7 @@ namespace uranus {
         }
     }
 
-    ServiceFactory::InstanceResult ServiceFactory::create(const std::string &path) const {
+    ServiceFactory::InstanceResult ServiceFactory::create(const std::string &path) {
         bool isCore = false;
         std::string filename;
 
@@ -171,12 +171,14 @@ namespace uranus {
         if (isCore) {
             if (const auto iter = coreServices_.find(filename); iter != coreServices_.end()) {
                 auto *inst = std::invoke(iter->second.ctor);
+                iter->second.count.fetch_add(1, std::memory_order_relaxed);
                 return make_tuple(inst, iter->second.lib.path());
             }
 
         } else {
             if (const auto iter = extendServices_.find(filename); iter != extendServices_.end()) {
                 auto *inst = std::invoke(iter->second.ctor);
+                iter->second.count.fetch_add(1, std::memory_order_relaxed);
                 return make_tuple(inst, iter->second.lib.path());
             }
         }
@@ -209,15 +211,66 @@ namespace uranus {
         if (isCore) {
             if (const auto iter = coreServices_.find(filename); iter != coreServices_.end()) {
                 std::invoke(iter->second.del, ptr);
+                iter->second.count.fetch_sub(1, std::memory_order_relaxed);
                 return;
             }
         } else {
             if (const auto iter = extendServices_.find(filename); iter != extendServices_.end()) {
                 std::invoke(iter->second.del, ptr);
+                iter->second.count.fetch_sub(1, std::memory_order_relaxed);
                 return;
             }
         }
 
         delete ptr;
+    }
+
+    ServiceFactory::ServiceNode::ServiceNode()
+        : lib(),
+          ctor(nullptr),
+          del(nullptr),
+          count(0) {
+    }
+
+    ServiceFactory::ServiceNode::~ServiceNode() {
+    }
+
+    ServiceFactory::ServiceNode::ServiceNode(const ServiceNode &rhs) {
+        lib = rhs.lib;
+        ctor = rhs.ctor;
+        del = rhs.del;
+        count.store(rhs.count.load(), std::memory_order_relaxed);
+    }
+
+    ServiceFactory::ServiceNode &ServiceFactory::ServiceNode::operator=(const ServiceNode &rhs) {
+        if (this != &rhs) {
+            lib = rhs.lib;
+            ctor = rhs.ctor;
+            del = rhs.del;
+        }
+
+        return *this;
+    }
+
+    ServiceFactory::ServiceNode::ServiceNode(ServiceNode &&rhs) noexcept {
+        lib = std::move(rhs.lib);
+        ctor = rhs.ctor;
+        del = rhs.del;
+
+        count.store(rhs.count.load(), std::memory_order_relaxed);
+        rhs.count.store(0, std::memory_order_relaxed);
+    }
+
+    ServiceFactory::ServiceNode &ServiceFactory::ServiceNode::operator=(ServiceNode &&rhs) noexcept {
+        if (this != &rhs) {
+            lib = std::move(rhs.lib);
+            ctor = rhs.ctor;
+            del = rhs.del;
+
+            count.store(rhs.count.load(), std::memory_order_relaxed);
+            rhs.count.store(0, std::memory_order_relaxed);
+        }
+
+        return *this;
     }
 } // uranus
