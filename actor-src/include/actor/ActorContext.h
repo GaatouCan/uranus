@@ -64,6 +64,8 @@ namespace uranus::actor {
         virtual void dispatch(int64_t evt, DataAssetHandle &&data) = 0;
 
         virtual RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyDuration delay, SteadyDuration rate) = 0;
+        virtual RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyTimePoint point, SteadyDuration rate) = 0;
+
         virtual void cancelTimer(const RepeatedTimerHandle &handle) = 0;
 
     protected:

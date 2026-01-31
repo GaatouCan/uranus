@@ -121,6 +121,17 @@ namespace uranus::actor {
         return timerManager_.createTimer(task, delay, rate);
     }
 
+    RepeatedTimerHandle BaseActorContext::createTimer(
+        const RepeatedTask &task,
+        const SteadyTimePoint point,
+        const SteadyDuration rate
+    ) {
+        if (!isRunning())
+            return {-1, nullptr};
+
+        return timerManager_.createTimerWithTimepoint(task, point, rate);
+    }
+
     void BaseActorContext::cancelTimer(const RepeatedTimerHandle &handle) {
         TimerManager::cancelTimer(handle);
     }

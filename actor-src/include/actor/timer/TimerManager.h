@@ -40,6 +40,8 @@ namespace uranus::actor {
         DISABLE_COPY_MOVE(TimerManager)
 
         RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyDuration delay, SteadyDuration rate = SteadyDuration::zero());
+        RepeatedTimerHandle createTimerWithTimepoint(const RepeatedTask &task, SteadyTimePoint point, SteadyDuration rate = SteadyDuration::zero());
+
         static void cancelTimer(const RepeatedTimerHandle &handle);
 
         void cancelAll();

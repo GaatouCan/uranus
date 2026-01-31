@@ -54,6 +54,8 @@ namespace uranus::actor {
         void pushEnvelope(Envelope &&envelope);
 
         RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyDuration delay, SteadyDuration rate) override;
+        RepeatedTimerHandle createTimer(const RepeatedTask &task, SteadyTimePoint point, SteadyDuration rate) override;
+
         void cancelTimer(const RepeatedTimerHandle &handle) override;
 
     protected:

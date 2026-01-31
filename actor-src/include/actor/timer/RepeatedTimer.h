@@ -37,7 +37,10 @@ namespace uranus::actor {
         // 所有这些操作只允许TimerManager来调用 外部只能观察到有一个Timer
     private:
         void setTask(const RepeatedTask &task);
+
         void setDelay(SteadyDuration delay);
+        void setTimePoint(SteadyTimePoint point);
+
         void setRepeatRate(SteadyDuration rate);
 
         void start();
@@ -53,6 +56,7 @@ namespace uranus::actor {
         RepeatedTask task_;
 
         SteadyDuration delay_;
+        SteadyTimePoint point_;
         SteadyDuration rate_;
 
         atomic_flag running_;

@@ -25,21 +25,24 @@ namespace uranus::actor {
     void RepeatedTimer::setTask(const RepeatedTask &task) {
         if (running_.test(std::memory_order_acquire))
             return;
-
         task_ = task;
     }
 
     void RepeatedTimer::setDelay(const SteadyDuration delay) {
         if (running_.test(std::memory_order_acquire))
             return;
-
         delay_ = delay;
+    }
+
+    void RepeatedTimer::setTimePoint(const SteadyTimePoint point) {
+        if (running_.test(std::memory_order_acquire))
+            return;
+        point_ = point;
     }
 
     void RepeatedTimer::setRepeatRate(const SteadyDuration rate) {
         if (running_.test(std::memory_order_acquire))
             return;
-
         rate_ = rate;
     }
 
@@ -61,7 +64,12 @@ namespace uranus::actor {
                     co_return;
 
                 auto point = std::chrono::steady_clock::now();
-                point += self->delay_;
+
+                if (self->delay_ > SteadyDuration::zero()) {
+                    point += self->delay_;
+                } else if (self->point_ >= point) {
+                    point = self->point_;
+                }
 
                 auto kCleanUp = [self] {
                     self->completed_.test_and_set(std::memory_order_release);
