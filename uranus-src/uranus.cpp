@@ -34,54 +34,53 @@ int main() {
 
     auto *world = new GameWorld();
 
-    world->pushModule(new ConfigModule());
-    world->pushModule(new LoggerModule());
-    world->pushModule(new LoginAuth());
-    world->pushModule(new DatabaseModule());
-    world->pushModule(new EventManager(*world));
-    world->pushModule(new PlayerManager(*world));
-    world->pushModule(new ServiceManager(*world));
-    world->pushModule(new Gateway(*world));
+    world->pushModule<ConfigModule>();
+    world->pushModule<LoggerModule>();
+    // world->pushModule<LoginAuth>();
+    world->pushModule<DatabaseModule>();
+    world->pushModule<EventManager>(*world);
+    world->pushModule<PlayerManager>(*world);
+    world->pushModule<ServiceManager>(*world);
+    world->pushModule<Gateway>(*world);
 
     // Setup login auth
-    {
-        auto *login = GET_MODULE(world, LoginAuth);
-
-        login->onLoginSuccess([world](const std::shared_ptr<Connection> &conn, const int64_t pid) {
-            const auto client = std::dynamic_pointer_cast<ClientConnection>(conn);
-            if (!client)
-                return;
-
-            if (auto *gateway = GET_MODULE(world, Gateway)) {
-                gateway->emplace(pid, client);
-            }
-        });
-
-        login->onLoginFailure(
-            [](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
-                LoginAuth::sendLoginFailure(conn, pid, reason);
-            });
-
-        login->onPlayerLogout(
-            [](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
-                LoginAuth::sendLogoutResponse(conn, reason);
-            });
-    }
+    // {
+    //     auto *login = GET_MODULE(world, LoginAuth);
+    //
+    //     login->onLoginSuccess([world](const std::shared_ptr<Connection> &conn, const int64_t pid) {
+    //         const auto client = std::dynamic_pointer_cast<ClientConnection>(conn);
+    //         if (!client)
+    //             return;
+    //
+    //         if (auto *gateway = GET_MODULE(world, Gateway)) {
+    //             gateway->emplace(pid, client);
+    //         }
+    //     });
+    //
+    //     login->onLoginFailure(
+    //         [](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
+    //             LoginAuth::sendLoginFailure(conn, pid, reason);
+    //         });
+    //
+    //     login->onPlayerLogout(
+    //         [](const std::shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
+    //             LoginAuth::sendLogoutResponse(conn, reason);
+    //         });
+    // }
 
     // Fot test
-    // {
-    //     using asio::co_spawn;
-    //     using asio::awaitable;
-    //     using asio::detached;
-    //     co_spawn(world->getWorkerIOContext(), [&]() -> awaitable<void> {
-    //         auto exec = co_await asio::this_coro::executor;
-    //         uranus::SteadyTimer timer(exec, std::chrono::seconds(2));
-    //         co_await timer.async_wait();
-    //
-    //         world->terminate();
-    //         delete world;
-    //     }, detached);
-    // }
+    {
+        using asio::co_spawn;
+        using asio::awaitable;
+        using asio::detached;
+        co_spawn(world->getIOContext(), [&]() -> awaitable<void> {
+            auto exec = co_await asio::this_coro::executor;
+            uranus::SteadyTimer timer(exec, std::chrono::seconds(2));
+            co_await timer.async_wait();
+
+            world->terminate();
+        }, detached);
+    }
 
     world->run();
 
