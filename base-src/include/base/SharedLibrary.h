@@ -56,6 +56,8 @@ namespace uranus {
         void swap(SharedLibrary &rhs) noexcept;
         void reset();
 
+        bool tryRelease();
+
         [[nodiscard]] bool available() const;
         explicit operator bool() const;
 

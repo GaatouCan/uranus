@@ -10,7 +10,8 @@ namespace uranus {
 
     PlayerFactory::PlayerFactory()
         : creator_(nullptr),
-          deleter_(nullptr) {
+          deleter_(nullptr),
+          count_(0) {
     }
 
     PlayerFactory::~PlayerFactory() {
@@ -81,14 +82,17 @@ namespace uranus {
         SPDLOG_INFO("Use player library: {}", filename);
     }
 
-    PlayerFactory::InstanceResult PlayerFactory::create() const {
+    PlayerFactory::InstanceResult PlayerFactory::create() {
         auto *inst = std::invoke(creator_);
+        count_.fetch_add(1, std::memory_order_acq_rel);
+
         return std::make_tuple(inst, lib_.path());
     }
 
     void PlayerFactory::destroy(BasePlayer *plr) {
         if (plr) {
             std::invoke(deleter_, plr);
+            count_.fetch_sub(1, std::memory_order_acq_rel);
         }
     }
 }

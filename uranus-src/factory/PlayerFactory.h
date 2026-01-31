@@ -3,6 +3,7 @@
 #include <base/SharedLibrary.h>
 #include <base/Singleton.h>
 #include <tuple>
+#include <atomic>
 
 namespace uranus {
 
@@ -11,6 +12,7 @@ namespace uranus {
     }
 
     using actor::BasePlayer;
+    using std::atomic_uint32_t;
 
     class PlayerFactory final : public Singleton<PlayerFactory> {
 
@@ -27,7 +29,7 @@ namespace uranus {
 
         void initial();
 
-        [[nodiscard]] InstanceResult create() const;
+        [[nodiscard]] InstanceResult create();
         void destroy(BasePlayer *plr);
 
     private:
@@ -35,5 +37,7 @@ namespace uranus {
 
         PlayerCreator creator_;
         PlayerDeleter deleter_;
+
+        atomic_uint32_t count_;
     };
 }

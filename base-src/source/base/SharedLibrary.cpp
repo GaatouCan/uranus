@@ -108,6 +108,28 @@ namespace uranus {
         SharedLibrary().swap(*this);
     }
 
+    bool SharedLibrary::tryRelease() {
+        if (!ctrl_)
+            return true;
+
+        if (size_t expected = 1; ctrl_->refCount.compare_exchange_strong(expected, 0, std::memory_order_acq_rel)) {
+#if defined(_WIN32) || defined(_WIN64)
+            FreeLibrary(ctrl_->handle);
+#else
+            dlclose(ctrl_->handle);
+#endif
+
+            delete ctrl_;
+
+            ctrl_ = nullptr;
+            handle_ = nullptr;
+
+            return true;
+        }
+
+        return false;
+    }
+
     SharedLibrary::operator bool() const {
         return available();
     }
@@ -117,7 +139,7 @@ namespace uranus {
     }
 
     void SharedLibrary::release() {
-        if (ctrl_ && ctrl_->refCount.fetch_sub(1, std::memory_order_acq_rel) == 0) {
+        if (ctrl_ && ctrl_->refCount.fetch_sub(1, std::memory_order_acq_rel) == 1) {
 #if defined(_WIN32) || defined(_WIN64)
             FreeLibrary(ctrl_->handle);
 #else
