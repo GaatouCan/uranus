@@ -225,14 +225,12 @@ namespace uranus {
         delete ptr;
     }
 
-    ServiceFactory::ServiceNode::ServiceNode()
-        : lib(),
-          ctor(nullptr),
-          del(nullptr),
-          count(0) {
+    ServiceFactory::ServiceNode::ServiceNode() {
+
     }
 
     ServiceFactory::ServiceNode::~ServiceNode() {
+
     }
 
     ServiceFactory::ServiceNode::ServiceNode(const ServiceNode &rhs) {
