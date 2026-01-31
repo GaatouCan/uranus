@@ -1,5 +1,4 @@
 #include <mimalloc.h>
-#include <mimalloc-new-delete.h>
 #include <spdlog/spdlog.h>
 
 #include "GameWorld.h"

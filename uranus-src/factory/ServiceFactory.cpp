@@ -93,8 +93,7 @@ namespace uranus {
                 const auto deleter = library.getSymbol<ServiceDeleter>("DeleteInstance");
 
                 if (creator == nullptr || deleter == nullptr) {
-                    SPDLOG_ERROR("{} - Load core library[{}] symbol failed",
-                        __FUNCTION__, entry.path().string());
+                    SPDLOG_ERROR("Load core library[{}] symbol failed", entry.path().string());
                     continue;
                 }
 
@@ -105,9 +104,7 @@ namespace uranus {
                 node.del = deleter;
 
                 coreServices_.insert_or_assign(filename, node);
-
-                SPDLOG_INFO("{} - Loaded core service[{}]",
-                    __FUNCTION__, filename);
+                SPDLOG_INFO("Loaded core service[{}]", filename);
             }
         }
 
