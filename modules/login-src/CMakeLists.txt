@@ -44,10 +44,10 @@ generate_export_header(login
 )
 
 target_compile_definitions(login PRIVATE login_EXPORTS)
-
-target_compile_definitions(login PUBLIC
-        $<$<CONFIG:Debug>:LOGIN_DEVELOPER>
-)
+target_compile_definitions(login PUBLIC LOGIN_DEVELOPER)
+#target_compile_definitions(login PUBLIC
+#        $<$<CONFIG:Debug>:LOGIN_DEVELOPER>
+#)
 
 target_include_directories(login
         PRIVATE include/login
