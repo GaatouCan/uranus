@@ -58,21 +58,21 @@ namespace uranus {
         if (ctx_.stopped())
             return;
 
+        // Shutdown the workers pool
+        pool_.stop();
+
         // Shutdown all modules
         for (const auto val : ordered_ | std::views::reverse) {
             SPDLOG_INFO("Stop module: {}", val->getModuleName());
             val->stop();
         }
 
-        // Shutdown the workers pool
-        pool_.stop();
+        ordered_.clear();
+        modules_.clear();
 
         // Shutdown the main io_context
         guard_.reset();
         ctx_.stop();
-
-        ordered_.clear();
-        modules_.clear();
 
         SPDLOG_INFO("GameWorld terminated");
     }

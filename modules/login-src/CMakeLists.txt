@@ -45,7 +45,7 @@ generate_export_header(login
 
 target_compile_definitions(login PRIVATE login_EXPORTS)
 
-target_compile_definitions(login PRIVATE
+target_compile_definitions(login PUBLIC
         $<$<CONFIG:Debug>:LOGIN_DEVELOPER>
 )
 
