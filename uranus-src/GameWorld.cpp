@@ -17,7 +17,7 @@ namespace uranus {
     }
 
     GameWorld::~GameWorld() {
-
+        SPDLOG_INFO("GameWorld destroyed");
     }
 
     void GameWorld::run() {
