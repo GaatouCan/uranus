@@ -178,13 +178,13 @@ namespace uranus {
             shared_lock lock(mutex_);
             if (isCore) {
                 if (const auto iter = coreMap_.find(filename); iter != coreMap_.end()) {
-                    iter->second.count.fetch_add(1, std::memory_order_relaxed);
+                    iter->second.count.fetch_add(1, std::memory_order_release);
                     auto *inst = std::invoke(iter->second.creator);
                     return make_tuple(inst, std::filesystem::path{});
                 }
             } else {
                 if (const auto iter = extendMap_.find(filename); iter != extendMap_.end()) {
-                    iter->second.count.fetch_add(1, std::memory_order_relaxed);
+                    iter->second.count.fetch_add(1, std::memory_order_release);
                     auto *inst = std::invoke(iter->second.creator);
                     return make_tuple(inst, std::filesystem::path{});
                 }
@@ -221,13 +221,13 @@ namespace uranus {
             if (isCore) {
                 if (const auto iter = coreMap_.find(filename); iter != coreMap_.end()) {
                     std::invoke(iter->second.deleter, ptr);
-                    iter->second.count.fetch_sub(1, std::memory_order_relaxed);
+                    iter->second.count.fetch_sub(1, std::memory_order_release);
                     return;
                 }
             } else {
                 if (const auto iter = extendMap_.find(filename); iter != extendMap_.end()) {
                     std::invoke(iter->second.deleter, ptr);
-                    iter->second.count.fetch_sub(1, std::memory_order_relaxed);
+                    iter->second.count.fetch_sub(1, std::memory_order_release);
                     return;
                 }
             }
@@ -259,7 +259,7 @@ namespace uranus {
             unique_lock lock(mutex_);
             if (isCore) {
                 if (const auto iter = coreMap_.find(filename); iter != coreMap_.end()) {
-                    if (iter->second.count.load(std::memory_order_relaxed) > 0) {
+                    if (iter->second.count.load(std::memory_order_acquire) > 0) {
                         SPDLOG_WARN("Service[{}] still in use", path);
                         return;
                     }
@@ -269,7 +269,7 @@ namespace uranus {
                 }
             } else {
                 if (const auto iter = extendMap_.find(filename); iter != extendMap_.end()) {
-                    if (iter->second.count.load(std::memory_order_relaxed) > 0) {
+                    if (iter->second.count.load(std::memory_order_acquire) > 0) {
                         SPDLOG_WARN("Service[{}] still in use", path);
                         return;
                     }
@@ -280,7 +280,7 @@ namespace uranus {
             }
         }
 
-        if (!(node.library.available() && node.creator && node.deleter && node.count.load(std::memory_order_relaxed) == 0)) {
+        if (!(node.library.available() && node.creator && node.deleter && node.count.load(std::memory_order_acquire) == 0)) {
             SPDLOG_WARN("Service[{}] not found", path);
             return;
         }
