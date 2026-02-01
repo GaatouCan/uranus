@@ -4,6 +4,7 @@
 #include <base/Singleton.h>
 #include <tuple>
 #include <unordered_map>
+#include <shared_mutex>
 #include <atomic>
 
 namespace uranus {
@@ -17,6 +18,9 @@ namespace uranus {
     using std::tuple;
     using std::make_tuple;
     using std::atomic_uint32_t;
+    using std::shared_mutex;
+    using std::unique_lock;
+    using std::shared_lock;
 
     using ServiceCreator = BaseService *(*)();
     using ServiceDeleter = void (*)(BaseService *);
@@ -36,13 +40,15 @@ namespace uranus {
         [[nodiscard]] InstanceResult create(const std::string &path);
         void destroy(BaseService *ptr, const std::string &path);
 
+        void release(const std::string &path);
+        void reload(const std::string &path);
 
     private:
         struct ServiceNode {
 
-            SharedLibrary lib;
-            ServiceCreator ctor = nullptr;
-            ServiceDeleter del = nullptr;
+            SharedLibrary library;
+            ServiceCreator creator = nullptr;
+            ServiceDeleter deleter = nullptr;
             atomic_uint32_t count = 0;
 
             ServiceNode();
@@ -55,7 +61,8 @@ namespace uranus {
             ServiceNode &operator=(ServiceNode &&rhs) noexcept;
         };
 
-        unordered_map<std::string, ServiceNode> coreServices_;
-        unordered_map<std::string, ServiceNode> extendServices_;
+        mutable shared_mutex mutex_;
+        unordered_map<std::string, ServiceNode> coreMap_;
+        unordered_map<std::string, ServiceNode> extendMap_;
     };
 } // uranus

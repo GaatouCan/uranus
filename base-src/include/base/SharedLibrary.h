@@ -46,7 +46,7 @@ namespace uranus {
         SharedLibrary &operator=(SharedLibrary &&rhs) noexcept;
 
         template<typename Func>
-        Func getSymbol(std::string_view sv);
+        Func getSymbol(std::string_view sv) const;
 
         /// 获取当前引用计数
         [[nodiscard]] size_t refCount() const;
@@ -75,7 +75,7 @@ namespace uranus {
     };
 
     template<typename Func>
-    Func SharedLibrary::getSymbol(std::string_view sv) {
+    Func SharedLibrary::getSymbol(std::string_view sv) const {
         if (!available())
             return nullptr;
 
