@@ -150,7 +150,7 @@ namespace uranus {
 #endif
             delete ctrl_;
 
-            SPDLOG_DEBUG("Release library[{}] success", ctrl_->path_.string().c_str());
+            // SPDLOG_DEBUG("Release library[{}] success", ctrl_->path_.string().c_str());
         }
 
         ctrl_ = nullptr;
