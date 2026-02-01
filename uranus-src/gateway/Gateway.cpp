@@ -116,9 +116,12 @@ namespace uranus {
             db->queryPlayer(pid, [conn, pid, world = &world_](const std::string &res) {
                 login::LoginAuth::sendLoginPlayerResult(conn, pid, "Query from database success");
 
-                if (const auto *mgr = GET_MODULE(world, PlayerManager)) {
-                    mgr->onPlayerResult(pid, res);
-                }
+                // Run in main thread
+                asio::post(world->getIOContext(), [&] {
+                    if (const auto *mgr = GET_MODULE(world, PlayerManager)) {
+                        mgr->onPlayerResult(pid, res);
+                    }
+                });
             });
         }
     }

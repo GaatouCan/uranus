@@ -4,6 +4,7 @@
 #include <base/Singleton.h>
 #include <tuple>
 #include <atomic>
+#include <shared_mutex>
 
 namespace uranus {
 
@@ -13,6 +14,9 @@ namespace uranus {
 
     using actor::BasePlayer;
     using std::atomic_uint32_t;
+    using std::shared_mutex;
+    using std::shared_lock;
+    using std::unique_lock;
 
     class PlayerFactory final : public Singleton<PlayerFactory> {
 
@@ -36,6 +40,7 @@ namespace uranus {
         void reload();
 
     private:
+        mutable shared_mutex mutex_;
         SharedLibrary lib_;
 
         PlayerCreator creator_;
