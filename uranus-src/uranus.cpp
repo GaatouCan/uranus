@@ -7,6 +7,7 @@
 #include "player/PlayerManager.h"
 #include "service/ServiceManager.h"
 #include "event/EventManager.h"
+#include "monitor/WorldMonitor.h"
 
 #include <config/ConfigModule.h>
 #include <logger/LoggerModule.h>
@@ -26,6 +27,7 @@ using uranus::PlayerManager;
 using uranus::ServiceManager;
 using uranus::Gateway;
 using uranus::ClientConnection;
+using uranus::WorldMonitor;
 
 
 int main() {
@@ -44,6 +46,7 @@ int main() {
     world->pushModule<PlayerManager>(*world);
     world->pushModule<ServiceManager>(*world);
     world->pushModule<Gateway>(*world);
+    world->pushModule<WorldMonitor>(*world);
 
     // Setup login auth
     {
