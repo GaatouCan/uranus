@@ -29,7 +29,10 @@ using uranus::ClientConnection;
 
 
 int main() {
-    spdlog::info("Using mi-malloc version: {}", mi_version());
+    spdlog::set_level(spdlog::level::debug);
+
+    SPDLOG_INFO("Hello, Uranus!");
+    SPDLOG_INFO("Using mi-malloc version: {}", mi_version());
 
     auto *world = new GameWorld();
 

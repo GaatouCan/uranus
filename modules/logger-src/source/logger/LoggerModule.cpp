@@ -5,12 +5,13 @@
 
 namespace uranus::logger {
     LoggerModule::LoggerModule() {
+        SPDLOG_DEBUG("LoggerModule created");
         console_ = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         console_->set_level(spdlog::level::info);
     }
 
     LoggerModule::~LoggerModule() {
-        SPDLOG_DEBUG("Destroy LoggerModule");
+        SPDLOG_DEBUG("LoggerModule destroyed");
     }
 
     void LoggerModule::start() {

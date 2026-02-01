@@ -4,11 +4,13 @@
 #include <yaml-cpp/yaml.h>
 #include <cassert>
 
+
 namespace uranus::config {
 
     static constexpr auto kServerConfigFile = "config/server.yaml";
 
     ConfigModule::ConfigModule() {
+        SPDLOG_DEBUG("ConfigModule created");
         SPDLOG_INFO("Using configuration file: {}", kServerConfigFile);
         config_ = YAML::LoadFile(kServerConfigFile);
 
@@ -29,7 +31,7 @@ namespace uranus::config {
     }
 
     ConfigModule::~ConfigModule() {
-        SPDLOG_DEBUG("Destroy ConfigModule");
+        SPDLOG_DEBUG("ConfigModule destroyed");
     }
 
     void ConfigModule::start() {

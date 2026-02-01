@@ -13,10 +13,13 @@ namespace uranus {
 
     PlayerManager::PlayerManager(GameWorld &world)
         : world_(world) {
+        SPDLOG_DEBUG("PlayerManager created");
     }
 
     PlayerManager::~PlayerManager() {
         players_.clear();
+
+        SPDLOG_DEBUG("PlayerManager destroyed");
     }
 
     GameWorld &PlayerManager::getWorld() const {

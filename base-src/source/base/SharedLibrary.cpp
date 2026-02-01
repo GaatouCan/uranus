@@ -1,5 +1,7 @@
 #include "SharedLibrary.h"
 
+#include <spdlog/spdlog.h>
+
 namespace uranus {
     SharedLibrary::SharedLibrary()
         : ctrl_(nullptr),
@@ -32,6 +34,7 @@ namespace uranus {
         ctrl_->path_ = path;
 
         handle_ = ctrl_->handle;
+        SPDLOG_DEBUG("Load library[{}] success", path.string().c_str());
     }
 
     SharedLibrary::SharedLibrary(const std::string &str)
@@ -146,6 +149,8 @@ namespace uranus {
             dlclose(ctrl_->handle);
 #endif
             delete ctrl_;
+
+            SPDLOG_DEBUG("Release library[{}] success", ctrl_->path_.string().c_str());
         }
 
         ctrl_ = nullptr;

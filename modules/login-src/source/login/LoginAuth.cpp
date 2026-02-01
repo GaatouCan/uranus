@@ -15,10 +15,11 @@ namespace uranus::login {
         : incPlayerId_(1000000)
 #endif
     {
+        SPDLOG_DEBUG("LoginAuth created");
     }
 
     LoginAuth::~LoginAuth() {
-        SPDLOG_DEBUG("Destroy LoginAuth");
+        SPDLOG_DEBUG("LoginAuth destroyed");
     }
 
     void LoginAuth::start() {

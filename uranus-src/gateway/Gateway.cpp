@@ -18,10 +18,11 @@ namespace uranus {
 
     Gateway::Gateway(GameWorld &world)
         : world_(world) {
+        SPDLOG_DEBUG("Gateway created");
     }
 
     Gateway::~Gateway() {
-
+        SPDLOG_DEBUG("Gateway destroyed");
     }
 
     void Gateway::start() {
@@ -52,17 +53,17 @@ namespace uranus {
             conn->setGateway(this);
             conn->setExpirationSecond(30);
 
-            SPDLOG_INFO("Accept client from: {}", conn->remoteAddress().to_string());
+            spdlog::info("Accept client from: {}", conn->remoteAddress().to_string());
 
             return conn;
         });
 
         bootstrap_->onErrorCode([](const std::error_code ec) {
-            SPDLOG_ERROR("Server bootstrap error: {}", ec.message());
+            spdlog::warn("Server bootstrap error: {}", ec.message());
         });
 
-        bootstrap_->onException([](std::exception &e) {
-            SPDLOG_ERROR("Server bootstrap exception: {}", e.what());
+        bootstrap_->onException([](const std::exception &e) {
+            spdlog::error("Server bootstrap exception: {}", e.what());
         });
 
         SPDLOG_INFO("Use IO Threads: {}", threads);

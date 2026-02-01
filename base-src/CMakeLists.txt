@@ -38,6 +38,9 @@ target_link_libraries(base PUBLIC nlohmann_json::nlohmann_json)
 target_link_libraries(base PUBLIC yaml-cpp::yaml-cpp)
 target_link_libraries(base PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
+# Logger Level
+target_compile_definitions(base PUBLIC SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG)
+
 set_target_properties(base PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(base PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(base PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output/lib)

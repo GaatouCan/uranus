@@ -16,9 +16,11 @@ namespace uranus {
 
     ServiceManager::ServiceManager(GameWorld &world)
         : world_(world) {
+        SPDLOG_DEBUG("ServiceManager created");
     }
 
     ServiceManager::~ServiceManager() {
+        SPDLOG_DEBUG("ServiceManager destroyed");
     }
 
     void ServiceManager::start() {

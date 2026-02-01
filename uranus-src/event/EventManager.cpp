@@ -6,6 +6,7 @@
 #include "service/ServiceContext.h"
 
 #include <ranges>
+#include <spdlog/spdlog.h>
 
 namespace uranus {
 
@@ -15,9 +16,11 @@ namespace uranus {
 
     EventManager::EventManager(GameWorld &world)
         : world_(world) {
+        SPDLOG_DEBUG("EventManager created");
     }
 
     EventManager::~EventManager() {
+        SPDLOG_DEBUG("EventManager destroyed");
     }
 
     void EventManager::start() {

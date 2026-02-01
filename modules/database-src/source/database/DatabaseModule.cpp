@@ -11,6 +11,7 @@ namespace uranus::database {
     // using bsoncxx::document::value;
 
     DatabaseModule::DatabaseModule() {
+        SPDLOG_DEBUG("DatabaseModule created");
         th_ = std::thread([this]() {
             while (true) {
                 std::unique_lock lock(mtx_);
@@ -38,7 +39,7 @@ namespace uranus::database {
     }
 
     DatabaseModule::~DatabaseModule() {
-        SPDLOG_DEBUG("Destroy DatabaseModule");
+        SPDLOG_DEBUG("DatabaseModule destroyed");
 
         if (th_.joinable()) {
             th_.join();
