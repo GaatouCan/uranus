@@ -8,6 +8,36 @@
 namespace uranus {
     static constexpr auto kPlayerDirectory = "player";
 
+    static bool VerifyLibraryVersion(const SharedLibrary &lib, const std::string &path) {
+        using actor::ActorVersion;
+        using actor::kUranusActorABIVersion;
+        using actor::kUranusActorAPIVersion;
+        using actor::kUranusActorHeaderVersion;
+        using VersionGetter = const ActorVersion* (*)();
+
+        auto *getter = lib.getSymbol<VersionGetter>("GetActorVersion");
+        if (getter == nullptr) {
+            SPDLOG_ERROR("Failed to get service[{}] library version", path);
+            return false;
+        }
+
+        const auto *ver = getter();
+        if (ver == nullptr) {
+            SPDLOG_ERROR("Failed to get service[{}] library version", path);
+            return false;
+        }
+
+        if (ver->abi_version != kUranusActorABIVersion ||
+            ver->api_version != kUranusActorAPIVersion ||
+            ver->header_version != kUranusActorHeaderVersion
+        ) {
+            SPDLOG_ERROR("Service[{}] library version is not match!!!", path);
+            return false;
+        }
+
+        return true;
+    }
+
     PlayerFactory::PlayerFactory()
         : creator_(nullptr),
           deleter_(nullptr),
@@ -43,32 +73,8 @@ namespace uranus {
             exit(-2);
         }
 
-        {
-            using actor::ActorVersion;
-            using actor::kUranusActorABIVersion;
-            using actor::kUranusActorAPIVersion;
-            using actor::kUranusActorHeaderVersion;
-            using VersionGetter = const ActorVersion* (*)();
-
-            auto *getter = lib_.getSymbol<VersionGetter>("GetActorVersion");
-            if (getter == nullptr) {
-                SPDLOG_ERROR("Failed to get player library version");
-                exit(-2);
-            }
-
-            const auto *ver = getter();
-            if (ver == nullptr) {
-                SPDLOG_ERROR("Failed to get player library version");
-                exit(-2);
-            }
-
-            if (ver->abi_version != kUranusActorABIVersion ||
-                ver->api_version != kUranusActorAPIVersion ||
-                ver->header_version != kUranusActorHeaderVersion
-            ) {
-                SPDLOG_ERROR("Player library version is not match!!!");
-                exit(-2);
-            }
+        if (!VerifyLibraryVersion(lib_, filename)) {
+            exit(-3);
         }
 
         creator_ = lib_.getSymbol<PlayerCreator>("CreatePlayer");
@@ -94,5 +100,13 @@ namespace uranus {
             std::invoke(deleter_, plr);
             count_.fetch_sub(1, std::memory_order_acq_rel);
         }
+    }
+
+    void PlayerFactory::release() {
+        // TODO
+    }
+
+    void PlayerFactory::reload() {
+        // TODO
     }
 }

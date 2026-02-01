@@ -32,6 +32,9 @@ namespace uranus {
         [[nodiscard]] InstanceResult create();
         void destroy(BasePlayer *plr);
 
+        void release();
+        void reload();
+
     private:
         SharedLibrary lib_;
 
