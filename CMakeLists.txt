@@ -83,6 +83,7 @@ FetchContent_MakeAvailable(mimalloc)
 #find_package(asio CONFIG REQUIRED)
 #find_package(mimalloc CONFIG REQUIRED)
 find_package(OpenSSL COMPONENTS REQUIRED)
+find_package(lua CONFIG REQUIRED)
 
 add_subdirectory(base-src)
 add_subdirectory(actor-src)

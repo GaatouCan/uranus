@@ -74,18 +74,18 @@ int main() {
     }
 
     // Fot test
-    {
-        using asio::co_spawn;
-        using asio::awaitable;
-        using asio::detached;
-        co_spawn(world->getIOContext(), [&]() -> awaitable<void> {
-            auto exec = co_await asio::this_coro::executor;
-            uranus::SteadyTimer timer(exec, std::chrono::seconds(2));
-            co_await timer.async_wait();
-
-            world->terminate();
-        }, detached);
-    }
+    // {
+    //     using asio::co_spawn;
+    //     using asio::awaitable;
+    //     using asio::detached;
+    //     co_spawn(world->getIOContext(), [&]() -> awaitable<void> {
+    //         auto exec = co_await asio::this_coro::executor;
+    //         uranus::SteadyTimer timer(exec, std::chrono::seconds(2));
+    //         co_await timer.async_wait();
+    //
+    //         world->terminate();
+    //     }, detached);
+    // }
 
     world->run();
 
