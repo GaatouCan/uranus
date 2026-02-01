@@ -1,3 +1,5 @@
+find_package(lua CONFIG REQUIRED)
+
 file(GLOB_RECURSE GAME_PLAYER_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/*.h
         ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)

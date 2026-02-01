@@ -82,6 +82,12 @@ namespace uranus {
                 if (filename.compare(0, strlen(kLibraryPrefix), kLibraryPrefix) == 0) {
                     filename.erase(0, strlen(kLibraryPrefix));
                 }
+#elif defined(__linux__)
+            if (entry.is_regular_file() && entry.path().extension() == ".so") {
+                auto filename = entry.path().stem().string();
+                if (filename.compare(0, strlen(kLibraryPrefix), kLibraryPrefix) == 0) {
+                    filename.erase(0, strlen(kLibraryPrefix));
+                }
 #endif
                 SharedLibrary library(entry.path());
 
@@ -113,6 +119,12 @@ namespace uranus {
                 const auto filename = entry.path().stem().string();
 #elif defined(__APPLE__)
             if (entry.is_regular_file() && entry.path().extension() == ".dylib") {
+                auto filename = entry.path().stem().string();
+                if (filename.compare(0, strlen(kLibraryPrefix), kLibraryPrefix) == 0) {
+                    filename.erase(0, strlen(kLibraryPrefix));
+                }
+#elif defined(__linux__)
+            if (entry.is_regular_file() && entry.path().extension() == ".so") {
                 auto filename = entry.path().stem().string();
                 if (filename.compare(0, strlen(kLibraryPrefix), kLibraryPrefix) == 0) {
                     filename.erase(0, strlen(kLibraryPrefix));
