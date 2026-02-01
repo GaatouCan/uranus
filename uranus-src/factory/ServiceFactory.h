@@ -2,10 +2,11 @@
 
 #include <base/SharedLibrary.h>
 #include <base/Singleton.h>
-#include <tuple>
 #include <unordered_map>
 #include <shared_mutex>
 #include <atomic>
+#include <tuple>
+#include <memory>
 
 namespace uranus {
 
@@ -17,6 +18,8 @@ namespace uranus {
     using std::unordered_map;
     using std::tuple;
     using std::make_tuple;
+    using std::unique_ptr;
+    using std::make_unique;
     using std::atomic_uint32_t;
     using std::shared_mutex;
     using std::unique_lock;
@@ -45,24 +48,14 @@ namespace uranus {
 
     private:
         struct ServiceNode {
-
-            SharedLibrary library;
-            ServiceCreator creator = nullptr;
-            ServiceDeleter deleter = nullptr;
-            atomic_uint32_t count = 0;
-
-            ServiceNode();
-            ~ServiceNode();
-
-            ServiceNode(const ServiceNode &rhs);
-            ServiceNode &operator=(const ServiceNode &rhs);
-
-            ServiceNode(ServiceNode &&rhs) noexcept;
-            ServiceNode &operator=(ServiceNode &&rhs) noexcept;
+            SharedLibrary   library;
+            ServiceCreator  creator;
+            ServiceDeleter  deleter;
+            atomic_uint32_t count;
         };
 
         mutable shared_mutex mutex_;
-        unordered_map<std::string, ServiceNode> coreMap_;
-        unordered_map<std::string, ServiceNode> extendMap_;
+        unordered_map<std::string, unique_ptr<ServiceNode>> coreMap_;
+        unordered_map<std::string, unique_ptr<ServiceNode>> extendMap_;
     };
 } // uranus

@@ -102,13 +102,7 @@ namespace uranus {
                     continue;
                 }
 
-                ServiceNode node;
-
-                node.library = library;
-                node.creator = creator;
-                node.deleter = deleter;
-
-                coreMap_.insert_or_assign(filename, std::move(node));
+                coreMap_.insert_or_assign(filename, make_unique<ServiceNode>(library, creator, deleter, 0));
                 SPDLOG_INFO("Loaded core service[{}]", filename);
             }
         }
@@ -143,14 +137,7 @@ namespace uranus {
                     continue;
                 }
 
-                ServiceNode node;
-
-                node.library = library;
-                node.creator = creator;
-                node.deleter = deleter;
-
-                extendMap_.insert_or_assign(filename, std::move(node));
-
+                extendMap_.insert_or_assign(filename, make_unique<ServiceNode>(library, creator, deleter, 0));
                 SPDLOG_INFO("Loaded extend service[{}]", filename);
             }
         }
@@ -178,14 +165,20 @@ namespace uranus {
             shared_lock lock(mutex_);
             if (isCore) {
                 if (const auto iter = coreMap_.find(filename); iter != coreMap_.end()) {
-                    iter->second.count.fetch_add(1, std::memory_order_release);
-                    auto *inst = std::invoke(iter->second.creator);
+                    const auto &node = iter->second;
+
+                    node->count.fetch_add(1, std::memory_order_release);
+                    auto *inst = std::invoke(node->creator);
+
                     return make_tuple(inst, std::filesystem::path{});
                 }
             } else {
                 if (const auto iter = extendMap_.find(filename); iter != extendMap_.end()) {
-                    iter->second.count.fetch_add(1, std::memory_order_release);
-                    auto *inst = std::invoke(iter->second.creator);
+                    const auto &node = iter->second;
+
+                    node->count.fetch_add(1, std::memory_order_release);
+                    auto *inst = std::invoke(node->creator);
+
                     return make_tuple(inst, std::filesystem::path{});
                 }
             }
@@ -220,14 +213,20 @@ namespace uranus {
             shared_lock lock(mutex_);
             if (isCore) {
                 if (const auto iter = coreMap_.find(filename); iter != coreMap_.end()) {
-                    std::invoke(iter->second.deleter, ptr);
-                    iter->second.count.fetch_sub(1, std::memory_order_release);
+                    const auto &node = iter->second;
+
+                    std::invoke(node->deleter, ptr);
+                    node->count.fetch_sub(1, std::memory_order_release);
+
                     return;
                 }
             } else {
                 if (const auto iter = extendMap_.find(filename); iter != extendMap_.end()) {
-                    std::invoke(iter->second.deleter, ptr);
-                    iter->second.count.fetch_sub(1, std::memory_order_release);
+                    const auto &node = iter->second;
+
+                    std::invoke(node->deleter, ptr);
+                    node->count.fetch_sub(1, std::memory_order_release);
+
                     return;
                 }
             }
@@ -253,13 +252,13 @@ namespace uranus {
         if (filename.empty())
             return;
 
-        ServiceNode node;
+        unique_ptr<ServiceNode> node;
 
         {
             unique_lock lock(mutex_);
             if (isCore) {
                 if (const auto iter = coreMap_.find(filename); iter != coreMap_.end()) {
-                    if (iter->second.count.load(std::memory_order_acquire) > 0) {
+                    if (iter->second->count.load(std::memory_order_acquire) > 0) {
                         SPDLOG_WARN("Service[{}] still in use", path);
                         return;
                     }
@@ -269,7 +268,7 @@ namespace uranus {
                 }
             } else {
                 if (const auto iter = extendMap_.find(filename); iter != extendMap_.end()) {
-                    if (iter->second.count.load(std::memory_order_acquire) > 0) {
+                    if (iter->second->count.load(std::memory_order_acquire) > 0) {
                         SPDLOG_WARN("Service[{}] still in use", path);
                         return;
                     }
@@ -280,12 +279,16 @@ namespace uranus {
             }
         }
 
-        if (!(node.library.available() && node.creator && node.deleter && node.count.load(std::memory_order_acquire) == 0)) {
+        if (!(node->library.available()
+            && node->creator
+            && node->deleter
+            && node->count.load(std::memory_order_acquire) == 0)
+        ) {
             SPDLOG_WARN("Service[{}] not found", path);
             return;
         }
 
-        if (node.library.tryRelease()) {
+        if (node->library.tryRelease()) {
             SPDLOG_INFO("Release service[{}] success", path);
         }
     }
@@ -341,68 +344,16 @@ namespace uranus {
             return;
         }
 
-        ServiceNode node;
-
-        node.library = library;
-        node.creator = creator;
-        node.deleter = deleter;
+        auto node = make_unique<ServiceNode>(library, creator, deleter, 0);
 
         {
             unique_lock lock(mutex_);
-            if (isCore) {
+            if (isCore)
                 coreMap_.insert_or_assign(filename, std::move(node));
-            } else {
+            else
                 extendMap_.insert_or_assign(filename, std::move(node));
-            }
         }
 
         SPDLOG_INFO("Reload service[{}] success", path);
-    }
-
-    ServiceFactory::ServiceNode::ServiceNode() {
-
-    }
-
-    ServiceFactory::ServiceNode::~ServiceNode() {
-
-    }
-
-    ServiceFactory::ServiceNode::ServiceNode(const ServiceNode &rhs) {
-        library = rhs.library;
-        creator = rhs.creator;
-        deleter = rhs.deleter;
-        count.store(rhs.count.load(), std::memory_order_relaxed);
-    }
-
-    ServiceFactory::ServiceNode &ServiceFactory::ServiceNode::operator=(const ServiceNode &rhs) {
-        if (this != &rhs) {
-            library = rhs.library;
-            creator = rhs.creator;
-            deleter = rhs.deleter;
-        }
-
-        return *this;
-    }
-
-    ServiceFactory::ServiceNode::ServiceNode(ServiceNode &&rhs) noexcept {
-        library = std::move(rhs.library);
-        creator = rhs.creator;
-        deleter = rhs.deleter;
-
-        count.store(rhs.count.load(), std::memory_order_relaxed);
-        rhs.count.store(0, std::memory_order_relaxed);
-    }
-
-    ServiceFactory::ServiceNode &ServiceFactory::ServiceNode::operator=(ServiceNode &&rhs) noexcept {
-        if (this != &rhs) {
-            library = std::move(rhs.library);
-            creator = rhs.creator;
-            deleter = rhs.deleter;
-
-            count.store(rhs.count.load(), std::memory_order_relaxed);
-            rhs.count.store(0, std::memory_order_relaxed);
-        }
-
-        return *this;
     }
 } // uranus
