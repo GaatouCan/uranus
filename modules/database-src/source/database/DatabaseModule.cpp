@@ -72,7 +72,7 @@ namespace uranus::database {
                     "data": {
                         "current_avatar": 1,
                         "current_frame": 1,
-                        "current_background": 1,
+                        "current_background": 1
                     }
                 }
             ]
