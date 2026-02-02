@@ -59,3 +59,5 @@ namespace uranus {
         unordered_map<std::string, unique_ptr<ServiceNode>> extendMap_;
     };
 } // uranus
+
+#define SERVICE_FACTORY ServiceFactory::instance()

@@ -38,7 +38,7 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        auto [plr, path] = PlayerFactory::instance().create();
+        auto [plr, path] = PLAYER_FACTORY.create();
 
         if (!plr)
             return;
@@ -48,7 +48,7 @@ namespace uranus {
                 return;
 
             if (auto *temp = dynamic_cast<BasePlayer *>(ptr)) {
-                PlayerFactory::instance().destroy(temp);
+                PLAYER_FACTORY.destroy(temp);
                 return;
             }
 

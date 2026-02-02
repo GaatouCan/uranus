@@ -38,7 +38,7 @@ namespace uranus {
             const auto filename = item.as<std::string>();
             const auto sid = idAlloc_.allocate();
 
-            auto [ser, path] = ServiceFactory::instance().create(filename);
+            auto [ser, path] = SERVICE_FACTORY.create(filename);
             if (!ser) {
                 SPDLOG_ERROR("Create service instance failed: {}", filename);
                 exit(-1);
@@ -49,7 +49,7 @@ namespace uranus {
                     return;
 
                 if (auto *temp = dynamic_cast<BaseService *>(ptr)) {
-                    ServiceFactory::instance().destroy(temp, filename);
+                    SERVICE_FACTORY.destroy(temp, filename);
                     return;
                 }
 

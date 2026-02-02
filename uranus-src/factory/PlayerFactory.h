@@ -49,3 +49,5 @@ namespace uranus {
         atomic_uint32_t count_;
     };
 }
+
+#define PLAYER_FACTORY PlayerFactory::instance()
