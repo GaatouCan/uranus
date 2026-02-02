@@ -118,7 +118,7 @@ namespace uranus {
             db->queryPlayer(pid, [conn, pid, world = &world_](const std::string &res) {
                 login::LoginAuth::sendLoginPlayerResult(conn, pid, "Query from database success");
 
-                asio::post(conn->socket().get_executor(), [conn] {
+                asio::dispatch(conn->socket().get_executor(), [conn] {
                     conn->attr().set("WAITING_DB", false);
                 });
 
