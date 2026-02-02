@@ -188,8 +188,6 @@ namespace uranus::actor {
                     break;
                     case Envelope::kRequest: {
                         if (auto *pkg = std::get_if<PackageHandle>(&evl.variant)) {
-                            auto res = handle_->onRequest(evl.source, std::move(*pkg));
-
                             const auto sess = evl.session;
                             const auto from = evl.source;
 
@@ -201,6 +199,7 @@ namespace uranus::actor {
                                 type = Package::kToService;
                             }
 
+                            auto res = handle_->onRequest(evl.source, std::move(*pkg));
                             this->sendResponse(type, sess, from, std::move(res));
                         }
                     }

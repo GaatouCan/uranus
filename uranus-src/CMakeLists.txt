@@ -65,9 +65,9 @@ if (WIN32)
 endif ()
 
 # lua-test target
-add_executable(lua-tset lua-test.cpp)
-target_link_libraries(lua-tset PUBLIC lua::lualib)
-
-set_target_properties(lua-tset PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/test)
-set_target_properties(lua-tset PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/test)
-set_target_properties(lua-tset PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/test/lib)
+#add_executable(lua-tset lua-test.cpp)
+#target_link_libraries(lua-tset PUBLIC lua::lualib)
+#
+#set_target_properties(lua-tset PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/test)
+#set_target_properties(lua-tset PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/test)
+#set_target_properties(lua-tset PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/test/lib)
