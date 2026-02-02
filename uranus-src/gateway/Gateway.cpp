@@ -44,7 +44,7 @@ namespace uranus {
         SPDLOG_INFO("Use private key file: {}", "config/server.key");
 
         bootstrap_->useCertificateChainFile("config/server.crt");
-        bootstrap_->usePrivateKeyFile("config/server.pem");
+        bootstrap_->usePrivateKeyFile("config/server.key");
 #endif
 
         bootstrap_->onAccept([this](TcpSocket &&socket) {
