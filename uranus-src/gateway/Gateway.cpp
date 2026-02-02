@@ -103,12 +103,14 @@ namespace uranus {
         } while (false);
 
         if (repeated) {
+            SPDLOG_WARN("Player[{}] login repeated!", pid);
             login::LoginAuth::sendLoginFailure(conn, pid, "Player ID repeated");
             return;
         }
 
         SPDLOG_INFO("Player[{}] login from: {}", pid, conn->remoteAddress().to_string());
         conn->attr().set("PLAYER_ID", pid);
+        conn->attr().set("WAITING_DB", true);
 
         login::LoginAuth::sendLoginSuccess(conn, pid);
 
@@ -116,10 +118,14 @@ namespace uranus {
             db->queryPlayer(pid, [conn, pid, world = &world_](const std::string &res) {
                 login::LoginAuth::sendLoginPlayerResult(conn, pid, "Query from database success");
 
+                asio::post(conn->socket().get_executor(), [conn] {
+                    conn->attr().set("WAITING_DB", false);
+                });
+
                 // Run in main thread
                 asio::post(world->getIOContext(), [&] {
-                    if (const auto *mgr = GET_MODULE(world, PlayerManager)) {
-                        mgr->onPlayerResult(pid, res);
+                    if (auto *mgr = GET_MODULE(world, PlayerManager)) {
+                        mgr->onPlayerLogin(pid, res);
                     }
                 });
             });

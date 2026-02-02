@@ -38,7 +38,6 @@ namespace uranus {
         ~Gateway() override;
 
         DISABLE_COPY_MOVE(Gateway)
-
         SERVER_MODULE_NAME(Gateway)
 
         void start() override;

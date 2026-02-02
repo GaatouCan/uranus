@@ -33,8 +33,8 @@ namespace uranus {
         void start() override;
         void stop() override;
 
-        void onPlayerLogin(int64_t pid);
-        void onPlayerResult(int64_t pid, const std::string &res) const;
+        void onPlayerLogin(int64_t pid, const std::string &res);
+        // void onPlayerResult(int64_t pid, const std::string &res) const;
         void onPlayerLogout(int64_t pid);
 
         [[nodiscard]] shared_ptr<PlayerContext> find(int64_t pid) const;

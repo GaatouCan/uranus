@@ -60,6 +60,11 @@ namespace uranus {
             return;
         }
 
+        // Waiting database data
+        if (const auto db_op = attr().get<bool>("WAITING_DB"); !db_op.has_value() || db_op.value() == false)
+            return;
+
+        received_ = std::chrono::steady_clock::now();
         const auto pid = op.value();
 
         const auto *mgr = GET_MODULE(getWorld(), PlayerManager);

@@ -2,7 +2,7 @@
 #include "LoginProtocol.h"
 
 #include <spdlog/spdlog.h>
-#include <network/Connection.h>
+#include <network/BaseConnection.h>
 
 #include "login.pb.h"
 
@@ -32,6 +32,14 @@ namespace uranus::login {
         if (pkg->id_ != kLoginRequest)
             return;
 
+        if (conn == nullptr)
+            return;
+
+        const auto temp = std::dynamic_pointer_cast<network::BaseConnection>(conn);
+        if (temp == nullptr)
+            return;
+
+        SPDLOG_INFO("Client[{}] request to login", temp->remoteAddress().to_string());
         ::login::LoginRequest request;
 
         request.ParseFromArray(pkg->payload_.data(), pkg->payload_.size());
@@ -42,6 +50,7 @@ namespace uranus::login {
         // If use developer mode, alloc an increase player_id for the first time login
         if (request.developer_mode() && request.allocate_id()) {
             pid = incPlayerId_.fetch_add(1, std::memory_order_relaxed);
+            SPDLOG_INFO("Client[{}] allocated player_id - {}", temp->remoteAddress().to_string(), pid);
         } else {
             pid = request.player_id();
         }
@@ -52,6 +61,7 @@ namespace uranus::login {
         const auto token = request.token();
 
         if (pid <= 0) {
+            SPDLOG_WARN("Client[{}] authentication failed", temp->remoteAddress().to_string());
             if (onFailure_) {
                 std::invoke(onFailure_, conn, pid, "Player ID is invalid");
             }
@@ -66,12 +76,20 @@ namespace uranus::login {
         }
 
         if (onSuccess_) {
+            SPDLOG_INFO("Client[{}] authentication success", temp->remoteAddress().to_string());
             std::invoke(onSuccess_, conn, pid);
         }
     }
 
     void LoginAuth::onLogoutRequest(PackageHandle &&pkg, const shared_ptr<Connection> &conn) {
         if (pkg->id_ != kLogoutRequest)
+            return;
+
+        if (conn == nullptr)
+            return;
+
+        const auto temp = std::dynamic_pointer_cast<network::BaseConnection>(conn);
+        if (temp == nullptr)
             return;
 
         ::login::LogoutRequest req;
@@ -81,6 +99,7 @@ namespace uranus::login {
         const auto reason = req.reason();
 
         if (onLogout_) {
+            SPDLOG_INFO("Client[{} - {}] request to logout", temp->remoteAddress().to_string(), pid);
             std::invoke(onLogout_, conn, pid, reason);
         }
     }

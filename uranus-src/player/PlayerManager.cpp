@@ -34,9 +34,13 @@ namespace uranus {
     void PlayerManager::stop() {
     }
 
-    void PlayerManager::onPlayerLogin(const int64_t pid) {
+    void PlayerManager::onPlayerLogin(const int64_t pid, const std::string &res) {
         if (!world_.isRunning())
             return;
+
+        auto result = std::make_unique<DA_PlayerResult>();
+        result->data = nlohmann::json::parse(res);
+        SPDLOG_INFO("Acquire player[{}] data success", pid);
 
         auto [plr, path] = PLAYER_FACTORY.create();
 
@@ -57,6 +61,7 @@ namespace uranus {
 
         auto strand = asio::make_strand(world_.getWorkerIOContext());
         auto ctx = std::make_shared<PlayerContext>(strand, std::move(handle));
+        SPDLOG_INFO("Player[{}] context created", pid);
 
         shared_ptr<PlayerContext> old;
 
@@ -74,6 +79,7 @@ namespace uranus {
 
         // Stop the old one
         if (old) {
+            SPDLOG_WARN("Player[{}] login repeated!", pid);
             old->terminate();
         }
 
@@ -82,26 +88,25 @@ namespace uranus {
         ctx->attr().set("LIBRARY_PATH", path.string());
 
         SPDLOG_INFO("Add player[{}]", pid);
-
-        ctx->run(nullptr);
+        ctx->run(std::move(result));
     }
 
-    void PlayerManager::onPlayerResult(int64_t pid, const std::string &res) const {
-        if (!world_.isRunning())
-            return;
-
-        if (const auto plr = this->find(pid)) {
-            if (!plr->isRunning())
-                return;
-
-            SPDLOG_INFO("Player database result: {}", pid);
-
-            auto result = std::make_unique<DA_PlayerResult>();
-            result->data = nlohmann::json::parse(res);
-
-            plr->run(std::move(result));
-        }
-    }
+    // void PlayerManager::onPlayerResult(int64_t pid, const std::string &res) const {
+    //     if (!world_.isRunning())
+    //         return;
+    //
+    //     if (const auto plr = this->find(pid)) {
+    //         if (!plr->isRunning())
+    //             return;
+    //
+    //         SPDLOG_INFO("Player database result: {}", pid);
+    //
+    //         auto result = std::make_unique<DA_PlayerResult>();
+    //         result->data = nlohmann::json::parse(res);
+    //
+    //         plr->run(std::move(result));
+    //     }
+    // }
 
     void PlayerManager::onPlayerLogout(const int64_t pid) {
         if (!world_.isRunning())
