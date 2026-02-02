@@ -54,12 +54,7 @@ namespace uranus::network {
 
     void ServerBootstrap::runInBlock(const uint16_t port, const unsigned int threads) {
 #ifdef URANUS_SSL
-        sslContext_.set_options(
-            asio::ssl::context::no_sslv2 |
-            asio::ssl::context::no_sslv3 |
-            asio::ssl::context::default_workarounds |
-            asio::ssl::context::single_dh_use
-        );
+        sslContext_.set_options(asio::ssl::context::default_workarounds);
 #endif
 
         if (pool_.empty()) {
