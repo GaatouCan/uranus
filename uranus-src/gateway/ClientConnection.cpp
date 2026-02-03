@@ -61,7 +61,8 @@ namespace uranus {
         }
 
         // Waiting database data
-        if (const auto db_op = attr().get<bool>("WAITING_DB"); !db_op.has_value() || db_op.value() == false)
+        if (const auto db_op = attr().get<bool>("WAITING_DB");
+            db_op.has_value() && db_op.value() == true)
             return;
 
         received_ = std::chrono::steady_clock::now();

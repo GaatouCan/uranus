@@ -116,10 +116,10 @@ namespace uranus {
 
         if (auto *db = GET_MODULE(&world_, DatabaseModule)) {
             db->queryPlayer(pid, [conn, pid, world = &world_](const std::string &res) {
-                login::LoginAuth::sendLoginPlayerResult(conn, pid, "Query from database success");
-
-                asio::dispatch(conn->socket().get_executor(), [conn] {
-                    conn->attr().set("WAITING_DB", false);
+                // Run in connection strand
+                asio::dispatch(conn->socket().get_executor(), [&] {
+                    conn->attr().erase("WAITING_DB");
+                    login::LoginAuth::sendLoginPlayerResult(conn, pid, "Query from database success");
                 });
 
                 // Run in main thread
