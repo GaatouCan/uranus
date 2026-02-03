@@ -14,7 +14,6 @@
 #include <login/LoginAuth.h>
 #include <database/DatabaseModule.h>
 
-#include <asio.hpp>
 
 using uranus::network::Connection;
 using uranus::GameWorld;
