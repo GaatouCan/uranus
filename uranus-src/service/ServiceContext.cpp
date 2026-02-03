@@ -5,11 +5,11 @@
 #include "gateway/Gateway.h"
 #include "gateway/ClientConnection.h"
 #include "event/EventManager.h"
+#include "monitor/WorldMonitor.h"
 #include "GameWorld.h"
 
 #include <actor/BaseService.h>
 
-#include <utility>
 
 namespace uranus {
 
@@ -214,6 +214,13 @@ namespace uranus {
     }
 
     void ServiceContext::sendCommand(const std::string &cmd, DataAssetHandle &&data) {
+        if (isTerminated())
+            return;
+
+        auto *monitor = GET_MODULE(getWorld(), WorldMonitor);
+        if (monitor == nullptr)
+            return;
+
         // TODO
     }
 

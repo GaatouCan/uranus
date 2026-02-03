@@ -1,14 +1,13 @@
 ﻿#include "PlayerContext.h"
-
-#include <utility>
 #include "PlayerManager.h"
-
 #include "GameWorld.h"
 #include "gateway/ClientConnection.h"
 #include "gateway/Gateway.h"
 #include "service/ServiceManager.h"
 #include "service/ServiceContext.h"
 #include "event/EventManager.h"
+#include "monitor/WorldMonitor.h"
+
 
 namespace uranus {
 
@@ -24,8 +23,6 @@ namespace uranus {
     }
 
     void PlayerContext::send(const int ty, const int64_t target, PackageHandle &&pkg) {
-
-
         const auto pid = getPlayerId();
         if (pid < 0)
             return;
@@ -178,6 +175,13 @@ namespace uranus {
     }
 
     void PlayerContext::sendCommand(const std::string &cmd, DataAssetHandle &&data) {
+        if (isTerminated())
+            return;
+
+        auto *monitor = GET_MODULE(getWorld(), WorldMonitor);
+        if (monitor == nullptr)
+            return;
+
         // TODO
     }
 
