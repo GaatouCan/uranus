@@ -116,7 +116,10 @@ namespace uranus::login {
         onLogout_ = cb;
     }
 
-    void LoginAuth::sendLoginSuccess(const shared_ptr<Connection> &conn, const int64_t pid) {
+    void LoginAuth::sendLoginSuccess(
+        const shared_ptr<Connection> &conn,
+        const int64_t pid
+    ) {
         if (conn == nullptr)
             return;
 
@@ -126,12 +129,18 @@ namespace uranus::login {
         res.set_player_id(pid);
 
         pkg->setId(kLoginSuccess);
-        pkg->setData(res.SerializeAsString());
+
+        pkg->payload_.resize(res.ByteSizeLong());
+        res.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
 
         conn->sendMessage(std::move(pkg));
     }
 
-    void LoginAuth::sendLoginFailure(const shared_ptr<Connection> &conn, const int64_t pid, const std::string &reason) {
+    void LoginAuth::sendLoginFailure(
+        const shared_ptr<Connection> &conn,
+        const int64_t pid,
+        const std::string &reason
+    ) {
         if (conn == nullptr)
             return;
 
@@ -142,23 +151,53 @@ namespace uranus::login {
         res.set_reason(reason);
 
         pkg->setId(kLoginFailure);
-        pkg->setData(res.SerializeAsString());
+
+        pkg->payload_.resize(res.ByteSizeLong());
+        res.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
 
         conn->sendMessage(std::move(pkg));
     }
 
-    void LoginAuth::sendLoginPlayerResult(const shared_ptr<Connection> &conn, const int64_t pid, const std::string &message) {
+    void LoginAuth::sendLoginRepeated(
+        const shared_ptr<Connection> &conn,
+        const int64_t pid,
+        const std::string &address
+    ) {
         if (conn == nullptr)
             return;
 
         auto pkg = Package::getHandle();
 
-        ::login::LoginPlayerResult res;
+        ::login::LoginRepeated res;
         res.set_player_id(pid);
-        res.set_data(message);
+        res.set_address(address);
 
-        pkg->setId(kLoginPlayerResult);
-        pkg->setData(res.SerializeAsString());
+        pkg->setId(kLoginRepeated);
+
+        pkg->payload_.resize(res.ByteSizeLong());
+        res.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
+
+        conn->sendMessage(std::move(pkg));
+    }
+
+    void LoginAuth::sendLoginProcessInfo(
+        const shared_ptr<Connection> &conn,
+        const int64_t pid,
+        const std::string &message
+    ) {
+        if (conn == nullptr)
+            return;
+
+        auto pkg = Package::getHandle();
+
+        ::login::LoginProcessInfo info;
+        info.set_player_id(pid);
+        info.set_data(message);
+
+        pkg->setId(kLoginProcessInfo);
+
+        pkg->payload_.resize(info.ByteSizeLong());
+        info.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
 
         conn->sendMessage(std::move(pkg));
     }
@@ -173,7 +212,10 @@ namespace uranus::login {
         res.set_data(reason);
 
         pkg->setId(kLogoutResponse);
-        pkg->setData(res.SerializeAsString());
+
+
+        pkg->payload_.resize(res.ByteSizeLong());
+        res.SerializeToArray(pkg->payload_.data(), pkg->payload_.size());
 
         conn->sendMessage(std::move(pkg));
     }

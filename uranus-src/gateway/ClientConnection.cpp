@@ -37,6 +37,9 @@ namespace uranus {
     void ClientConnection::onDisconnect() {
         SPDLOG_INFO("Client[{}] disconnected", attr().get<std::string>("CONNECTION_KEY").value());
 
+        if (const auto repeated_op = attr().get<bool>("REPEATED"); repeated_op.has_value())
+            return;
+
         const auto op = attr().get<int64_t>("PLAYER_ID");
         if (!op.has_value()) {
             return;
@@ -48,6 +51,10 @@ namespace uranus {
 
     void ClientConnection::onReadMessage(PackageHandle &&pkg) {
         if (!pkg)
+            return;
+
+        // If it is repeated, do not handle any message
+        if (const auto repeated_op = attr().get<bool>("REPEATED"); repeated_op.has_value())
             return;
 
         const auto op = attr().get<int64_t>("PLAYER_ID");
@@ -92,6 +99,12 @@ namespace uranus {
         // Fail to login or request to logout
         if (pkg->getId() == login::kLoginFailure) {
             SPDLOG_WARN("Client from [{}] login failed", remoteAddress().to_string());
+            disconnect();
+            return;
+        }
+
+        if (pkg->getId() == login::kLoginRepeated) {
+            SPDLOG_WARN("Client from [{}] login repeated", remoteAddress().to_string());
             disconnect();
             return;
         }

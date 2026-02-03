@@ -5,9 +5,10 @@ namespace uranus::login {
         kLoginRequest = 1001,
         kLoginSuccess = 1002,
         kLoginFailure = 1003,
-        kLoginPlayerResult = 1004,
-        kLogoutRequest = 1005,
-        kLogoutResponse = 1006,
-        kHeartbeat = 1007,
+        kLoginRepeated = 1004,
+        kLoginProcessInfo = 1005,
+        kLogoutRequest = 1006,
+        kLogoutResponse = 1007,
+        kHeartbeat = 1008,
     };
 }

@@ -48,7 +48,9 @@ namespace uranus::login {
 
         static void sendLoginSuccess(const shared_ptr<Connection> &conn, int64_t pid);
         static void sendLoginFailure(const shared_ptr<Connection> &conn, int64_t pid, const std::string &reason);
-        static void sendLoginPlayerResult(const shared_ptr<Connection> &conn, int64_t pid, const std::string &message);
+
+        static void sendLoginRepeated(const shared_ptr<Connection> &conn, int64_t pid, const std::string &address);
+        static void sendLoginProcessInfo(const shared_ptr<Connection> &conn, int64_t pid, const std::string &message);
 
         static void sendLogoutResponse(const shared_ptr<Connection> &conn, const std::string &reason);
 

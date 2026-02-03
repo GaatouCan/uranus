@@ -3,7 +3,6 @@
 #include "ClientConnection.h"
 #include "player/PlayerManager.h"
 
-#include <database/DatabaseModule.h>
 #include <config/ConfigModule.h>
 #include <login/LoginAuth.h>
 
@@ -14,7 +13,6 @@
 namespace uranus {
 
     using config::ConfigModule;
-    using database::DatabaseModule;
 
     Gateway::Gateway(GameWorld &world)
         : world_(world) {
@@ -89,23 +87,29 @@ namespace uranus {
         if (!world_.isRunning())
             return;
 
-        bool repeated = false;
+        shared_ptr<ClientConnection> old;
 
         do {
             unique_lock lock(mutex_);
 
-            if (conns_.contains(pid)) {
-                repeated = true;
-                break;
+            if (const auto it = conns_.find(pid); it != conns_.end()) {
+                old = it->second;
+                conns_.insert_or_assign(it, pid, conn);
+            } else {
+                conns_.insert_or_assign(pid, conn);
             }
-
-            conns_.insert_or_assign(pid, conn);
         } while (false);
 
-        if (repeated) {
-            SPDLOG_WARN("Player[{}] login repeated!", pid);
-            login::LoginAuth::sendLoginFailure(conn, pid, "Player ID repeated");
-            return;
+        // Send a repeated message and disconnect the old
+        if (old) {
+            SPDLOG_WARN("Player[{}] login repeated, redirect from[{}] to [{}]",
+                pid, old->remoteAddress().to_string(), conn->remoteAddress().to_string());
+
+            asio::dispatch(conn->socket().get_executor(), [old, pid, address = conn->remoteAddress().to_string()] {
+                old->attr().erase("PLAYER_ID");
+                old->attr().set("REPEATED", true);
+                login::LoginAuth::sendLoginRepeated(old, pid, address);
+            });
         }
 
         SPDLOG_INFO("Player[{}] login from: {}", pid, conn->remoteAddress().to_string());
@@ -114,21 +118,8 @@ namespace uranus {
 
         login::LoginAuth::sendLoginSuccess(conn, pid);
 
-        if (auto *db = GET_MODULE(&world_, DatabaseModule)) {
-            db->queryPlayer(pid, [conn, pid, world = &world_](const std::string &res) {
-                // Run in connection strand
-                asio::dispatch(conn->socket().get_executor(), [&] {
-                    conn->attr().erase("WAITING_DB");
-                    login::LoginAuth::sendLoginPlayerResult(conn, pid, "Query from database success");
-                });
-
-                // Run in main thread
-                asio::post(world->getIOContext(), [&] {
-                    if (auto *mgr = GET_MODULE(world, PlayerManager)) {
-                        mgr->onPlayerLogin(pid, res);
-                    }
-                });
-            });
+        if (auto *mgr = GET_MODULE(&world_, PlayerManager)) {
+            mgr->onPlayerLogin(pid, conn);
         }
     }
 

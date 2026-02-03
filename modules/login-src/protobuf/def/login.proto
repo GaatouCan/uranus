@@ -20,7 +20,12 @@ message LoginFailure {
   string reason = 2;
 }
 
-message LoginPlayerResult {
+message LoginRepeated {
+  int64 player_id = 1;
+  string address = 2;
+}
+
+message LoginProcessInfo {
   int64 player_id = 1;
   string data = 2;
 }

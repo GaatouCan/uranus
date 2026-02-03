@@ -1,15 +1,21 @@
 #include "PlayerManager.h"
 #include "PlayerContext.h"
 #include "GameWorld.h"
+#include "gateway/Gateway.h"
+#include "gateway/ClientConnection.h"
 #include "factory/PlayerFactory.h"
 
 #include <actor/BasePlayer.h>
 #include <common/data_asset/DA_PlayerResult.h>
+#include <database/DatabaseModule.h>
+#include <login/LoginAuth.h>
 #include <spdlog/spdlog.h>
+
 
 namespace uranus {
 
     using actor::BaseActor;
+    using database::DatabaseModule;
 
     PlayerManager::PlayerManager(GameWorld &world)
         : world_(world) {
@@ -34,13 +40,20 @@ namespace uranus {
     void PlayerManager::stop() {
     }
 
-    void PlayerManager::onPlayerLogin(const int64_t pid, const std::string &res) {
+    void PlayerManager::onPlayerLogin(const int64_t pid, const shared_ptr<ClientConnection> &client) {
         if (!world_.isRunning())
             return;
 
-        auto result = std::make_unique<DA_PlayerResult>();
-        result->data = nlohmann::json::parse(res);
-        SPDLOG_INFO("Acquire player[{}] data success", pid);
+        if (client == nullptr || pid < 0)
+            return;
+
+        // Maybe login repeated
+        if (const auto plr = find(pid); plr) {
+            client->attr().erase("WAITING_DB");
+            login::LoginAuth::sendLoginProcessInfo(client, pid, "Reconnect to player actor");
+            SPDLOG_WARN("Player[{}] already exists!", pid);
+            return;
+        }
 
         auto [plr, path] = PLAYER_FACTORY.create();
 
@@ -63,6 +76,7 @@ namespace uranus {
         auto ctx = std::make_shared<PlayerContext>(strand, std::move(handle));
         SPDLOG_INFO("Player[{}] context created", pid);
 
+        // In normal, that would not get the repeated one
         shared_ptr<PlayerContext> old;
 
         {
@@ -79,7 +93,7 @@ namespace uranus {
 
         // Stop the old one
         if (old) {
-            SPDLOG_WARN("Player[{}] login repeated!", pid);
+            SPDLOG_WARN("Player[{}] actor repeated!", pid);
             old->terminate();
         }
 
@@ -87,26 +101,47 @@ namespace uranus {
         ctx->setPlayerId(pid);
         ctx->attr().set("LIBRARY_PATH", path.string());
 
-        SPDLOG_INFO("Add player[{}]", pid);
-        ctx->run(std::move(result));
+        SPDLOG_INFO("Add player[{}] to PlayerManager", pid);
+
+        if (auto *db = GET_MODULE(&world_, DatabaseModule)) {
+            login::LoginAuth::sendLoginProcessInfo(client, pid, "Acquire player data from database");
+            SPDLOG_INFO("Acquire player[{}] data from database", pid);
+
+            db->queryPlayer(pid, [&world = world_, pid](const std::string &res) {
+                if (res.empty())
+                    return;
+
+                // Run in the main thread
+                asio::post(world.getIOContext(), [&world = world, pid, res] {
+                    if (const auto *mgr = GET_MODULE(&world, PlayerManager)) {
+                        mgr->onPlayerData(pid, res);
+                    }
+                });
+            });
+        }
     }
 
-    // void PlayerManager::onPlayerResult(int64_t pid, const std::string &res) const {
-    //     if (!world_.isRunning())
-    //         return;
-    //
-    //     if (const auto plr = this->find(pid)) {
-    //         if (!plr->isRunning())
-    //             return;
-    //
-    //         SPDLOG_INFO("Player database result: {}", pid);
-    //
-    //         auto result = std::make_unique<DA_PlayerResult>();
-    //         result->data = nlohmann::json::parse(res);
-    //
-    //         plr->run(std::move(result));
-    //     }
-    // }
+    void PlayerManager::onPlayerData(const int64_t pid, const std::string &str) const {
+        if (!world_.isRunning())
+            return;
+
+        if (const auto *gateway = GET_MODULE(&world_, Gateway)) {
+            if (const auto client = gateway->find(pid)) {
+                asio::dispatch(client->socket().get_executor(), [&client, pid] {
+                    client->attr().erase("WAITING_DB");
+                    login::LoginAuth::sendLoginProcessInfo(client, pid, "Acquire player data success");
+                });
+            }
+        }
+
+        if (const auto plr = find(pid)) {
+            auto data = make_unique<DA_PlayerResult>();
+            data->data = nlohmann::json::parse(str);
+
+            SPDLOG_INFO("Acquire player[{}] data success", pid);
+            plr->run(std::move(data));
+        }
+    }
 
     void PlayerManager::onPlayerLogout(const int64_t pid) {
         if (!world_.isRunning())
