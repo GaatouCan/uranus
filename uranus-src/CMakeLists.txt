@@ -29,22 +29,47 @@ set_target_properties(uranus PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_
 set_target_properties(uranus PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output)
 set_target_properties(uranus PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/output/lib)
 
-add_custom_command(
-        TARGET uranus
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_RUNTIME_DLLS:uranus>
-        $<TARGET_FILE_DIR:uranus>
-        COMMAND_EXPAND_LISTS
-)
 
 if (WIN32)
+    add_custom_command(
+            TARGET uranus
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_RUNTIME_DLLS:uranus>
+            $<TARGET_FILE_DIR:uranus>
+            COMMAND_EXPAND_LISTS
+    )
+
     FetchContent_GetProperties(mimalloc BINARY_DIR MIMALLOC_BINARY_DIR)
     add_custom_command(
             TARGET uranus
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${MIMALLOC_BINARY_DIR}/mimalloc-redirect.dll"
+            $<TARGET_FILE_DIR:uranus>
+    )
+else ()
+    add_custom_command(
+            TARGET uranus
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:spdlog::spdlog>
+            $<TARGET_FILE_DIR:uranus>
+    )
+
+    add_custom_command(
+            TARGET uranus
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:yaml-cpp::yaml-cpp>
+            $<TARGET_FILE_DIR:uranus>
+    )
+
+    add_custom_command(
+            TARGET uranus
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:mimalloc>
             $<TARGET_FILE_DIR:uranus>
     )
 endif ()

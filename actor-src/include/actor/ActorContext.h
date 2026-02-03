@@ -10,6 +10,7 @@
 #include <functional>
 #include <chrono>
 #include <map>
+#include <string>
 
 
 namespace uranus {
@@ -23,6 +24,7 @@ namespace uranus::actor {
     struct RepeatedTimerHandle;
 
     using std::unique_ptr;
+    using std::string;
 
     using DataAssetHandle   = unique_ptr<DataAsset>;
     using RepeatedTask      = std::function<void(BaseActor *)>;
@@ -46,14 +48,14 @@ namespace uranus::actor {
 
         virtual asio::any_io_executor &executor() = 0;
 
-        [[nodiscard]] virtual ServerModule *getModule(const std::string &name) const = 0;
+        [[nodiscard]] virtual ServerModule *getModule(const string &name) const = 0;
 
         template<class T>
         requires std::derived_from<T, ServerModule>
-        [[nodiscard]] T *getModuleT(const std::string &name) const;
+        [[nodiscard]] T *getModuleT(const string &name) const;
 
-        [[nodiscard]] virtual ActorMap getActorMap(const std::string &type) const = 0;
-        [[nodiscard]] virtual int64_t queryActorId(const std::string &type, const std::string &name) const = 0;
+        [[nodiscard]] virtual ActorMap getActorMap(const string &type) const = 0;
+        [[nodiscard]] virtual int64_t queryActorId(const string &type, const string &name) const = 0;
 
         virtual void send(int ty, int64_t target, PackageHandle &&pkg) = 0;
 
@@ -68,13 +70,15 @@ namespace uranus::actor {
 
         virtual void cancelTimer(const RepeatedTimerHandle &handle) = 0;
 
+        virtual void sendCommand(const string &cmd, DataAssetHandle &&data) = 0;
+
     protected:
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandler &&handle) = 0;
     };
 
     template<class T>
     requires std::derived_from<T, ServerModule>
-    T *ActorContext::getModuleT(const std::string &name) const {
+    T *ActorContext::getModuleT(const string &name) const {
         if (auto *module = this->getModule(name); module != nullptr) {
             return dynamic_cast<T *>(module);
         }

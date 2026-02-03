@@ -37,6 +37,8 @@ namespace uranus {
         void dispatch(int64_t evt, DataAssetHandle &&data) override;
         void listen(int64_t evt, bool cancel) override;
 
+        void sendCommand(const std::string &cmd, DataAssetHandle &&data) override;
+
         [[nodiscard]] ServiceManager *getServiceManager() const;
         [[nodiscard]] GameWorld *getWorld() const;
 

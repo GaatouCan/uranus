@@ -213,6 +213,10 @@ namespace uranus {
         }
     }
 
+    void ServiceContext::sendCommand(const std::string &cmd, DataAssetHandle &&data) {
+        // TODO
+    }
+
     void ServiceContext::setServiceManager(ServiceManager *mgr) {
         if (!isInitial())
             return;

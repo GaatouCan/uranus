@@ -177,6 +177,10 @@ namespace uranus {
         }
     }
 
+    void PlayerContext::sendCommand(const std::string &cmd, DataAssetHandle &&data) {
+        // TODO
+    }
+
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {
         if (!isInitial())
             return;
