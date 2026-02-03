@@ -34,7 +34,7 @@ namespace uranus {
 
     void PlayerManager::start() {
         // Initial the player manager
-        PlayerFactory::instance().initial();
+        PLAYER_FACTORY.initial();
     }
 
     void PlayerManager::stop() {
