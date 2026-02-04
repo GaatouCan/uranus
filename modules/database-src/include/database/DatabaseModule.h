@@ -48,7 +48,7 @@ namespace uranus::database {
         void queryPlayer(int64_t pid, const ResultCallback &cb);
 
     private:
-        std::thread th_;
+        // std::thread th_;
         TaskQueue queue_;
         std::mutex mtx_;
         std::condition_variable cv_;

@@ -12,38 +12,28 @@ namespace uranus::database {
 
     DatabaseModule::DatabaseModule() {
         SPDLOG_DEBUG("DatabaseModule created");
-        th_ = std::thread([this]() {
-            while (true) {
-                std::unique_lock lock(mtx_);
-                cv_.wait(lock, [this] {
-                    return !queue_.empty() || stopped_.test();
-                });
-
-                if (queue_.empty())
-                    break;
-
-                auto task = std::move(queue_.front());
-                queue_.pop();
-
-                // auto client = pool_.acquire();
-                // auto db = (*client)["admin"];
-                //
-                // auto collection = db[task.collection];
-                // auto res = collection.find_one(task.query.view());
-                //
-                // if (res.has_value()) {
-                //     std::invoke(task.cb, bsoncxx::to_json(res.value()));
-                // }
-            }
-        });
+        // th_ = std::thread([this]() {
+        //     while (true) {
+        //         std::unique_lock lock(mtx_);
+        //         cv_.wait(lock, [this] {
+        //             return !queue_.empty() || stopped_.test();
+        //         });
+        //
+        //         if (queue_.empty())
+        //             break;
+        //
+        //         auto task = std::move(queue_.front());
+        //         queue_.pop();
+        //     }
+        // });
     }
 
     DatabaseModule::~DatabaseModule() {
         SPDLOG_DEBUG("DatabaseModule destroyed");
 
-        if (th_.joinable()) {
-            th_.join();
-        }
+        // if (th_.joinable()) {
+        //     th_.join();
+        // }
     }
 
     void DatabaseModule::start() {
