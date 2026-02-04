@@ -33,6 +33,7 @@ namespace uranus::actor {
     using SteadyTimePoint   = std::chrono::steady_clock::time_point;
     using SteadyDuration    = std::chrono::steady_clock::duration;
     using SessionHandler    = asio::any_completion_handler<void(PackageHandle)>;
+    using CommandHandler    = asio::any_completion_handler<void(DataAssetHandle)>;
 
 
     class ActorContext {
@@ -70,10 +71,12 @@ namespace uranus::actor {
 
         virtual void cancelTimer(const RepeatedTimerHandle &handle) = 0;
 
-        virtual void sendCommand(const string &cmd, DataAssetHandle &&data) = 0;
+        template<asio::completion_token_for<void(DataAssetHandle)> CompletionToken>
+        auto sendCommand(const string &cmd, DataAssetHandle &&data, CompletionToken &&token = asio::use_awaitable);
 
     protected:
         virtual void createSession(int ty, int64_t target, PackageHandle &&req, SessionHandler &&handle) = 0;
+        virtual void createCommand(const string &cmd, DataAssetHandle &&data, CommandHandler &&handler) = 0;
     };
 
     template<class T>
@@ -95,5 +98,16 @@ namespace uranus::actor {
         ) mutable {
             this->createSession(type, dest, std::move(temp), std::move(handler));
         }, token, ty, target, std::move(req));
+    }
+
+    template<asio::completion_token_for<void(DataAssetHandle)> CompletionToken>
+    auto ActorContext::sendCommand(const string &cmd, DataAssetHandle &&data, CompletionToken &&token) {
+        return asio::async_initiate<CompletionToken, void(DataAssetHandle)>([this](
+            asio::completion_handler_for<void(DataAssetHandle)> auto handler,
+            const string &command,
+            DataAssetHandle &&temp
+        ) mutable {
+            this->createCommand(command, std::move(temp), std::move(handler));
+        }, token, cmd, std::move(data));
     }
 }

@@ -8,6 +8,8 @@
 #include "event/EventManager.h"
 #include "monitor/WorldMonitor.h"
 
+#include <asio/bind_allocator.hpp>
+
 
 namespace uranus {
 
@@ -174,15 +176,35 @@ namespace uranus {
         }
     }
 
-    void PlayerContext::sendCommand(const std::string &cmd, DataAssetHandle &&data) {
-        if (isTerminated())
+    void PlayerContext::createCommand(const std::string &cmd, DataAssetHandle &&data, CommandHandler &&handler) {
+        auto kDispatchResult = [](CommandHandler &&h, DataAssetHandle &&res) mutable {
+            const auto work = asio::make_work_guard(h);
+            const auto alloc = asio::get_associated_allocator(h, asio::recycling_allocator<void>());
+
+            asio::dispatch(
+                work.get_executor(),
+                asio::bind_allocator(
+                    alloc,
+                    [handler = std::move(h), result = std::move(res)]() mutable {
+                        std::move(handler)(std::move(result));
+                    }
+                )
+            );
+        };
+
+        if (isTerminated()) {
+            kDispatchResult(std::move(handler), nullptr);
             return;
+        }
 
         auto *monitor = GET_MODULE(getWorld(), WorldMonitor);
-        if (monitor == nullptr)
+        if (monitor == nullptr) {
+            kDispatchResult(std::move(handler), nullptr);
             return;
+        }
 
         // TODO
+        kDispatchResult(std::move(handler), nullptr);
     }
 
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {

@@ -10,6 +10,7 @@ namespace uranus {
     using actor::PackageHandle;
     using actor::DataAssetHandle;
     using actor::ActorMap;
+    using actor::CommandHandler;
 
     class PlayerManager;
     class GameWorld;
@@ -34,8 +35,6 @@ namespace uranus {
         void dispatch(int64_t evt, DataAssetHandle &&data) override;
         void listen(int64_t evt, bool cancel) override;
 
-        void sendCommand(const std::string &cmd, DataAssetHandle &&data) override;
-
         [[nodiscard]] ActorMap getActorMap(const std::string &type) const override;
         [[nodiscard]] int64_t queryActorId(const std::string &type, const std::string &name) const override;
 
@@ -45,6 +44,8 @@ namespace uranus {
     protected:
         void sendRequest(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
         void sendResponse(int ty, int64_t sess, int64_t target, PackageHandle &&pkg) override;
+
+        void createCommand(const std::string &cmd, DataAssetHandle &&data, CommandHandler &&handler) override;
 
         bool cleanUp() override;
 
