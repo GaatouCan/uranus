@@ -51,7 +51,7 @@ namespace uranus {
                 }
             }
         } else {
-            for (auto &[ser, plr] : listeners_ | std::views::values) {
+            for (auto &[ser, plr]: listeners_ | std::views::values) {
                 if (is_player) {
                     plr.erase(id);
                 } else {
@@ -68,34 +68,36 @@ namespace uranus {
         if (evt < 0)
             return;
 
-        ListenerSet set;
-
-        {
-            std::shared_lock lock(mutex_);
-            const auto it = listeners_.find(evt);
-            if (it == listeners_.end())
+        // Dispatch event in the main thread
+        asio::post(world_.getIOContext(), [this, evt, data = std::move(data)] {
+            if (!world_.isRunning())
                 return;
-            set = it->second;
-        }
 
-        if (const auto *mgr = GET_MODULE(&world_, ServiceManager)) {
-            const auto services = mgr->getServiceSet(set.services);
-            for (const auto &ctx : services) {
-                if (data != nullptr) {
-                    auto evl = Envelope::makeDataAsset(evt, DataAssetHandle(data->clone()));
-                    ctx->pushEnvelope(std::move(evl));
+            ListenerSet set; {
+                std::shared_lock lock(mutex_);
+                const auto it = listeners_.find(evt);
+                if (it == listeners_.end())
+                    return;
+                set = it->second;
+            }
+
+            if (const auto *mgr = GET_MODULE(&world_, ServiceManager)) {
+                for (const auto &ctx: mgr->getServiceSet(set.services)) {
+                    if (data != nullptr) {
+                        auto evl = Envelope::makeDataAsset(evt, DataAssetHandle(data->clone()));
+                        ctx->pushEnvelope(std::move(evl));
+                    }
                 }
             }
-        }
 
-        if (const auto *mgr = GET_MODULE(&world_, PlayerManager)) {
-            const auto players = mgr->getPlayerSet(set.players);
-            for (const auto &ctx : players) {
-                if (data != nullptr) {
-                    auto evl = Envelope::makeDataAsset(evt, DataAssetHandle(data->clone()));
-                    ctx->pushEnvelope(std::move(evl));
+            if (const auto *mgr = GET_MODULE(&world_, PlayerManager)) {
+                for (const auto &plr: mgr->getPlayerSet(set.players)) {
+                    if (data != nullptr) {
+                        auto evl = Envelope::makeDataAsset(evt, DataAssetHandle(data->clone()));
+                        plr->pushEnvelope(std::move(evl));
+                    }
                 }
             }
-        }
+        });
     }
 }

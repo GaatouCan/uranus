@@ -79,14 +79,14 @@ namespace uranus {
         if (!mgr)
             return;
 
-        const auto ctx = mgr->find(pid);
-        if (!ctx)
+        const auto plr = mgr->find(pid);
+        if (!plr)
             return;
 
         constexpr int type = Package::kFromClient | Package::kToPlayer;
         auto evl = Envelope::makePackage(type, pid, std::move(pkg));
 
-        ctx->pushEnvelope(std::move(evl));
+        plr->pushEnvelope(std::move(evl));
     }
 
     void ClientConnection::beforeWrite(Package *pkg) {
