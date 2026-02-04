@@ -71,7 +71,7 @@ namespace uranus::actor {
                     point = self->point_;
                 }
 
-                auto kCleanUp = [self] {
+                auto lOnCompleted = [self] {
                     self->completed_.test_and_set(std::memory_order_release);
                     if (const auto temp = self->owner_.lock()) {
                         temp->timerManager_.removeOnCompleted(self->id_);
@@ -93,7 +93,7 @@ namespace uranus::actor {
                         if (ec != asio::error::operation_aborted)
                             temp->onErrorCode(ec);
 
-                        kCleanUp();
+                        lOnCompleted();
                         co_return;
                     }
 
@@ -127,7 +127,7 @@ namespace uranus::actor {
                     }
                 }
 
-                kCleanUp();
+                lOnCompleted();
             } catch (std::exception &e) {
                 if (const auto temp = self->owner_.lock()) {
                     temp->onException(e);

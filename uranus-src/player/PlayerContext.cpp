@@ -177,7 +177,7 @@ namespace uranus {
     }
 
     void PlayerContext::createCommand(const std::string &cmd, DataAssetHandle &&data, CommandHandler &&handler) {
-        auto kDispatchResult = [](CommandHandler &&h, DataAssetHandle &&res) mutable {
+        auto lDispatchResult = [](CommandHandler &&h, DataAssetHandle &&res) mutable {
             const auto work = asio::make_work_guard(h);
             const auto alloc = asio::get_associated_allocator(h, asio::recycling_allocator<void>());
 
@@ -193,18 +193,18 @@ namespace uranus {
         };
 
         if (isTerminated()) {
-            kDispatchResult(std::move(handler), nullptr);
+            lDispatchResult(std::move(handler), nullptr);
             return;
         }
 
         auto *monitor = GET_MODULE(getWorld(), WorldMonitor);
         if (monitor == nullptr) {
-            kDispatchResult(std::move(handler), nullptr);
+            lDispatchResult(std::move(handler), nullptr);
             return;
         }
 
         // TODO
-        kDispatchResult(std::move(handler), nullptr);
+        lDispatchResult(std::move(handler), nullptr);
     }
 
     void PlayerContext::setPlayerManager(PlayerManager *mgr) {
