@@ -75,18 +75,14 @@ namespace uranus {
         received_ = std::chrono::steady_clock::now();
         const auto pid = op.value();
 
-        const auto *mgr = GET_MODULE(getWorld(), PlayerManager);
-        if (!mgr)
-            return;
+        if (const auto *mgr = GET_MODULE(getWorld(), PlayerManager)) {
+            if (const auto plr = mgr->find(pid)) {
+                constexpr int type = Package::kFromClient | Package::kToPlayer;
+                auto evl = Envelope::makePackage(type, pid, std::move(pkg));
 
-        const auto plr = mgr->find(pid);
-        if (!plr)
-            return;
-
-        constexpr int type = Package::kFromClient | Package::kToPlayer;
-        auto evl = Envelope::makePackage(type, pid, std::move(pkg));
-
-        plr->pushEnvelope(std::move(evl));
+                plr->pushEnvelope(std::move(evl));
+            }
+        }
     }
 
     void ClientConnection::beforeWrite(Package *pkg) {
