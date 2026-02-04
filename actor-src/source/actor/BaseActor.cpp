@@ -1,4 +1,5 @@
 #include "BaseActor.h"
+#include "ActorContext.h"
 
 namespace uranus::actor {
 
@@ -25,5 +26,12 @@ namespace uranus::actor {
     }
 
     void BaseActor::onTick(SteadyTimePoint now, SteadyDuration delta) {
+    }
+
+    ServerModule *BaseActor::getModule(const std::string &name) const {
+        if (ctx_ == nullptr) {
+            return nullptr;
+        }
+        return ctx_->getModule(name);
     }
 }

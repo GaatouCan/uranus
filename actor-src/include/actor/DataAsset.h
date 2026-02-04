@@ -1,12 +1,14 @@
 #pragma once
 
+#include "actor.export.h"
+
 namespace uranus::actor {
 
-    class DataAsset {
+    class ACTOR_API DataAsset {
 
     public:
-        DataAsset() = default;
-        virtual ~DataAsset() = default;
+        DataAsset();
+        virtual ~DataAsset();
 
         virtual DataAsset *clone() = 0;
     };

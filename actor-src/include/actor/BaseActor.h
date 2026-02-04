@@ -10,6 +10,7 @@ namespace uranus::actor {
     class ActorContext;
     class BaseActorContext;
     class DataAsset;
+    class ServerModule;
 
     using SteadyTimePoint = std::chrono::steady_clock::time_point;
     using SteadyDuration = std::chrono::steady_clock::duration;
@@ -38,6 +39,8 @@ namespace uranus::actor {
         virtual PackageHandle onRequest(int64_t src, PackageHandle &&req) = 0;
 
         virtual void onTick(SteadyTimePoint now, SteadyDuration delta);
+
+        ServerModule *getModule(const std::string &name) const;
 
     private:
         ActorContext *ctx_;

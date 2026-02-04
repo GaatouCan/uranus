@@ -36,11 +36,11 @@ namespace uranus::actor {
     using CommandHandler    = asio::any_completion_handler<void(DataAssetHandle)>;
 
 
-    class ActorContext {
+    class ACTOR_API ActorContext {
 
     public:
-        ActorContext() = default;
-        virtual ~ActorContext() = default;
+        ActorContext();
+        virtual ~ActorContext();
 
         DISABLE_COPY_MOVE(ActorContext)
 

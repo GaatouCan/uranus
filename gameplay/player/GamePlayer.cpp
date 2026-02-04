@@ -30,8 +30,10 @@ namespace gameplay {
     void GamePlayer::onInitial(ActorContext *ctx) {
         super::onInitial(ctx);
 
-        if (auto *module = ACTOR_GET_MODULE(LoggerModule); module != nullptr) {
-            module->createLogger("game_player", "player");
+        if (auto *module = getModule("LoggerModule"); module != nullptr) {
+            if (auto *temp = dynamic_cast<LoggerModule *>(module)) {
+                temp->createLogger("game_player", "player");
+            }
         }
     }
 

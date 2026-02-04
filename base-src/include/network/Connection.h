@@ -10,11 +10,11 @@ namespace uranus {
 
     namespace network {
 
-        class Connection {
+        class BASE_API Connection {
 
         public:
-            Connection() = default;
-            virtual ~Connection() = default;
+            Connection();
+            virtual ~Connection();
 
             DISABLE_COPY_MOVE(Connection)
 
