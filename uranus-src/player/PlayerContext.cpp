@@ -10,6 +10,8 @@
 
 #include <asio/bind_allocator.hpp>
 
+#include "actor/BaseActor.h"
+
 
 namespace uranus {
 
@@ -212,5 +214,6 @@ namespace uranus {
             return;
 
         manager_ = mgr;
+        getActor()->onInitial(this);
     }
 } // uranus

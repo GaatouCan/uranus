@@ -250,5 +250,6 @@ namespace uranus {
             return;
 
         manager_ = mgr;
+        getActor()->onInitial(this);
     }
 }

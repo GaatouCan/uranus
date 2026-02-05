@@ -21,7 +21,6 @@ target_link_libraries(uranus PUBLIC config)
 target_link_libraries(uranus PUBLIC login)
 target_link_libraries(uranus PUBLIC logger)
 target_link_libraries(uranus PUBLIC database)
-target_link_libraries(uranus PUBLIC common)
 
 target_include_directories(uranus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -40,36 +39,11 @@ if (WIN32)
             COMMAND_EXPAND_LISTS
     )
 
-    FetchContent_GetProperties(mimalloc BINARY_DIR MIMALLOC_BINARY_DIR)
     add_custom_command(
             TARGET uranus
             POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${MIMALLOC_BINARY_DIR}/mimalloc-redirect.dll"
-            $<TARGET_FILE_DIR:uranus>
-    )
-else ()
-    add_custom_command(
-            TARGET uranus
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:spdlog::spdlog>
-            $<TARGET_FILE_DIR:uranus>
-    )
-
-    add_custom_command(
-            TARGET uranus
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:yaml-cpp::yaml-cpp>
-            $<TARGET_FILE_DIR:uranus>
-    )
-
-    add_custom_command(
-            TARGET uranus
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:mimalloc>
+            "${THIRD_LIBRARY_DIR}/mimalloc/bin/mimalloc-redirect.dll"
             $<TARGET_FILE_DIR:uranus>
     )
 endif ()

@@ -160,6 +160,7 @@ namespace uranus::network {
                 auto [ec, msg] = co_await output_.async_receive();
 
                 if (ec == asio::error::operation_aborted ||
+                    ec == asio::experimental::error::channel_cancelled ||
                     ec == asio::experimental::error::channel_closed) {
                     break;
                 }

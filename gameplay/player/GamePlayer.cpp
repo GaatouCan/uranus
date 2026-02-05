@@ -5,7 +5,7 @@
 
 #include "common/ProtocolID.h"
 
-#include <common/data_asset/DA_PlayerResult.h>
+#include <login/data_asset/DA_PlayerResult.h>
 #include <logger/LoggerModule.h>
 #include <database/DatabaseModule.h>
 
@@ -18,6 +18,7 @@ namespace gameplay {
     using uranus::actor::Envelope;
     using uranus::logger::LoggerModule;
     using uranus::database::DatabaseModule;
+    using uranus::login::DA_PlayerResult;
     using uranus::actor::BaseActorContext;
 
     GamePlayer::GamePlayer()
@@ -30,17 +31,15 @@ namespace gameplay {
     void GamePlayer::onInitial(ActorContext *ctx) {
         super::onInitial(ctx);
 
-        if (auto *module = getModule("LoggerModule"); module != nullptr) {
-            if (auto *temp = dynamic_cast<LoggerModule *>(module)) {
-                temp->createLogger("game_player", "player");
-            }
+        if (auto *module = ACTOR_GET_MODULE(LoggerModule)) {
+            module->createLogger("game_player", "player");
         }
     }
 
     void GamePlayer::onStart(DataAsset *data) {
         if (data != nullptr) {
-            if (const auto *temp = dynamic_cast<uranus::DA_PlayerResult *>(data)) {
-                component_.deserialize(temp->data);
+            if (const auto *temp = dynamic_cast<DA_PlayerResult *>(data)) {
+                component_.deserialize(temp->data["components"]);
             }
         }
 

@@ -20,10 +20,10 @@ namespace uranus::actor {
           ticker_(exec_),
           sessionManager_(*this),
           timerManager_(*this) {
-#ifndef NDEBUG
-        assert(handle_ != nullptr);
-#endif
-        handle_->onInitial(this);
+// #ifndef NDEBUG
+//         assert(handle_ != nullptr);
+// #endif
+//         handle_->onInitial(this);
     }
 
     BaseActorContext::~BaseActorContext() {

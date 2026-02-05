@@ -6,7 +6,7 @@
 #include "factory/PlayerFactory.h"
 
 #include <actor/BasePlayer.h>
-#include <common/data_asset/DA_PlayerResult.h>
+#include <login/data_asset/DA_PlayerResult.h>
 #include <database/DatabaseModule.h>
 #include <login/LoginAuth.h>
 #include <spdlog/spdlog.h>
@@ -16,6 +16,7 @@ namespace uranus {
 
     using actor::BaseActor;
     using database::DatabaseModule;
+    using login::DA_PlayerResult;
 
     PlayerManager::PlayerManager(GameWorld &world)
         : world_(world) {
@@ -97,9 +98,9 @@ namespace uranus {
             old->terminate();
         }
 
-        ctx->setPlayerManager(this);
         ctx->setPlayerId(pid);
         ctx->attr().set("LIBRARY_PATH", path.string());
+        ctx->setPlayerManager(this);
 
         SPDLOG_INFO("Add player[{}] to PlayerManager", pid);
 
