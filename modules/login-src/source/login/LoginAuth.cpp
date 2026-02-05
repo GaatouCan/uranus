@@ -10,9 +10,10 @@ namespace uranus::login {
 
     using actor::Package;
 
-    LoginAuth::LoginAuth()
+    LoginAuth::LoginAuth(asio::any_io_executor exec)
+        : exec_(std::move(exec))
 #ifdef LOGIN_DEVELOPER
-        : incPlayerId_(1000000)
+        , incPlayerId_(1000000)
 #endif
     {
         SPDLOG_DEBUG("LoginAuth created");
@@ -63,21 +64,27 @@ namespace uranus::login {
         if (pid <= 0) {
             SPDLOG_WARN("Client[{}] authentication failed", temp->remoteAddress().to_string());
             if (onFailure_) {
-                std::invoke(onFailure_, conn, pid, "Player ID is invalid");
+                asio::post(exec_, [func = onFailure_, conn, pid] {
+                    std::invoke(func, conn, pid, "Player ID is invalid");
+                });
             }
             return;
         }
 
         if (token == "LOGIN FAILURE TEST") {
             if (onFailure_) {
-                std::invoke(onFailure_, conn, pid, "Token is invalid");
+                asio::post(exec_, [func = onFailure_, conn, pid] {
+                    std::invoke(func, conn, pid, "Token is invalid");
+                });
             }
             return;
         }
 
         if (onSuccess_) {
             SPDLOG_INFO("Client[{}] authentication success", temp->remoteAddress().to_string());
-            std::invoke(onSuccess_, conn, pid);
+            asio::post(exec_, [func = onSuccess_, conn, pid] {
+                std::invoke(func, conn, pid);
+            });
         }
     }
 
@@ -100,7 +107,9 @@ namespace uranus::login {
 
         if (onLogout_) {
             SPDLOG_INFO("Client[{} - {}] request to logout", temp->remoteAddress().to_string(), pid);
-            std::invoke(onLogout_, conn, pid, reason);
+            asio::post(exec_, [func = onLogout_, conn, pid, reason] {
+                std::invoke(func, conn, pid, reason);
+            });
         }
     }
 

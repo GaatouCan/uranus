@@ -5,6 +5,7 @@
 #include <actor/ServerModule.h>
 #include <actor/Package.h>
 #include <functional>
+#include <asio/any_io_executor.hpp>
 
 #ifdef LOGIN_DEVELOPER
 #include <atomic>
@@ -30,7 +31,9 @@ namespace uranus::login {
         using FailureCallback   = std::function<void(const shared_ptr<Connection> &, int64_t, const std::string &)>;
         using LogoutCallback    = std::function<void(const shared_ptr<Connection> &, int64_t, const std::string &)>;
 
-        LoginAuth();
+        LoginAuth() = delete;
+
+        explicit LoginAuth(asio::any_io_executor exec);
         ~LoginAuth() override;
 
         SERVER_MODULE_NAME(LoginAuth)
@@ -55,6 +58,8 @@ namespace uranus::login {
         static void sendLogoutResponse(const shared_ptr<Connection> &conn, const std::string &reason);
 
     private:
+        asio::any_io_executor exec_;
+
         SuccessCallback onSuccess_;
         FailureCallback onFailure_;
         LogoutCallback onLogout_;

@@ -39,7 +39,7 @@ int main() {
 
     world->pushModule<ConfigModule>();
     world->pushModule<LoggerModule>();
-    world->pushModule<LoginAuth>();
+    world->pushModule<LoginAuth>(world->getIOContext().get_executor());
     world->pushModule<DatabaseModule>();
     world->pushModule<EventManager>(*world);
     world->pushModule<PlayerManager>(*world);
@@ -47,7 +47,7 @@ int main() {
     world->pushModule<Gateway>(*world);
     world->pushModule<WorldMonitor>(*world);
 
-    // Setup login auth
+    // Set up login auth
     {
         auto *login = GET_MODULE(world, LoginAuth);
 
