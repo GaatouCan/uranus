@@ -24,7 +24,7 @@ namespace uranus {
     }
 
     void ServiceManager::start() {
-        ServiceFactory::instance().initial();
+        SERVICE_FACTORY.initial();
 
         const auto *config = GET_MODULE(&world_, ConfigModule);
         if (!config) {
