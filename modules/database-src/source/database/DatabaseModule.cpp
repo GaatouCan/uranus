@@ -71,7 +71,7 @@ namespace uranus::database {
         )"_json;
 
         asio::post(exec_, [cb, data = std::move(data)] {
-            std::invoke(cb, data);
+            std::invoke(cb, data.dump());
         });
     }
 }
