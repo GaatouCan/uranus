@@ -113,11 +113,9 @@ namespace uranus {
                     return;
 
                 // Run in the main thread
-                asio::post(world.getIOContext(), [&world = world, pid, res] {
-                    if (const auto *mgr = GET_MODULE(&world, PlayerManager)) {
-                        mgr->onPlayerData(pid, res);
-                    }
-                });
+                if (const auto *mgr = GET_MODULE(&world, PlayerManager)) {
+                    mgr->onPlayerData(pid, res);
+                }
             });
         }
     }

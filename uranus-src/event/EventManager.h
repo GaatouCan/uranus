@@ -34,8 +34,7 @@ namespace uranus {
         void start() override;
         void stop() override;
 
-        void listenEvent(bool is_player, int64_t id, int evt, bool cancel);
-
+        void listenEvent(bool is_player, int64_t id, int64_t evt, bool cancel);
         void dispatchEvent(int64_t evt, DataAssetHandle &&data);
 
     private:

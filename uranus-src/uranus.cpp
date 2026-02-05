@@ -40,7 +40,7 @@ int main() {
     world->pushModule<ConfigModule>();
     world->pushModule<LoggerModule>();
     world->pushModule<LoginAuth>(world->getIOContext().get_executor());
-    world->pushModule<DatabaseModule>();
+    world->pushModule<DatabaseModule>(world->getIOContext().get_executor());
     world->pushModule<EventManager>(*world);
     world->pushModule<PlayerManager>(*world);
     world->pushModule<ServiceManager>(*world);

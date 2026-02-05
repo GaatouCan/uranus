@@ -3,6 +3,8 @@
 #include "database.export.h"
 
 #include <actor/ServerModule.h>
+
+#include <asio/any_io_executor.hpp>
 #include <functional>
 #include <string>
 #include <thread>
@@ -34,7 +36,8 @@ namespace uranus::database {
         using TaskQueue = std::queue<Task>;
 
     public:
-        DatabaseModule();
+
+        explicit DatabaseModule(asio::any_io_executor exec);
         ~DatabaseModule() override;
 
         SERVER_MODULE_NAME(DatabaseModule);
@@ -49,6 +52,8 @@ namespace uranus::database {
 
     private:
         // std::thread th_;
+        asio::any_io_executor exec_;
+
         TaskQueue queue_;
         std::mutex mtx_;
         std::condition_variable cv_;

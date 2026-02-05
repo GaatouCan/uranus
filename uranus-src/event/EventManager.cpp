@@ -29,7 +29,12 @@ namespace uranus {
     void EventManager::stop() {
     }
 
-    void EventManager::listenEvent(const bool is_player, const int64_t id, const int evt, const bool cancel) {
+    void EventManager::listenEvent(
+        const bool is_player,
+        const int64_t id,
+        const int64_t evt,
+        const bool cancel
+    ) {
         if (!world_.isRunning())
             return;
 

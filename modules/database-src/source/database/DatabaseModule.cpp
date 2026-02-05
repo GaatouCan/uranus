@@ -1,5 +1,6 @@
 #include "DatabaseModule.h"
 
+#include <asio/post.hpp>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
@@ -10,7 +11,8 @@ namespace uranus::database {
     // using bsoncxx::builder::basic::make_document;
     // using bsoncxx::document::value;
 
-    DatabaseModule::DatabaseModule() {
+    DatabaseModule::DatabaseModule(asio::any_io_executor exec)
+        : exec_(std::move(exec)) {
         SPDLOG_DEBUG("DatabaseModule created");
         // th_ = std::thread([this]() {
         //     while (true) {
@@ -68,6 +70,8 @@ namespace uranus::database {
             ]
         )"_json;
 
-        std::invoke(cb, data.dump());
+        asio::post(exec_, [cb, data = std::move(data)] {
+            std::invoke(cb, data);
+        });
     }
 }
