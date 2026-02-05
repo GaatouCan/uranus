@@ -113,9 +113,16 @@ namespace uranus {
     }
 
     void ClientConnection::onTimeout() {
+        if (const auto op = attr().get<int64_t>("PLAYER_ID"); op.has_value()) {
+            const auto pid = op.value();
+            SPDLOG_WARN("Player[{}] timeout", pid);
+            return;
+        }
+
+        SPDLOG_WARN("Client[{}] timeout", remoteAddress().to_string());
     }
 
-    void ClientConnection::onErrorCode(std::error_code ec) {
+    void ClientConnection::onErrorCode(const std::error_code ec) {
         SPDLOG_ERROR(ec.message());
     }
 

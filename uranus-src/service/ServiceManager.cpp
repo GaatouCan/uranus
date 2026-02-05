@@ -59,7 +59,7 @@ namespace uranus {
             auto strand = asio::make_strand(world_.getWorkerIOContext());
             const auto ctx = std::make_shared<ServiceContext>(strand, std::move(handle));
 
-            ctx->setServiceId(sid);
+            ctx->attr().set("SERVICE_ID", sid);
             ctx->attr().set("LIBRARY_PATH", path.string());
             ctx->setServiceManager(this);
 

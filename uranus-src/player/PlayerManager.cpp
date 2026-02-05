@@ -98,7 +98,7 @@ namespace uranus {
             old->terminate();
         }
 
-        ctx->setPlayerId(pid);
+        ctx->attr().set("PLAYER_ID", pid);
         ctx->attr().set("LIBRARY_PATH", path.string());
         ctx->setPlayerManager(this);
 
