@@ -160,6 +160,14 @@ namespace uranus::actor {
         return true;
     }
 
+    SessionManager &BaseActorContext::getSessionManager() {
+        return sessionManager_;
+    }
+
+    TimerManager &BaseActorContext::getTimerManager() {
+        return timerManager_;
+    }
+
     awaitable<void> BaseActorContext::process() {
         try {
             while (isRunning()) {

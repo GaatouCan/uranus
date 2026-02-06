@@ -13,7 +13,6 @@
 namespace uranus::actor {
 
     using SessionHandler = asio::any_completion_handler<void(PackageHandle)>;
-    using SessionWorkGuard = asio::executor_work_guard<asio::any_completion_executor>;
     using std::atomic_flag;
     using std::shared_ptr;
     using std::weak_ptr;
@@ -42,11 +41,11 @@ namespace uranus::actor {
         asio::any_io_executor exec_;
 
         int64_t id_;
-        weak_ptr<BaseActorContext> owner_;
-
         SessionHandler handler_;
-        SessionWorkGuard guard_;
         SteadyTimer timer_;
+
         atomic_flag completed_;
+
+        weak_ptr<BaseActorContext> owner_;
     };
 }

@@ -31,10 +31,9 @@ namespace uranus::actor {
     RequestSession::RequestSession(const shared_ptr<BaseActorContext> &owner, SessionHandler &&handler, const int64_t id)
         : exec_(owner->executor()),
           id_(id),
-          owner_(owner),
           handler_(std::move(handler)),
-          guard_(asio::make_work_guard(handler_)),
-          timer_(exec_) {
+          timer_(exec_),
+          owner_(owner) {
         // 发起超时等待
         co_spawn(exec_, [self = shared_from_this()]() mutable -> awaitable<void> {
             try {
@@ -47,7 +46,7 @@ namespace uranus::actor {
                 if (!self->completed_.test_and_set(std::memory_order_acquire)) {
                     DispatchResponse(std::move(self->handler_), nullptr);
                     if (const auto temp = self->owner_.lock()) {
-                        temp->sessionManager_.removeOnComplete(self->id_);
+                        temp->getSessionManager().removeOnComplete(self->id_);
                     }
                 }
             } catch (std::exception &e) {
@@ -70,7 +69,7 @@ namespace uranus::actor {
 
             DispatchResponse(std::move(handler_), std::move(res));
             if (const auto owner = owner_.lock()) {
-                owner->sessionManager_.removeOnComplete(id_);
+                owner->getSessionManager().removeOnComplete(id_);
             }
         }
     }

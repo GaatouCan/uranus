@@ -69,6 +69,9 @@ namespace uranus::actor {
 
         virtual bool cleanUp();
 
+        SessionManager &getSessionManager();
+        TimerManager &getTimerManager();
+
     private:
         awaitable<void> process();
         awaitable<void> tick();

@@ -74,7 +74,7 @@ namespace uranus::actor {
                 auto lOnCompleted = [self] {
                     self->completed_.test_and_set(std::memory_order_release);
                     if (const auto temp = self->owner_.lock()) {
-                        temp->timerManager_.removeOnCompleted(self->id_);
+                        temp->getTimerManager().removeOnCompleted(self->id_);
                     }
                 };
 
@@ -143,7 +143,7 @@ namespace uranus::actor {
         if (!running_.test_and_set(std::memory_order_acq_rel)) {
             asio::dispatch(exec_, [self = shared_from_this()]() mutable {
                 if (const auto temp = self->owner_.lock(); temp && self->id_ > 0) {
-                    temp->timerManager_.removeOnCompleted(self->id_);
+                    temp->getTimerManager().removeOnCompleted(self->id_);
                 }
             });
             return;
