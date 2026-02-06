@@ -36,9 +36,10 @@ namespace uranus {
 
         for (const auto &item : cfg["server"]["service"]["core"]) {
             const auto filename = item.as<std::string>();
+            const auto real_name = std::string("core.") + filename;
             const auto sid = idAlloc_.allocate();
 
-            auto [ser, path] = SERVICE_FACTORY.create(filename);
+            auto [ser, path] = SERVICE_FACTORY.create(real_name);
             if (!ser) {
                 SPDLOG_ERROR("Create service instance failed: {}", filename);
                 exit(-1);

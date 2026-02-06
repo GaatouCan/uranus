@@ -20,10 +20,7 @@ namespace uranus::actor {
           ticker_(exec_),
           sessionManager_(*this),
           timerManager_(*this) {
-// #ifndef NDEBUG
-//         assert(handle_ != nullptr);
-// #endif
-//         handle_->onInitial(this);
+
     }
 
     BaseActorContext::~BaseActorContext() {
@@ -190,7 +187,7 @@ namespace uranus::actor {
                 switch (evl.type) {
                     case Envelope::kPackage: {
                         if (auto *pkg = std::get_if<PackageHandle>(&evl.variant)) {
-                            handle_->onRequest(evl.source, std::move(*pkg));
+                            handle_->onPackage(evl.source, std::move(*pkg));
                         }
                     }
                     break;

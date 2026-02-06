@@ -7,5 +7,5 @@ server:
     threads: 4
 
   service:
-    core: []
+    core: [friend]
     extend: []
